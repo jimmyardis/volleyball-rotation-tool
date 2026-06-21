@@ -1,4 +1,8 @@
-# Volleyball Rotation & Lineup Tool — Phase 1
+# Volleyball Rotation & Lineup Tool
+
+**Live:** https://volleyball-api-production.up.railway.app (Railway — backend + frontend in one service; data persists on a volume).
+
+## Phase 1
 
 A rotation & lineup visualizer. Define a roster, set a starting lineup, see all
 6 rotations on a court diagram, and read off who serves, where the setter is,
