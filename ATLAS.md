@@ -32,6 +32,23 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-06-21 (session 5)
+- Researched the volleyball "pairs" the user described: confirmed they're the
+  diagonal OPPOSITE pairings (setter↔opposite, OH↔OH, MB↔MB), always 3 zones
+  apart, one front / one back. Distinct from the front/back SUB pairing built in
+  session 4. Sources: NCAA, GoldMedalSquared, coachingvb. Formulated 3 ideas
+  (presented to user, not yet built): pair-based lineup builder, opposite
+  highlighter in viewer, lineup legality/structure validator.
+- Built the explicit asks:
+  1. Guided "? Guide" explainer (`HelpPanel.jsx`): step-by-step workflow + key
+     concepts glossary (incl. both kinds of pairs) + coach recommendations.
+  2. Coaching chatbot (`CoachChat.jsx` + backend `/coach-chat` + `/coach-chat/
+     status`): floating assistant for drills + player help, backed by Claude
+     (claude-sonnet-4-6). Reads ANTHROPIC_API_KEY from ~/.env via python-dotenv;
+     degrades gracefully if absent. Added anthropic + python-dotenv to reqs.
+- Did NOT make a paid Claude call in testing (cost guideline) — verified routing
+  + status (key present) only; user exercises live chat. 30 tests pass.
+
 ### 2026-06-21 (session 4)
 - Substitution roles + pairings (all per-lineup, user's choice). New tables:
   `lineup_player_meta` (coverage: all/front/back) + `sub_pairs`

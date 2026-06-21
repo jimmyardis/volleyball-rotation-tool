@@ -3,6 +3,8 @@ import { api } from "./api.js";
 import RosterScreen from "./components/RosterScreen.jsx";
 import LineupBuilder from "./components/LineupBuilder.jsx";
 import RotationViewer from "./components/RotationViewer.jsx";
+import HelpPanel from "./components/HelpPanel.jsx";
+import CoachChat from "./components/CoachChat.jsx";
 
 const TABS = ["Roster", "Lineups", "Rotations"];
 
@@ -40,6 +42,7 @@ export default function App() {
   const [viewLineupId, setViewLineupId] = useState(null);
   const [newTeamName, setNewTeamName] = useState("");
   const [error, setError] = useState(null);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     api.listTeams()
@@ -83,6 +86,7 @@ export default function App() {
       <header>
         <h1>🏐 Rotation &amp; Lineup Tool</h1>
         <div className="team-bar">
+          <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">? Guide</button>
           <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>
             <option value="" disabled>Select a team</option>
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}{t.season ? ` (${t.season})` : ""}</option>)}
@@ -94,8 +98,13 @@ export default function App() {
         </div>
       </header>
 
+      {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
+      <CoachChat />
+
       <Stepper items={stepItems} onJump={setTab} />
-      {nextStep && <p className="nudge">👉 {nudge}</p>}
+      {nextStep && (
+        <p className="nudge">👉 {nudge} <button className="link inline-link" onClick={() => setShowHelp(true)}>New here? Open the guide.</button></p>
+      )}
 
       {error && <p className="error global">{error}</p>}
 

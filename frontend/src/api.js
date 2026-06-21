@@ -64,6 +64,11 @@ export const api = {
     request(`/lineups/${lineupId}/pairs`, { method: "PUT", body: JSON.stringify({ pairs }) }),
   generateSubs: (lineupId) =>
     request(`/lineups/${lineupId}/generate-subs`, { method: "POST" }),
+
+  // coach assistant
+  coachStatus: () => request("/coach-chat/status"),
+  coachChat: (messages) =>
+    request("/coach-chat", { method: "POST", body: JSON.stringify({ messages }) }),
 };
 
 export const COVERAGE = [

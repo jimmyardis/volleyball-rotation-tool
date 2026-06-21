@@ -7,13 +7,16 @@ are never persisted — the engine is the single source of truth.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from . import db, engine
 from .models import (
+    ChatRequest,
     CoverageSave,
     FormationSave,
     LineupCreate,
@@ -26,7 +29,30 @@ from .models import (
     TeamCreate,
 )
 
+# Pull ANTHROPIC_API_KEY from the user's ~/.env (and any local .env) for the
+# coaching chatbot. The key is never committed; the feature degrades gracefully
+# if it's absent.
+load_dotenv()
+load_dotenv(os.path.expanduser("~/.env"))
+
 FRONT_ROW_ZONES = {2, 3, 4}
+
+COACH_SYSTEM = """You are an assistant volleyball coach built into a rotation & \
+lineup app. Your job is to help the coach with two things: (1) practice DRILLS \
+and (2) PLAYER development/help (skills, positioning, fixing common mistakes).
+
+Guidelines:
+- Be concrete and practical. Prefer named drills with a one-line setup, the \
+reps/goal, and what to coach (the key cue). Keep answers tight.
+- Tailor advice to the position when relevant (setter, outside, middle, \
+opposite, libero, DS) and to age/level if the coach mentions it.
+- Use short paragraphs and simple dashes for lists. No long essays.
+- You understand the app's concepts: zones 1-6, the 6 rotations, serve / \
+receive / base situations, overlap rules, diagonal opposite pairings \
+(setter-opposite, the two outsides, the two middles), front/back substitution \
+pairings, and that the libero can't play the front row.
+- If asked something unrelated to volleyball coaching, briefly say that's \
+outside what you help with and steer back to drills or player help."""
 
 DB_PATH = Path(__file__).resolve().parent.parent / "volleyball.db"
 
@@ -324,3 +350,39 @@ def generate_subs(lineup_id: int, conn=Depends(get_conn)):
 def overlap_check(body: OverlapCheck):
     faults = engine.check_overlap({z: tuple(xy) for z, xy in body.coords.items()})
     return {"legal": not faults, "faults": faults}
+
+
+# ---------------------------------------------------------------- coach assistant
+
+@app.get("/coach-chat/status")
+def coach_chat_status():
+    """Tell the UI whether the assistant is configured (API key present)."""
+    return {"available": bool(os.getenv("ANTHROPIC_API_KEY"))}
+
+
+@app.post("/coach-chat")
+def coach_chat(body: ChatRequest):
+    """A volleyball coaching assistant (drills + player help) backed by Claude."""
+    key = os.getenv("ANTHROPIC_API_KEY")
+    if not key:
+        raise HTTPException(503, "Coach assistant unavailable: set ANTHROPIC_API_KEY in ~/.env")
+    try:
+        from anthropic import Anthropic
+    except ImportError:
+        raise HTTPException(503, "Coach assistant unavailable: run pip install -r requirements.txt")
+
+    # keep the last few turns to bound cost/context
+    msgs = [{"role": m.role, "content": m.content} for m in body.messages if m.content.strip()][-12:]
+    if not msgs:
+        raise HTTPException(422, "no message to send")
+    try:
+        resp = Anthropic(api_key=key).messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=1024,
+            system=COACH_SYSTEM,
+            messages=msgs,
+        )
+    except Exception as e:  # surface upstream errors as a clean 502
+        raise HTTPException(502, f"Coach assistant error: {e}")
+    text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
+    return {"reply": text}

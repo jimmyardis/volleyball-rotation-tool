@@ -62,3 +62,12 @@ class CoverageSave(BaseModel):
 class PairsSave(BaseModel):
     # [[front_player_id, back_player_id], ...]
     pairs: list[tuple[int, int]]
+
+
+class ChatTurn(BaseModel):
+    role: str          # 'user' | 'assistant'
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: list[ChatTurn]
