@@ -14,15 +14,19 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import db, engine
 from .models import (
+    CoverageSave,
     FormationSave,
     LineupCreate,
     LineupPositions,
     OverlapCheck,
+    PairsSave,
     PlayerCreate,
     PlayerUpdate,
     SubsSave,
     TeamCreate,
 )
+
+FRONT_ROW_ZONES = {2, 3, 4}
 
 DB_PATH = Path(__file__).resolve().parent.parent / "volleyball.db"
 
@@ -238,15 +242,80 @@ def save_subs(lineup_id: int, rotation_index: int, body: SubsSave, conn=Depends(
     if len(set(effective.values())) != 6:
         raise HTTPException(422, "substitutions would put a player in two zones at once")
 
-    team_players = {p["id"] for p in db.list_players(conn, db.get_lineup(conn, lineup_id)["team_id"])}
-    if not set(effective.values()) <= team_players:
+    players = {p["id"]: p for p in db.list_players(conn, db.get_lineup(conn, lineup_id)["team_id"])}
+    if not set(effective.values()) <= set(players):
         raise HTTPException(422, "on-court player not on this team")
+
+    # Hard rule: a libero can never be in a front-row zone.
+    for zone in FRONT_ROW_ZONES:
+        if players.get(effective[zone], {}).get("is_libero"):
+            raise HTTPException(422, f"the libero cannot play a front-row zone (zone {zone})")
 
     try:
         db.set_substitutions(conn, lineup_id, rotation_index, body.swaps)
     except ValueError as e:
         raise HTTPException(422, str(e))
     return {"saved": True, "on_court": effective}
+
+
+@app.get("/lineups/{lineup_id}/setup")
+def get_setup(lineup_id: int, conn=Depends(get_conn)):
+    """Coverage types + pairings + roster for the lineup's substitution setup."""
+    lineup = db.get_lineup(conn, lineup_id)
+    if not lineup:
+        raise HTTPException(404, "lineup not found")
+    return {
+        "players": db.list_players(conn, lineup["team_id"]),
+        "starter_positions": db.get_lineup_positions(conn, lineup_id),
+        "coverage": db.get_coverage(conn, lineup_id),
+        "pairs": db.get_pairs(conn, lineup_id),
+    }
+
+
+@app.put("/lineups/{lineup_id}/coverage")
+def put_coverage(lineup_id: int, body: CoverageSave, conn=Depends(get_conn)):
+    if not db.get_lineup(conn, lineup_id):
+        raise HTTPException(404, "lineup not found")
+    try:
+        db.set_coverage(conn, lineup_id, body.coverage)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    return db.get_coverage(conn, lineup_id)
+
+
+@app.put("/lineups/{lineup_id}/pairs")
+def put_pairs(lineup_id: int, body: PairsSave, conn=Depends(get_conn)):
+    if not db.get_lineup(conn, lineup_id):
+        raise HTTPException(404, "lineup not found")
+    players = {p["id"]: p for p in db.list_players(conn, db.get_lineup(conn, lineup_id)["team_id"])}
+    # The libero is a back-row player by rule — they can only be the back of a pair.
+    for front_id, back_id in body.pairs:
+        if players.get(front_id, {}).get("is_libero"):
+            raise HTTPException(422, "the libero can't be the front-row player in a pairing")
+    try:
+        db.set_pairs(conn, lineup_id, [tuple(p) for p in body.pairs])
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    return db.get_pairs(conn, lineup_id)
+
+
+@app.post("/lineups/{lineup_id}/generate-subs")
+def generate_subs(lineup_id: int, conn=Depends(get_conn)):
+    """Fill in per-rotation substitutions from the pairings (overwrites existing
+    subs for all 6 rotations). The starting point the coach then hand-edits."""
+    if not db.get_lineup(conn, lineup_id):
+        raise HTTPException(404, "lineup not found")
+    start = db.get_lineup_positions(conn, lineup_id)
+    if set(start.keys()) != set(range(1, 7)):
+        raise HTTPException(409, "lineup has no complete starting positions yet")
+
+    pairs = [(p["front_player_id"], p["back_player_id"]) for p in db.get_pairs(conn, lineup_id)]
+    plan = engine.generate_substitutions(start, pairs)
+    total = 0
+    for r in range(6):
+        db.set_substitutions(conn, lineup_id, r, plan[r])
+        total += len(plan[r])
+    return {"generated": True, "rotations_with_subs": sum(1 for r in range(6) if plan[r]), "total_swaps": total}
 
 
 # ---------------------------------------------------------------- overlap (stretch)

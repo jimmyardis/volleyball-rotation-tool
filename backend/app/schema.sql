@@ -76,6 +76,31 @@ CREATE TABLE IF NOT EXISTS substitutions (
     UNIQUE (lineup_id, rotation_index, starter_id)
 );
 
+-- Per-lineup court-coverage type for a player: how much of the court they play.
+--   'all'   — all-around, plays all 6 rotations (never auto-subbed).
+--   'front' — front-row specialist, on only when in the front row.
+--   'back'  — back-row specialist (DS / libero), on only when in the back row.
+-- Coverage is per-lineup because the same player can be used differently.
+CREATE TABLE IF NOT EXISTS lineup_player_meta (
+    id          INTEGER PRIMARY KEY,
+    lineup_id   INTEGER NOT NULL REFERENCES lineups(id),
+    player_id   INTEGER NOT NULL REFERENCES players(id),
+    coverage    TEXT NOT NULL DEFAULT 'all' CHECK (coverage IN ('all', 'front', 'back')),
+    UNIQUE (lineup_id, player_id)
+);
+
+-- Per-lineup substitution pairing: a front-row specialist and a back-row
+-- partner who SHARE one rotational slot. Whoever matches the slot's current
+-- row is on court. One of the pair must be a starter (the slot owner).
+CREATE TABLE IF NOT EXISTS sub_pairs (
+    id              INTEGER PRIMARY KEY,
+    lineup_id       INTEGER NOT NULL REFERENCES lineups(id),
+    front_player_id INTEGER NOT NULL REFERENCES players(id),
+    back_player_id  INTEGER NOT NULL REFERENCES players(id),
+    UNIQUE (lineup_id, front_player_id),
+    UNIQUE (lineup_id, back_player_id)
+);
+
 -- Optional in P1: records a libero swapping in for a back-row player.
 CREATE TABLE IF NOT EXISTS libero_replacements (
     id              INTEGER PRIMARY KEY,

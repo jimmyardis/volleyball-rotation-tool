@@ -172,6 +172,39 @@ def apply_substitutions(
     return {zone: swaps.get(pid, pid) for zone, pid in positions.items()}
 
 
+def generate_substitutions(
+    start: dict[int, int], pairs: list[tuple[int, int]]
+) -> dict[int, dict[int, int]]:
+    """Derive a per-rotation substitution plan from front/back pairings.
+
+    Each pair is (front_player_id, back_player_id) who share one rotational
+    slot. The slot is owned by whichever of them is a starter in `start`. For
+    every rotation, the slot sits in some zone; if that zone is front row the
+    front player is on, if back row the back player is on.
+
+    Returns {rotation_index: {starter_id: on_court_id}} — only real swaps
+    (where the on-court player differs from the slot's starter) are included.
+    This is the "starting point" the coach then hand-edits.
+    """
+    rotations = all_rotations(start)
+    starters = set(start.values())
+    plan: dict[int, dict[int, int]] = {r: {} for r in range(6)}
+
+    for front_id, back_id in pairs:
+        if front_id in starters:
+            owner = front_id
+        elif back_id in starters:
+            owner = back_id
+        else:
+            continue  # neither is in the starting six; nothing to drive
+        for r, state in enumerate(rotations):
+            zone = next(z for z, pid in state.items() if pid == owner)
+            desired = front_id if zone in FRONT_ROW else back_id
+            if desired != owner:
+                plan[r][owner] = desired
+    return plan
+
+
 def _role_lane(role: str | None) -> int:
     """Preferred left/middle/right lane (0/1/2) for a role's base position."""
     if role == "OH":

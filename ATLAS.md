@@ -32,6 +32,23 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-06-21 (session 4)
+- Substitution roles + pairings (all per-lineup, user's choice). New tables:
+  `lineup_player_meta` (coverage: all/front/back) + `sub_pairs`
+  (front_player_id ⇄ back_player_id). `engine.generate_substitutions(start,
+  pairs)` derives the per-rotation plan: the slot owner (the starter) plays when
+  their slot is front row, the partner subs in for back-row rotations.
+- "Generate, then edit" model (user's choice): POST `/generate-subs` overwrites
+  all 6 rotations' subs from pairings; coach then hand-edits in the viewer.
+- Libero hard rule enforced everywhere: can't be the front of a pair, blocked
+  from front-row zones in save_subs (422) and filtered out of front-zone
+  dropdowns in the UI.
+- New endpoints: GET `/lineups/{id}/setup`, PUT `/coverage`, PUT `/pairs`,
+  POST `/generate-subs`. New `SubstitutionSetup.jsx` lives in the lineup builder
+  (coverage dropdowns + pairing editor + generate). 30 tests pass; verified the
+  full middle/DS(libero) pairing flow live (libero on only in back-row
+  rotations, never front), then reset sample to pristine.
+
 ### 2026-06-21 (session 3)
 - Base view is now a draggable + savable sandbox (after-serve switch positions),
   no overlap check. Generalized storage: `receive_formations` → `formations`

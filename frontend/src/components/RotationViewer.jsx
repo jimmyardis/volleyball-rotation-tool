@@ -92,9 +92,13 @@ export default function RotationViewer({ lineupId }) {
   // ---- substitutions ----
   const onCourtIds = new Set(Object.values(rot.positions));
   const bench = data.players.filter((p) => !onCourtIds.has(p.id));
+  const FRONT_ZONES = new Set([2, 3, 4]);
   function candidatesFor(zone) {
     const ids = new Set([rot.starter_positions[zone], rot.positions[zone], ...bench.map((p) => p.id)]);
-    return data.players.filter((p) => ids.has(p.id));
+    let list = data.players.filter((p) => ids.has(p.id));
+    // Hard rule: a libero can never play a front-row zone.
+    if (FRONT_ZONES.has(zone)) list = list.filter((p) => !p.is_libero);
+    return list;
   }
   async function changeOnCourt(zone, newId) {
     setSubError(null);

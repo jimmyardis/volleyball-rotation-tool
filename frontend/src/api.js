@@ -55,7 +55,22 @@ export const api = {
     }),
   overlapCheck: (coords) =>
     request("/overlap-check", { method: "POST", body: JSON.stringify({ coords }) }),
+
+  // substitution setup (per lineup)
+  getSetup: (lineupId) => request(`/lineups/${lineupId}/setup`),
+  saveCoverage: (lineupId, coverage) =>
+    request(`/lineups/${lineupId}/coverage`, { method: "PUT", body: JSON.stringify({ coverage }) }),
+  savePairs: (lineupId, pairs) =>
+    request(`/lineups/${lineupId}/pairs`, { method: "PUT", body: JSON.stringify({ pairs }) }),
+  generateSubs: (lineupId) =>
+    request(`/lineups/${lineupId}/generate-subs`, { method: "POST" }),
 };
+
+export const COVERAGE = [
+  { code: "all", label: "All-around (all 6)" },
+  { code: "front", label: "Front-row only" },
+  { code: "back", label: "Back-row only" },
+];
 
 export const ROLES = [
   { code: "S", label: "Setter" },

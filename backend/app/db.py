@@ -276,6 +276,60 @@ def set_substitutions(
         )
 
 
+# ---------------------------------------------------------------- coverage & pairs
+
+VALID_COVERAGE = {"all", "front", "back"}
+
+
+def get_coverage(conn: sqlite3.Connection, lineup_id: int) -> dict[int, str]:
+    """Return {player_id: coverage} for a lineup (only explicitly-set rows)."""
+    rows = conn.execute(
+        "SELECT player_id, coverage FROM lineup_player_meta WHERE lineup_id = ?",
+        (lineup_id,),
+    ).fetchall()
+    return {r["player_id"]: r["coverage"] for r in rows}
+
+
+def set_coverage(conn: sqlite3.Connection, lineup_id: int, coverage: dict[int, str]) -> None:
+    """Upsert coverage types for players in a lineup."""
+    for cov in coverage.values():
+        if cov not in VALID_COVERAGE:
+            raise ValueError(f"coverage must be one of {sorted(VALID_COVERAGE)}")
+    with conn:
+        for pid, cov in coverage.items():
+            conn.execute(
+                "INSERT INTO lineup_player_meta (lineup_id, player_id, coverage) VALUES (?, ?, ?) "
+                "ON CONFLICT (lineup_id, player_id) DO UPDATE SET coverage = excluded.coverage",
+                (lineup_id, pid, cov),
+            )
+
+
+def get_pairs(conn: sqlite3.Connection, lineup_id: int) -> list[dict]:
+    """Return [{id, front_player_id, back_player_id}] for a lineup."""
+    rows = conn.execute(
+        "SELECT id, front_player_id, back_player_id FROM sub_pairs WHERE lineup_id = ?",
+        (lineup_id,),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
+def set_pairs(conn: sqlite3.Connection, lineup_id: int, pairs: list[tuple[int, int]]) -> None:
+    """Replace all pairings for a lineup with `pairs` (front_id, back_id)."""
+    seen: set[int] = set()
+    for front_id, back_id in pairs:
+        if front_id == back_id:
+            raise ValueError("a player cannot be paired with themselves")
+        if front_id in seen or back_id in seen:
+            raise ValueError("each player can be in at most one pairing")
+        seen.update((front_id, back_id))
+    with conn:
+        conn.execute("DELETE FROM sub_pairs WHERE lineup_id = ?", (lineup_id,))
+        conn.executemany(
+            "INSERT INTO sub_pairs (lineup_id, front_player_id, back_player_id) VALUES (?, ?, ?)",
+            [(lineup_id, f, b) for f, b in pairs],
+        )
+
+
 # ---------------------------------------------------------------- libero swaps
 
 def set_libero_replacement(

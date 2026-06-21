@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
+import SubstitutionSetup from "./SubstitutionSetup.jsx";
 
 const SYSTEMS = ["5-1", "6-2", "4-2"];
 const ZONE_LABELS = {
@@ -156,6 +157,12 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
                 )}
               </div>
               {saved && <p className="ok">Saved. Player IDs persisted.</p>}
+
+              {[1, 2, 3, 4, 5, 6].every((z) => assign[z]) ? (
+                <SubstitutionSetup lineupId={selected.id} onGenerated={() => onView(selected.id)} />
+              ) : (
+                <p className="hint">Save a full starting six to set up coverage types and substitutions.</p>
+              )}
             </>
           )}
           {error && <p className="error">{error}</p>}

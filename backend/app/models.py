@@ -52,3 +52,13 @@ class FormationSave(BaseModel):
 class SubsSave(BaseModel):
     # starter_id -> on_court_id (who actually plays that slot this rotation)
     swaps: dict[int, int]
+
+
+class CoverageSave(BaseModel):
+    # player_id -> 'all' | 'front' | 'back'
+    coverage: dict[int, str]
+
+
+class PairsSave(BaseModel):
+    # [[front_player_id, back_player_id], ...]
+    pairs: list[tuple[int, int]]

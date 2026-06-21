@@ -161,3 +161,31 @@ def test_metadata_reflects_substituted_player():
     meta = engine.rotation_metadata(effective, players)
     assert 201 not in meta["front_row_attacker_ids"]  # libero isn't an attacker
     assert 102 not in meta["front_row_attacker_ids"]
+
+
+# ---- Pairing-driven substitution generation -----------------------------
+
+def test_pairing_subs_back_partner_in_for_back_row_rotations():
+    # Starter 103 (a middle, starts zone 3 = front) paired with bench 201 (back).
+    # 201 should be on court exactly in the rotations where 103 sits in the back
+    # row, and 103 on for the front-row rotations.
+    pairs = [(103, 201)]
+    plan = engine.generate_substitutions(START, pairs)
+    rotations = engine.all_rotations(START)
+    for r in range(6):
+        zone_of_103 = next(z for z, pid in rotations[r].items() if pid == 103)
+        if zone_of_103 in engine.BACK_ROW:
+            assert plan[r].get(103) == 201   # DS subs in for the back row
+        else:
+            assert 103 not in plan[r]        # middle stays in up front
+
+
+def test_pairing_subs_total_three_back_row_rotations():
+    plan = engine.generate_substitutions(START, [(103, 201)])
+    swaps = sum(1 for r in range(6) if plan[r].get(103) == 201)
+    assert swaps == 3  # every player is back row in exactly 3 of 6 rotations
+
+
+def test_no_pairs_means_no_generated_subs():
+    plan = engine.generate_substitutions(START, [])
+    assert all(plan[r] == {} for r in range(6))
