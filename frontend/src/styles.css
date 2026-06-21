@@ -205,6 +205,7 @@ button.primary { background: var(--accent-2); color: #00121f; }
 .bubble { padding: 0.5rem 0.7rem; border-radius: 10px; font-size: 0.9rem; white-space: pre-wrap; max-width: 90%; line-height: 1.35; }
 .bubble.user { background: var(--accent-2); color: #00121f; align-self: flex-end; border-bottom-right-radius: 3px; }
 .bubble.assistant { background: var(--panel-2); align-self: flex-start; border-bottom-left-radius: 3px; }
+.bubble.system { background: rgba(62,207,142,0.14); border: 1px solid var(--good); align-self: stretch; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
 .chat-input { display: flex; gap: 0.4rem; padding: 0.6rem; border-top: 1px solid var(--line); }
 .chat-input input { flex: 1; }
 

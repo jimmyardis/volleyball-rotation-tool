@@ -7,6 +7,7 @@ are never persisted — the engine is the single source of truth.
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -53,7 +54,13 @@ receive / base situations, overlap rules, diagonal opposite pairings \
 (setter-opposite, the two outsides, the two middles), front/back substitution \
 pairings, and that the libero can't play the front row.
 - If asked something unrelated to volleyball coaching, briefly say that's \
-outside what you help with and steer back to drills or player help."""
+outside what you help with and steer back to drills or player help.
+- You can BUILD a lineup and save it into the app with the create_lineup tool. \
+Use the player IDs from the team context. Build a sensible lineup from the \
+roster's roles and ratings (a 5-1 places the setter and opposite diagonally, \
+the two outsides diagonally, the two middles diagonally). If the coach's request \
+is vague, make reasonable choices and tell them what you built; they can edit or \
+delete it. Only create a lineup when the coach asks you to build/make/insert one."""
 
 DB_PATH = Path(__file__).resolve().parent.parent / "volleyball.db"
 
@@ -409,11 +416,11 @@ def _coach_context(conn, team_id: int | None, lineup_id: int | None) -> str:
         parts.append(f"Team: {team['name']}" + (f" ({team['season']})" if team.get("season") else ""))
         roster = db.list_players(conn, team_id)
         if roster:
-            parts.append("Roster (attributes are 0-100):")
+            parts.append("Roster (use the id= value when building a lineup; attributes are 0-100):")
             for p in roster:
                 lib = " [libero]" if p.get("is_libero") else ""
                 attrs = " ".join(f"{a[:3]}{p.get(a)}" for a in engine.ATTRS)
-                parts.append(f"- #{p.get('jersey_number','?')} {p['name']} — {p['primary_role']}{lib} ({attrs})")
+                parts.append(f"- id={p['id']} #{p.get('jersey_number','?')} {p['name']} — {p['primary_role']}{lib} ({attrs})")
 
     lineup = db.get_lineup(conn, lineup_id) if lineup_id else None
     if lineup:
@@ -434,12 +441,70 @@ def _coach_context(conn, team_id: int | None, lineup_id: int | None) -> str:
     return "\n".join(parts)
 
 
+CREATE_LINEUP_TOOL = {
+    "name": "create_lineup",
+    "description": (
+        "Create a new lineup (a starting six) for the coach's current team and "
+        "save it into the app. Use player IDs from the team context. The 6 "
+        "rotations are computed automatically from the starting six."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string", "description": "a short descriptive name"},
+            "system": {"type": "string", "enum": ["5-1", "6-2", "4-2"]},
+            "positions": {
+                "type": "object",
+                "description": "map of zone ('1'..'6') to player id. Exactly 6 distinct players.",
+                "additionalProperties": {"type": "integer"},
+            },
+            "notes": {"type": "string"},
+        },
+        "required": ["name", "system", "positions"],
+    },
+}
+
+
+def _exec_create_lineup(conn, team_id: int | None, args: dict) -> dict:
+    """Execute the create_lineup tool. Returns a result dict for the model."""
+    if not team_id:
+        return {"error": "No team is selected in the app, so I can't save a lineup."}
+    team_players = {p["id"]: p for p in db.list_players(conn, team_id)}
+    by_name = {p["name"].lower(): p["id"] for p in team_players.values()}
+
+    raw = args.get("positions") or {}
+    positions: dict[int, int] = {}
+    for z, v in raw.items():
+        try:
+            zone = int(z)
+        except (TypeError, ValueError):
+            return {"error": f"invalid zone {z!r}"}
+        pid = v if isinstance(v, int) and v in team_players else by_name.get(str(v).lower())
+        if pid is None:
+            return {"error": f"player {v!r} (zone {z}) is not on this team"}
+        positions[zone] = pid
+
+    if set(positions) != set(range(1, 7)):
+        return {"error": "positions must assign exactly zones 1-6"}
+    if len(set(positions.values())) != 6:
+        return {"error": "each zone needs a different player"}
+
+    try:
+        lineup = db.create_lineup(conn, team_id, args.get("name", "New lineup"),
+                                  args.get("system", "5-1"), args.get("notes"))
+        db.set_lineup_positions(conn, lineup["id"], positions)
+    except ValueError as e:
+        return {"error": str(e)}
+    return {"ok": True, "lineup_id": lineup["id"], "name": lineup["name"], "system": lineup["system"]}
+
+
 @app.post("/coach-chat")
 def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
     """A volleyball coaching assistant (drills + player help) backed by Claude.
 
-    If team_id / lineup_id are passed, the assistant is given the roster and the
-    lineup's rotations so it can answer questions about the actual team."""
+    Given team_id / lineup_id, the assistant sees the roster + the lineup's
+    rotations, and can build & save a new lineup via the create_lineup tool.
+    """
     key = os.getenv("ANTHROPIC_API_KEY")
     if not key:
         raise HTTPException(503, "Coach assistant unavailable: set ANTHROPIC_API_KEY in ~/.env")
@@ -448,8 +513,8 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
     except ImportError:
         raise HTTPException(503, "Coach assistant unavailable: run pip install -r requirements.txt")
 
-    msgs = [{"role": m.role, "content": m.content} for m in body.messages if m.content.strip()][-12:]
-    if not msgs:
+    messages = [{"role": m.role, "content": m.content} for m in body.messages if m.content.strip()][-12:]
+    if not messages:
         raise HTTPException(422, "no message to send")
 
     system = COACH_SYSTEM
@@ -457,16 +522,35 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
     if context:
         system += (
             "\n\nThe coach is working with this team in the app. Use it to answer "
-            "questions about their roster and rotations:\n" + context
+            "questions about their roster and rotations, and as the source of "
+            "player IDs when building a lineup:\n" + context
         )
+
+    client = Anthropic(api_key=key)
+    created: list[dict] = []
     try:
-        resp = Anthropic(api_key=key).messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=1024,
-            system=system,
-            messages=msgs,
-        )
-    except Exception as e:  # surface upstream errors as a clean 502
+        for _ in range(4):  # bounded tool loop
+            resp = client.messages.create(
+                model="claude-sonnet-4-6", max_tokens=1024, system=system,
+                messages=messages, tools=[CREATE_LINEUP_TOOL],
+            )
+            if resp.stop_reason != "tool_use":
+                text = "".join(b.text for b in resp.content if b.type == "text")
+                return {"reply": text, "created_lineups": created}
+
+            # replay the assistant's tool_use turn, then return tool results
+            assistant_content, tool_results = [], []
+            for b in resp.content:
+                if b.type == "text":
+                    assistant_content.append({"type": "text", "text": b.text})
+                elif b.type == "tool_use":
+                    assistant_content.append({"type": "tool_use", "id": b.id, "name": b.name, "input": b.input})
+                    out = _exec_create_lineup(conn, body.team_id, b.input) if b.name == "create_lineup" else {"error": "unknown tool"}
+                    if out.get("ok"):
+                        created.append({"id": out["lineup_id"], "name": out["name"], "system": out["system"]})
+                    tool_results.append({"type": "tool_result", "tool_use_id": b.id, "content": json.dumps(out)})
+            messages.append({"role": "assistant", "content": assistant_content})
+            messages.append({"role": "user", "content": tool_results})
+    except Exception as e:
         raise HTTPException(502, f"Coach assistant error: {e}")
-    text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-    return {"reply": text}
+    return {"reply": "(I made several changes — check your lineups.)", "created_lineups": created}

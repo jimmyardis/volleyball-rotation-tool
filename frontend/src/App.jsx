@@ -100,7 +100,12 @@ export default function App() {
       </header>
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
-      <CoachChat teamId={teamId} lineupId={viewLineupId} />
+      <CoachChat
+        teamId={teamId}
+        lineupId={viewLineupId}
+        onLineupCreated={() => reloadTeam()}
+        onViewLineup={(id) => { setViewLineupId(id); setTab("Rotations"); }}
+      />
 
       <Stepper items={stepItems} onJump={setTab} />
       {nextStep && (

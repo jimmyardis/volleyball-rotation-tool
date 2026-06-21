@@ -32,6 +32,19 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-06-21 (session 7)
+- Chatbot can now BUILD & SAVE lineups via Anthropic tool use. Added
+  `CREATE_LINEUP_TOOL` + `_exec_create_lineup` (resolves player id or name,
+  validates 6 distinct zones, no orphan lineup on error) and a bounded (4-iter)
+  tool-use loop in `coach_chat`. Context now includes `id=` per player so the
+  model references players reliably. Response returns `created_lineups`; the
+  chat UI shows a green "Added …" bubble with a "View in Rotations →" button
+  (App reloads lineups + jumps via onLineupCreated/onViewLineup).
+- Executor unit-verified directly on a temp db (valid by-id + by-name, plus dup
+  / missing-zone / unknown-player / no-team errors) — NO paid Claude call made.
+  Live tool loop reviewed, not executed (paid).
+- 34 tests pass; frontend builds clean.
+
 ### 2026-06-21 (session 6)
 - Game simulation (Phase 3, simplified Monte Carlo) — new "Simulate" tab.
   Players got 6 editable 0-100 attributes (setting, defense, attacking,

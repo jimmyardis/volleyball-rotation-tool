@@ -11,7 +11,7 @@ const SUGGESTIONS = [
   "How do I teach a middle blocker to close the block?",
 ];
 
-export default function CoachChat({ teamId, lineupId }) {
+export default function CoachChat({ teamId, lineupId, onLineupCreated, onViewLineup }) {
   const [open, setOpen] = useState(false);
   const [available, setAvailable] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -32,7 +32,14 @@ export default function CoachChat({ teamId, lineupId }) {
     setBusy(true);
     try {
       const res = await api.coachChat(next, { teamId, lineupId });
-      setMessages([...next, { role: "assistant", content: res.reply }]);
+      const added = [...next, { role: "assistant", content: res.reply }];
+      if (res.created_lineups?.length) {
+        onLineupCreated?.(res.created_lineups);
+        for (const l of res.created_lineups) {
+          added.push({ role: "system", content: `✅ Added “${l.name}” (${l.system}) to your lineups.`, lineupId: l.id });
+        }
+      }
+      setMessages(added);
     } catch (e) {
       setError(e.message);
       setMessages(next);
@@ -68,9 +75,18 @@ export default function CoachChat({ teamId, lineupId }) {
             ))}
           </div>
         )}
-        {messages.map((m, i) => (
-          <div key={i} className={`bubble ${m.role}`}>{m.content}</div>
-        ))}
+        {messages.map((m, i) =>
+          m.role === "system" ? (
+            <div key={i} className="bubble system">
+              {m.content}
+              {m.lineupId != null && onViewLineup && (
+                <button className="link inline-link" onClick={() => onViewLineup(m.lineupId)}>View in Rotations →</button>
+              )}
+            </div>
+          ) : (
+            <div key={i} className={`bubble ${m.role}`}>{m.content}</div>
+          )
+        )}
         {busy && <div className="bubble assistant dim">thinking…</div>}
         {error && <p className="error">{error}</p>}
       </div>
