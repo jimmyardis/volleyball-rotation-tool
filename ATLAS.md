@@ -3,7 +3,10 @@
 ## Meta
 | Field | Value |
 | Last Active | 2026-06-21 |
-| Status | building |
+| Status | shipping |
+| Live URL | https://volleyball-api-production.up.railway.app |
+| GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
+| Railway | project volleyball-tool (2491a7c7-6c6b-43ab-9a3a-b2dec5b5b8cd), service volleyball-api (e02e7646-e478-4976-b8d5-23df55bd6d1c) |
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
@@ -32,6 +35,24 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-06-21 (session 8)
+- DEPLOYED to Railway as a single service. Live:
+  https://volleyball-api-production.up.railway.app
+- Prep: FastAPI serves the built frontend from `backend/webdist` (mounted last so
+  it doesn't shadow API routes); `VB_DB_PATH` env points the SQLite file at the
+  persistent volume `/data`; frontend calls API same-origin in prod
+  (`import.meta.env.PROD ? "" : "/api"`); `backend/railway.json` (Nixpacks +
+  uvicorn) + `backend/.railwayignore`.
+- Railway: project `volleyball-tool`, service `volleyball-api`, volume at /data,
+  env VB_DB_PATH=/data/volleyball.db + ANTHROPIC_API_KEY (piped via stdin, not
+  echoed). Deployed with `railway up` (account token from ~/.env: export
+  `$(grep RAILWAY_..._TOKEN ~/.env)`). Domain generated. Seeded sample team via
+  the live API. Verified health, root app, simulate, chatbot status, persistence.
+- GitHub: pushed to public standalone repo
+  jimmyardis/volleyball-rotation-tool (subtree split from the monorepo).
+- Redeploy: rebuild frontend → copy dist to backend/webdist → `railway up` from
+  backend (linked to project). No auth on the app yet (add before real launch).
+
 ### 2026-06-21 (session 7)
 - Chatbot can now BUILD & SAVE lineups via Anthropic tool use. Added
   `CREATE_LINEUP_TOOL` + `_exec_create_lineup` (resolves player id or name,
