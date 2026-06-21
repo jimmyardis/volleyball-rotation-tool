@@ -31,7 +31,10 @@ export default function CoachChat({ teamId, lineupId, onLineupCreated, onViewLin
     setMessages(next);
     setBusy(true);
     try {
-      const res = await api.coachChat(next, { teamId, lineupId });
+      // only real user/assistant turns go to the API — the green "added" bubbles
+      // are UI-only annotations (role 'system' is not a valid chat role).
+      const apiMessages = next.filter((m) => m.role === "user" || m.role === "assistant");
+      const res = await api.coachChat(apiMessages, { teamId, lineupId });
       const added = [...next, { role: "assistant", content: res.reply }];
       if (res.created_lineups?.length) {
         onLineupCreated?.(res.created_lineups);

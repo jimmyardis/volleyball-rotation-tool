@@ -44,6 +44,10 @@ None.
   / missing-zone / unknown-player / no-team errors) — NO paid Claude call made.
   Live tool loop reviewed, not executed (paid).
 - 34 tests pass; frontend builds clean.
+- BUGFIX (same session): the UI-only "✅ Added" bubbles had role 'system' and
+  were being sent back to the API on the next turn → Anthropic 400 ("role
+  'system' must follow a user/assistant message"). Now filtered out client-side
+  before sending, and the backend ignores any non-user/assistant role.
 
 ### 2026-06-21 (session 6)
 - Game simulation (Phase 3, simplified Monte Carlo) — new "Simulate" tab.

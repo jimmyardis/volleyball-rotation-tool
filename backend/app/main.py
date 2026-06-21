@@ -513,7 +513,12 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
     except ImportError:
         raise HTTPException(503, "Coach assistant unavailable: run pip install -r requirements.txt")
 
-    messages = [{"role": m.role, "content": m.content} for m in body.messages if m.content.strip()][-12:]
+    # only user/assistant turns are valid chat roles (system is a separate param)
+    messages = [
+        {"role": m.role, "content": m.content}
+        for m in body.messages
+        if m.content.strip() and m.role in ("user", "assistant")
+    ][-12:]
     if not messages:
         raise HTTPException(422, "no message to send")
 
