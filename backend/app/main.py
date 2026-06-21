@@ -14,6 +14,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from . import db, engine
 from .models import (
@@ -62,7 +63,9 @@ the two outsides diagonally, the two middles diagonally). If the coach's request
 is vague, make reasonable choices and tell them what you built; they can edit or \
 delete it. Only create a lineup when the coach asks you to build/make/insert one."""
 
-DB_PATH = Path(__file__).resolve().parent.parent / "volleyball.db"
+# DB lives on the persistent volume in production (set VB_DB_PATH), else local.
+DB_PATH = Path(os.getenv("VB_DB_PATH") or (Path(__file__).resolve().parent.parent / "volleyball.db"))
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Volleyball Rotation & Lineup Tool", version="1.0.0")
 app.add_middleware(
@@ -559,3 +562,11 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
     except Exception as e:
         raise HTTPException(502, f"Coach assistant error: {e}")
     return {"reply": "(I made several changes — check your lineups.)", "created_lineups": created}
+
+
+# ---------------------------------------------------------------- static frontend
+# Serve the built React app (if present) from the same service, so the whole app
+# lives at one URL. Mounted LAST so it never shadows the API routes above.
+_WEBDIST = Path(__file__).resolve().parent.parent / "webdist"
+if _WEBDIST.is_dir():
+    app.mount("/", StaticFiles(directory=str(_WEBDIST), html=True), name="web")

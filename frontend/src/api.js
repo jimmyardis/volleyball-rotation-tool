@@ -1,6 +1,7 @@
 // Tiny fetch wrapper. All calls go through Vite's /api proxy -> FastAPI.
 
-const BASE = "/api";
+// Dev: Vite proxies /api -> backend. Prod: same-origin (FastAPI serves both).
+const BASE = import.meta.env.PROD ? "" : "/api";
 
 async function request(path, options = {}) {
   const res = await fetch(BASE + path, {
