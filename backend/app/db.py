@@ -10,6 +10,8 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+from . import engine
+
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
 DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent / "volleyball.db"
 
@@ -44,6 +46,23 @@ def _migrate(conn: sqlite3.Connection) -> None:
             "FROM receive_formations"
         )
         conn.execute("DROP TABLE receive_formations")
+
+    # add simulation attribute columns to older players tables, backfilling
+    # existing rows from their position preset.
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(players)")}
+    added = [a for a in engine.ATTRS if a not in cols]
+    for a in added:
+        conn.execute(f"ALTER TABLE players ADD COLUMN {a} INTEGER")
+    # backfill any NULL attributes (covers both new columns and fresh inserts)
+    sel = ", ".join(engine.ATTRS)
+    for row in conn.execute(f"SELECT id, primary_role, {sel} FROM players").fetchall():
+        preset = engine.preset_for(row["primary_role"])
+        updates = {a: preset[a] for a in engine.ATTRS if row[a] is None}
+        if updates:
+            conn.execute(
+                "UPDATE players SET " + ", ".join(f"{a} = ?" for a in updates) + " WHERE id = ?",
+                (*updates.values(), row["id"]),
+            )
 
 
 def _row_to_dict(row: sqlite3.Row | None) -> dict | None:
@@ -80,14 +99,21 @@ def create_player(
     secondary_role: str | None = None,
     is_libero: bool = False,
     dominant_hand: str | None = None,
+    attributes: dict | None = None,
 ) -> dict:
     if primary_role not in VALID_ROLES:
         raise ValueError(f"Invalid primary_role {primary_role!r}; must be one of {sorted(VALID_ROLES)}")
+    # seed attributes from the position preset, overridden by any provided
+    attrs = engine.preset_for(primary_role)
+    if attributes:
+        attrs.update({a: attributes[a] for a in engine.ATTRS if a in attributes and attributes[a] is not None})
     cur = conn.execute(
-        """INSERT INTO players
-           (team_id, name, jersey_number, primary_role, secondary_role, is_libero, dominant_hand)
-           VALUES (?, ?, ?, ?, ?, ?, ?)""",
-        (team_id, name, jersey_number, primary_role, secondary_role, int(is_libero), dominant_hand),
+        f"""INSERT INTO players
+           (team_id, name, jersey_number, primary_role, secondary_role, is_libero,
+            dominant_hand, {", ".join(engine.ATTRS)})
+           VALUES (?, ?, ?, ?, ?, ?, ?, {", ".join("?" for _ in engine.ATTRS)})""",
+        (team_id, name, jersey_number, primary_role, secondary_role, int(is_libero),
+         dominant_hand, *(attrs[a] for a in engine.ATTRS)),
     )
     conn.commit()
     return get_player(conn, cur.lastrowid)
@@ -108,7 +134,7 @@ def list_players(conn: sqlite3.Connection, team_id: int) -> list[dict]:
 def update_player(conn: sqlite3.Connection, player_id: int, **fields) -> dict | None:
     allowed = {
         "name", "jersey_number", "primary_role", "secondary_role",
-        "is_libero", "dominant_hand",
+        "is_libero", "dominant_hand", *engine.ATTRS,
     }
     updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
     if "primary_role" in updates and updates["primary_role"] not in VALID_ROLES:

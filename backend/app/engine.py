@@ -239,6 +239,145 @@ def base_positions(
     return coords
 
 
+# ---------------------------------------------------------------------------
+# Game simulation (the "which rotation works best?" Monte Carlo).
+#
+# Each player has six 0-100 attributes. A rotation's strength is built from the
+# on-court six; we turn that into a per-rally win probability against an
+# opponent of a given skill, with game stakes amplifying the cost of low
+# "pressure". Then we simulate many games per rotation and rank them.
+#
+# The model is intentionally simple and transparent so it's easy to tune.
+# ---------------------------------------------------------------------------
+
+ATTRS = ["setting", "defense", "attacking", "blocking", "confidence", "pressure"]
+
+# Position presets (0-100). Seed values when a player is created; fully editable.
+ROLE_PRESETS: dict[str, dict[str, int]] = {
+    "S":   {"setting": 80, "defense": 65, "attacking": 45, "blocking": 45, "confidence": 78, "pressure": 68},
+    "OH":  {"setting": 35, "defense": 65, "attacking": 75, "blocking": 60, "confidence": 66, "pressure": 62},
+    "MB":  {"setting": 30, "defense": 50, "attacking": 72, "blocking": 82, "confidence": 62, "pressure": 60},
+    "OPP": {"setting": 42, "defense": 55, "attacking": 78, "blocking": 70, "confidence": 66, "pressure": 62},
+    "L":   {"setting": 45, "defense": 90, "attacking": 18, "blocking": 18, "confidence": 82, "pressure": 72},
+    "DS":  {"setting": 35, "defense": 82, "attacking": 35, "blocking": 30, "confidence": 72, "pressure": 66},
+}
+
+
+def preset_for(role: str | None) -> dict[str, int]:
+    return dict(ROLE_PRESETS.get(role or "", {a: 50 for a in ATTRS}))
+
+
+def _attr(player: dict, key: str) -> float:
+    v = player.get(key)
+    return float(v) if v is not None else 50.0
+
+
+def rotation_rating(positions: dict[int, int], players: dict[int, dict]) -> dict:
+    """Turn the on-court six into offense / defense / overall strength (0-100ish).
+
+    Offense: the front-row attackers' attacking, lifted by the setter's setting
+    and by how many attackers are up. Defense: front-row blocking + back-row
+    digging, nudged by team confidence (going for balls). Pressure is the team
+    average, used later when stakes are high.
+    """
+    fronts = [players[positions[z]] for z in (2, 3, 4)]
+    backs = [players[positions[z]] for z in (1, 5, 6)]
+    everyone = [players[positions[z]] for z in ZONES]
+
+    def avg(seq, key, default=50.0):
+        return sum(_attr(p, key) for p in seq) / len(seq) if seq else default
+
+    attackers = [p for p in fronts if p.get("primary_role") != "S" and not p.get("is_libero")]
+    offense = (sum(_attr(a, "attacking") for a in attackers) / len(attackers)) if attackers else 30.0
+    setter_setting = max((_attr(p, "setting") for p in everyone if p.get("primary_role") == "S"), default=50.0)
+    offense_adj = offense * (0.82 + 0.30 * setter_setting / 100) * (0.92 + 0.04 * len(attackers))
+
+    block = avg(fronts, "blocking")
+    dig = avg(backs, "defense")
+    defense = (0.5 * block + 0.5 * dig) * (0.9 + 0.2 * avg(everyone, "confidence") / 100)
+
+    base = 0.55 * offense_adj + 0.45 * defense
+    return {
+        "offense": round(offense_adj, 1),
+        "defense": round(defense, 1),
+        "base": base,
+        "pressure": avg(everyone, "pressure"),
+        "attacker_count": len(attackers),
+    }
+
+
+def rally_win_prob(rating: dict, stakes: float, opponent_skill: float) -> tuple[float, float]:
+    """Probability our team wins a single rally, plus our effective strength.
+
+    `stakes` is 0..1. Low pressure costs you more as stakes rise. Strength is
+    compared to the opponent's skill Bradley-Terry style: p = us / (us + them).
+    """
+    penalty = stakes * (1 - rating["pressure"] / 100) * 25.0
+    eff = max(5.0, rating["base"] - penalty)
+    return eff / (eff + opponent_skill), eff
+
+
+def _simulate_game(p: float, rng, target: int = 25) -> tuple[int, int]:
+    """One game to `target`, win by 2 (hard cap at 40 to bound runtime)."""
+    us = them = 0
+    while True:
+        if rng.random() < p:
+            us += 1
+        else:
+            them += 1
+        if (us >= target or them >= target) and abs(us - them) >= 2:
+            break
+        if us >= 40 or them >= 40:
+            break
+    return us, them
+
+
+def simulate_rotations(
+    rotations: list[dict[int, int]],
+    players: dict[int, dict],
+    stakes: float,
+    opponent_skill: float,
+    games: int = 10000,
+    seed: int | None = 1234,
+) -> dict:
+    """Monte Carlo every rotation and rank them. `rotations` is the 6 effective
+    on-court states. Splits `games` evenly across the rotations."""
+    import random
+
+    rng = random.Random(seed)
+    per = max(1, games // max(1, len(rotations)))
+    results = []
+    for idx, pos in enumerate(rotations):
+        rating = rotation_rating(pos, players)
+        p, eff = rally_win_prob(rating, stakes, opponent_skill)
+        wins = pf = pa = 0
+        for _ in range(per):
+            us, them = _simulate_game(p, rng)
+            wins += us > them
+            pf += us
+            pa += them
+        results.append({
+            "rotation_index": idx,
+            "win_pct": round(100 * wins / per, 1),
+            "avg_points_for": round(pf / per, 1),
+            "avg_points_against": round(pa / per, 1),
+            "rally_win_prob": round(p, 3),
+            "team_strength": round(eff, 1),
+            "offense": rating["offense"],
+            "defense": rating["defense"],
+            "attacker_count": rating["attacker_count"],
+        })
+    ranking = sorted(results, key=lambda r: r["win_pct"], reverse=True)
+    return {
+        "per_rotation": results,
+        "ranking": [r["rotation_index"] for r in ranking],
+        "best_rotation": ranking[0]["rotation_index"],
+        "worst_rotation": ranking[-1]["rotation_index"],
+        "games_per_rotation": per,
+        "total_games": per * len(rotations),
+    }
+
+
 def check_overlap(coords: dict[int, tuple[float, float]]) -> list[str]:
     """Validate serve-receive positional (overlap) rules for custom spots.
 

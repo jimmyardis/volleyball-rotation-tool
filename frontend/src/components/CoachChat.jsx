@@ -5,13 +5,13 @@ import { api } from "../api.js";
 // on the server. Closed by default; opens as a panel in the corner.
 
 const SUGGESTIONS = [
+  "Which of my rotations looks weakest, and why?",
+  "Who should sub in for the back row in each rotation?",
   "Give me 3 passing drills for a beginner team.",
   "How do I teach a middle blocker to close the block?",
-  "Warm-up for a 90-minute practice?",
-  "My setter's hands are inconsistent — drills?",
 ];
 
-export default function CoachChat() {
+export default function CoachChat({ teamId, lineupId }) {
   const [open, setOpen] = useState(false);
   const [available, setAvailable] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -31,7 +31,7 @@ export default function CoachChat() {
     setMessages(next);
     setBusy(true);
     try {
-      const res = await api.coachChat(next);
+      const res = await api.coachChat(next, { teamId, lineupId });
       setMessages([...next, { role: "assistant", content: res.reply }]);
     } catch (e) {
       setError(e.message);

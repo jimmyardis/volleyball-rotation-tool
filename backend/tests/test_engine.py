@@ -189,3 +189,46 @@ def test_pairing_subs_total_three_back_row_rotations():
 def test_no_pairs_means_no_generated_subs():
     plan = engine.generate_substitutions(START, [])
     assert all(plan[r] == {} for r in range(6))
+
+
+# ---- Simulation ---------------------------------------------------------
+
+def _sim_players(attacking=70, defense=60):
+    base = {pid: {"primary_role": PLAYERS[pid]["primary_role"], "is_libero": 0} for pid in PLAYERS}
+    for pid, p in base.items():
+        p.update({"setting": 60, "defense": defense, "attacking": attacking,
+                  "blocking": 60, "confidence": 65, "pressure": 65})
+    base[101]["setting"] = 85  # the setter sets well
+    return base
+
+
+def test_stronger_team_beats_weak_opponent():
+    players = _sim_players(attacking=85, defense=80)
+    out = engine.simulate_rotations(engine.all_rotations(START), players, stakes=0.3,
+                                    opponent_skill=30, games=600)
+    assert all(r["win_pct"] > 60 for r in out["per_rotation"])
+
+
+def test_simulation_ranks_all_six_rotations():
+    players = _sim_players()
+    out = engine.simulate_rotations(engine.all_rotations(START), players, stakes=0.5,
+                                    opponent_skill=60, games=600)
+    assert len(out["per_rotation"]) == 6
+    assert sorted(out["ranking"]) == [0, 1, 2, 3, 4, 5]
+    assert out["best_rotation"] == out["ranking"][0]
+
+
+def test_high_stakes_hurts_low_pressure_team():
+    players = _sim_players()
+    for p in players.values():
+        p["pressure"] = 20  # cracks under pressure
+    low = engine.rotation_rating(START, players)
+    p_low_stakes, eff_low = engine.rally_win_prob(low, stakes=0.1, opponent_skill=60)
+    p_high_stakes, eff_high = engine.rally_win_prob(low, stakes=1.0, opponent_skill=60)
+    assert eff_high < eff_low  # high stakes drags a low-pressure team down
+
+
+def test_back_row_setter_rotation_has_three_attackers_in_sim():
+    players = _sim_players()
+    rating = engine.rotation_rating(START, players)  # setter in zone 1 (back)
+    assert rating["attacker_count"] == 3

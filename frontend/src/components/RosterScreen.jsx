@@ -1,26 +1,39 @@
 import { useEffect, useState } from "react";
-import { api, ROLES } from "../api.js";
+import { api, ROLES, ATTRS } from "../api.js";
 
+const EMPTY_ATTRS = { setting: 50, attacking: 50, blocking: 50, defense: 50, confidence: 50, pressure: 50 };
 const EMPTY = {
   name: "",
   jersey_number: "",
   primary_role: "OH",
   secondary_role: "",
   is_libero: false,
+  attrs: { ...EMPTY_ATTRS },
 };
 
 export default function RosterScreen({ teamId, players, reload }) {
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
+  const [presets, setPresets] = useState({});
 
   useEffect(() => {
     setForm(EMPTY);
     setEditingId(null);
   }, [teamId]);
 
+  useEffect(() => { api.rolePresets().then(setPresets).catch(() => {}); }, []);
+
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+  function setAttr(key, value) {
+    const v = value === "" ? "" : Math.max(0, Math.min(100, Number(value)));
+    setForm((f) => ({ ...f, attrs: { ...f.attrs, [key]: v } }));
+  }
+  function applyPreset() {
+    const p = presets[form.primary_role];
+    if (p) setForm((f) => ({ ...f, attrs: { ...p } }));
   }
 
   async function submit(e) {
@@ -32,6 +45,7 @@ export default function RosterScreen({ teamId, players, reload }) {
       jersey_number: form.jersey_number === "" ? null : Number(form.jersey_number),
       secondary_role: form.secondary_role || null,
       is_libero: !!form.is_libero,
+      ...Object.fromEntries(ATTRS.map((a) => [a.key, form.attrs[a.key] === "" ? null : Number(form.attrs[a.key])])),
     };
     if (!payload.name) return setError("Name is required.");
     try {
@@ -45,6 +59,15 @@ export default function RosterScreen({ teamId, players, reload }) {
     }
   }
 
+  // when picking a role for a NEW player, prefill attributes from the preset
+  function changeRole(role) {
+    setForm((f) => ({
+      ...f,
+      primary_role: role,
+      attrs: !editingId && presets[role] ? { ...presets[role] } : f.attrs,
+    }));
+  }
+
   function startEdit(p) {
     setEditingId(p.id);
     setForm({
@@ -53,6 +76,7 @@ export default function RosterScreen({ teamId, players, reload }) {
       primary_role: p.primary_role,
       secondary_role: p.secondary_role ?? "",
       is_libero: !!p.is_libero,
+      attrs: Object.fromEntries(ATTRS.map((a) => [a.key, p[a.key] ?? 50])),
     });
   }
 
@@ -74,44 +98,44 @@ export default function RosterScreen({ teamId, players, reload }) {
         (Phase 3) will all hang off these IDs.
       </p>
 
-      <form className="card form-row" onSubmit={submit}>
-        <input
-          placeholder="Name"
-          value={form.name}
-          onChange={(e) => set("name", e.target.value)}
-        />
-        <input
-          type="number"
-          placeholder="#"
-          className="narrow"
-          value={form.jersey_number}
-          onChange={(e) => set("jersey_number", e.target.value)}
-        />
-        <select value={form.primary_role} onChange={(e) => set("primary_role", e.target.value)}>
-          {ROLES.map((r) => (
-            <option key={r.code} value={r.code}>{r.code} — {r.label}</option>
-          ))}
-        </select>
-        <select value={form.secondary_role} onChange={(e) => set("secondary_role", e.target.value)}>
-          <option value="">(no 2nd role)</option>
-          {ROLES.map((r) => (
-            <option key={r.code} value={r.code}>{r.code}</option>
-          ))}
-        </select>
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            checked={form.is_libero}
-            onChange={(e) => set("is_libero", e.target.checked)}
-          />
-          Libero
-        </label>
-        <button type="submit">{editingId ? "Save" : "Add"}</button>
-        {editingId && (
-          <button type="button" className="ghost" onClick={() => { setEditingId(null); setForm(EMPTY); }}>
-            Cancel
-          </button>
-        )}
+      <form className="card" onSubmit={submit}>
+        <div className="form-row">
+          <input placeholder="Name" value={form.name} onChange={(e) => set("name", e.target.value)} />
+          <input type="number" placeholder="#" className="narrow"
+                 value={form.jersey_number} onChange={(e) => set("jersey_number", e.target.value)} />
+          <select value={form.primary_role} onChange={(e) => changeRole(e.target.value)}>
+            {ROLES.map((r) => <option key={r.code} value={r.code}>{r.code} — {r.label}</option>)}
+          </select>
+          <select value={form.secondary_role} onChange={(e) => set("secondary_role", e.target.value)}>
+            <option value="">(no 2nd role)</option>
+            {ROLES.map((r) => <option key={r.code} value={r.code}>{r.code}</option>)}
+          </select>
+          <label className="checkbox">
+            <input type="checkbox" checked={form.is_libero} onChange={(e) => set("is_libero", e.target.checked)} />
+            Libero
+          </label>
+        </div>
+
+        <div className="attrs-editor">
+          <span className="label-inline">Skill ratings (0–100, used by the simulator):</span>
+          <button type="button" className="ghost" onClick={applyPreset}>↻ Use {form.primary_role} preset</button>
+          <div className="attrs-grid">
+            {ATTRS.map((a) => (
+              <label key={a.key} className="attr-field">
+                <span>{a.label}</span>
+                <input type="number" min="0" max="100" value={form.attrs[a.key]}
+                       onChange={(e) => setAttr(a.key, e.target.value)} />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="form-row">
+          <button type="submit">{editingId ? "Save player" : "Add player"}</button>
+          {editingId && (
+            <button type="button" className="ghost" onClick={() => { setEditingId(null); setForm(EMPTY); }}>Cancel</button>
+          )}
+        </div>
       </form>
       {error && <p className="error">{error}</p>}
 

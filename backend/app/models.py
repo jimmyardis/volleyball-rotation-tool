@@ -10,7 +10,16 @@ class TeamCreate(BaseModel):
     season: str | None = None
 
 
-class PlayerCreate(BaseModel):
+class PlayerAttrs(BaseModel):
+    setting: int | None = None
+    defense: int | None = None
+    attacking: int | None = None
+    blocking: int | None = None
+    confidence: int | None = None
+    pressure: int | None = None
+
+
+class PlayerCreate(PlayerAttrs):
     name: str
     primary_role: str = Field(..., description="S, OH, MB, OPP, L, DS")
     jersey_number: int | None = None
@@ -19,7 +28,7 @@ class PlayerCreate(BaseModel):
     dominant_hand: str | None = None  # 'L' / 'R' / None — unused in P1
 
 
-class PlayerUpdate(BaseModel):
+class PlayerUpdate(PlayerAttrs):
     name: str | None = None
     primary_role: str | None = None
     jersey_number: int | None = None
@@ -71,3 +80,11 @@ class ChatTurn(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: list[ChatTurn]
+    team_id: int | None = None      # optional: gives the assistant the roster
+    lineup_id: int | None = None    # optional: gives it the lineup's rotations
+
+
+class SimRequest(BaseModel):
+    stakes: float = 0.5            # 0..1 (low / medium / high game)
+    opponent_skill: int = 60       # 1..100
+    games: int = 10000

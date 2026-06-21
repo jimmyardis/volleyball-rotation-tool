@@ -6,7 +6,7 @@
 | Status | building |
 | Type | Full-stack learning project (3 phases) |
 
-## Current State
+## Current State (jump to latest Session Log entry for detail)
 Phase 1 built + extended. Engine-first: pure Python rotation engine
 (`backend/app/engine.py`) with 27 passing tests, simulator-ready SQLite model
 (permanent `players.id`, `rotation_index`, `dominant_hand` hook), FastAPI
@@ -32,6 +32,28 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-06-21 (session 6)
+- Game simulation (Phase 3, simplified Monte Carlo) — new "Simulate" tab.
+  Players got 6 editable 0-100 attributes (setting, defense, attacking,
+  blocking, confidence, pressure) seeded from position presets
+  (`engine.ROLE_PRESETS`); added via schema cols + a backfilling migration.
+  `engine.rotation_rating` → `rally_win_prob` (Bradley-Terry, stakes penalize
+  low pressure) → `simulate_rotations` (Monte Carlo, ranks the 6 rotations).
+  Endpoints: POST `/lineups/{id}/simulate`, GET `/role-presets`. UI:
+  attribute editor in RosterScreen (+ "use preset" button), SimulationScreen
+  (stakes select, opponent slider, ranked win% table, best/worst callout).
+- Chatbot now context-aware: ChatRequest takes optional team_id/lineup_id;
+  `main._coach_context` builds a roster + per-rotation snapshot injected into the
+  system prompt, so the coach can ask about their actual team/rotations.
+- BUG fixed: `from __future__ import annotations` + a missing `SimRequest`
+  import made FastAPI treat the body as a query param (422 "Field required").
+  Lesson: with lazy annotations, an unimported model fails silently as a query
+  param rather than NameError — always verify the import.
+- 34 tests pass; verified simulate + context live (no paid Claude call made).
+- STILL PENDING from session 5: the diagonal opposite-pairing feature (3 ideas
+  proposed: pair-based lineup builder / opposite highlighter / structure
+  validator) — user pivoted to simulation; revisit.
+
 ### 2026-06-21 (session 5)
 - Researched the volleyball "pairs" the user described: confirmed they're the
   diagonal OPPOSITE pairings (setter↔opposite, OH↔OH, MB↔MB), always 3 zones

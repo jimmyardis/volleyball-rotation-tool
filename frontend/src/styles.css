@@ -143,6 +143,24 @@ button.primary { background: var(--accent-2); color: #00121f; }
 .receive-controls { margin-top: 0.5rem; }
 .receive-controls ul { margin: 0.25rem 0 0.5rem 1rem; padding: 0; }
 
+/* attribute editor (roster) */
+.attrs-editor { margin: 0.75rem 0; border-top: 1px dashed var(--line); padding-top: 0.6rem; }
+.attrs-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem; margin-top: 0.4rem; }
+.attr-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.78rem; color: var(--dim); }
+.attr-field input { width: 100%; }
+
+/* simulation */
+.sim-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+.slider-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.9rem; min-width: 200px; }
+.sim-best { font-size: 1.05rem; border-left: 3px solid var(--accent); }
+.sim-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
+.sim-table th, .sim-table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
+.sim-table th { color: var(--dim); font-weight: 500; }
+.sim-table tr.best { background: rgba(255,176,46,0.12); }
+.winbar-wrap { position: relative; display: flex; align-items: center; gap: 0.5rem; min-width: 160px; }
+.winbar { height: 14px; background: var(--accent); border-radius: 3px; min-width: 2px; }
+.sim-table tr.best .winbar { background: var(--good); }
+
 /* subs editor */
 .subs-editor h4 { margin: 0 0 0.25rem; }
 .active-ghost { border-color: var(--accent-2) !important; color: var(--accent-2) !important; }

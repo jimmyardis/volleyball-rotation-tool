@@ -25,6 +25,7 @@ from .models import (
     PairsSave,
     PlayerCreate,
     PlayerUpdate,
+    SimRequest,
     SubsSave,
     TeamCreate,
 )
@@ -115,6 +116,7 @@ def create_player(team_id: int, body: PlayerCreate, conn=Depends(get_conn)):
             secondary_role=body.secondary_role,
             is_libero=body.is_libero,
             dominant_hand=body.dominant_hand,
+            attributes={a: getattr(body, a) for a in engine.ATTRS},
         )
     except ValueError as e:
         raise HTTPException(422, str(e))
@@ -352,6 +354,44 @@ def overlap_check(body: OverlapCheck):
     return {"legal": not faults, "faults": faults}
 
 
+# ---------------------------------------------------------------- simulation
+
+@app.get("/role-presets")
+def role_presets():
+    """Default attribute presets per position (for the roster editor)."""
+    return engine.ROLE_PRESETS
+
+
+@app.post("/lineups/{lineup_id}/simulate")
+def simulate(lineup_id: int, body: SimRequest, conn=Depends(get_conn)):
+    """Monte Carlo all 6 rotations (subs applied) and rank which works best."""
+    lineup = db.get_lineup(conn, lineup_id)
+    if not lineup:
+        raise HTTPException(404, "lineup not found")
+    start = db.get_lineup_positions(conn, lineup_id)
+    if set(start.keys()) != set(range(1, 7)):
+        raise HTTPException(409, "lineup has no complete starting positions yet")
+
+    players = {p["id"]: p for p in db.list_players(conn, lineup["team_id"])}
+    states = engine.all_rotations(start)
+    effective = [
+        engine.apply_substitutions(state, db.get_substitutions(conn, lineup_id, idx))
+        for idx, state in enumerate(states)
+    ]
+    stakes = max(0.0, min(1.0, body.stakes))
+    opponent = max(1, min(100, body.opponent_skill))
+    games = max(60, min(60000, body.games))
+    result = engine.simulate_rotations(effective, players, stakes, opponent, games=games)
+    # label each rotation with its server + setter situation for the UI
+    for r in result["per_rotation"]:
+        meta = engine.rotation_metadata(effective[r["rotation_index"]], players, lineup["system"])
+        r["server_id"] = meta["server_id"]
+        r["setter_location"] = meta["setter_location"]
+    result["lineup"] = lineup
+    result["players"] = list(players.values())
+    return result
+
+
 # ---------------------------------------------------------------- coach assistant
 
 @app.get("/coach-chat/status")
@@ -360,9 +400,46 @@ def coach_chat_status():
     return {"available": bool(os.getenv("ANTHROPIC_API_KEY"))}
 
 
+def _coach_context(conn, team_id: int | None, lineup_id: int | None) -> str:
+    """Build a compact text snapshot of the roster + a lineup's rotations so the
+    assistant can answer questions about the actual team."""
+    parts: list[str] = []
+    team = db.get_team(conn, team_id) if team_id else None
+    if team:
+        parts.append(f"Team: {team['name']}" + (f" ({team['season']})" if team.get("season") else ""))
+        roster = db.list_players(conn, team_id)
+        if roster:
+            parts.append("Roster (attributes are 0-100):")
+            for p in roster:
+                lib = " [libero]" if p.get("is_libero") else ""
+                attrs = " ".join(f"{a[:3]}{p.get(a)}" for a in engine.ATTRS)
+                parts.append(f"- #{p.get('jersey_number','?')} {p['name']} — {p['primary_role']}{lib} ({attrs})")
+
+    lineup = db.get_lineup(conn, lineup_id) if lineup_id else None
+    if lineup:
+        start = db.get_lineup_positions(conn, lineup_id)
+        if set(start.keys()) == set(range(1, 7)):
+            players = {p["id"]: p for p in db.list_players(conn, lineup["team_id"])}
+            nm = lambda pid: players.get(pid, {}).get("name", f"#{pid}")
+            parts.append(f'\nLineup "{lineup["name"]}" ({lineup["system"]}) — rotations:')
+            for idx, state in enumerate(engine.all_rotations(start)):
+                swaps = db.get_substitutions(conn, lineup_id, idx)
+                eff = engine.apply_substitutions(state, swaps)
+                meta = engine.rotation_metadata(eff, players, lineup["system"])
+                subtxt = "; ".join(f"{nm(o)} in for {nm(s)}" for s, o in swaps.items()) or "none"
+                parts.append(
+                    f"  R{idx+1}: serving {nm(meta['server_id'])}; setter {meta['setter_location']} row, "
+                    f"{meta['front_row_attacker_count']} front attackers; subs: {subtxt}"
+                )
+    return "\n".join(parts)
+
+
 @app.post("/coach-chat")
-def coach_chat(body: ChatRequest):
-    """A volleyball coaching assistant (drills + player help) backed by Claude."""
+def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
+    """A volleyball coaching assistant (drills + player help) backed by Claude.
+
+    If team_id / lineup_id are passed, the assistant is given the roster and the
+    lineup's rotations so it can answer questions about the actual team."""
     key = os.getenv("ANTHROPIC_API_KEY")
     if not key:
         raise HTTPException(503, "Coach assistant unavailable: set ANTHROPIC_API_KEY in ~/.env")
@@ -371,15 +448,22 @@ def coach_chat(body: ChatRequest):
     except ImportError:
         raise HTTPException(503, "Coach assistant unavailable: run pip install -r requirements.txt")
 
-    # keep the last few turns to bound cost/context
     msgs = [{"role": m.role, "content": m.content} for m in body.messages if m.content.strip()][-12:]
     if not msgs:
         raise HTTPException(422, "no message to send")
+
+    system = COACH_SYSTEM
+    context = _coach_context(conn, body.team_id, body.lineup_id)
+    if context:
+        system += (
+            "\n\nThe coach is working with this team in the app. Use it to answer "
+            "questions about their roster and rotations:\n" + context
+        )
     try:
         resp = Anthropic(api_key=key).messages.create(
             model="claude-sonnet-4-6",
             max_tokens=1024,
-            system=COACH_SYSTEM,
+            system=system,
             messages=msgs,
         )
     except Exception as e:  # surface upstream errors as a clean 502

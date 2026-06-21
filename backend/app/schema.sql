@@ -24,6 +24,13 @@ CREATE TABLE IF NOT EXISTS players (
     is_libero      INTEGER DEFAULT 0, -- 0/1 boolean
     dominant_hand  TEXT,              -- 'L' / 'R' / NULL. Unused in P1, but the
                                       -- simulator will want it.
+    -- Simulation attributes (0-100). Seeded from position presets, editable.
+    setting        INTEGER,
+    defense        INTEGER,
+    attacking      INTEGER,
+    blocking       INTEGER,
+    confidence     INTEGER,           -- chance to go for a ball
+    pressure       INTEGER,           -- performance under high-stakes games
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

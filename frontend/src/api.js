@@ -65,11 +65,28 @@ export const api = {
   generateSubs: (lineupId) =>
     request(`/lineups/${lineupId}/generate-subs`, { method: "POST" }),
 
+  // simulation
+  rolePresets: () => request("/role-presets"),
+  simulate: (lineupId, body) =>
+    request(`/lineups/${lineupId}/simulate`, { method: "POST", body: JSON.stringify(body) }),
+
   // coach assistant
   coachStatus: () => request("/coach-chat/status"),
-  coachChat: (messages) =>
-    request("/coach-chat", { method: "POST", body: JSON.stringify({ messages }) }),
+  coachChat: (messages, ctx = {}) =>
+    request("/coach-chat", {
+      method: "POST",
+      body: JSON.stringify({ messages, team_id: ctx.teamId ?? null, lineup_id: ctx.lineupId ?? null }),
+    }),
 };
+
+export const ATTRS = [
+  { key: "setting", label: "Setting" },
+  { key: "attacking", label: "Attacking" },
+  { key: "blocking", label: "Blocking" },
+  { key: "defense", label: "Defense" },
+  { key: "confidence", label: "Confidence" },
+  { key: "pressure", label: "Pressure" },
+];
 
 export const COVERAGE = [
   { code: "all", label: "All-around (all 6)" },

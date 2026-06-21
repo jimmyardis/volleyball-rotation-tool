@@ -5,8 +5,9 @@ import LineupBuilder from "./components/LineupBuilder.jsx";
 import RotationViewer from "./components/RotationViewer.jsx";
 import HelpPanel from "./components/HelpPanel.jsx";
 import CoachChat from "./components/CoachChat.jsx";
+import SimulationScreen from "./components/SimulationScreen.jsx";
 
-const TABS = ["Roster", "Lineups", "Rotations"];
+const TABS = ["Roster", "Lineups", "Rotations", "Simulate"];
 
 // The guided path. Each step knows when it's complete and which tab it lives on.
 function steps({ teamId, players, lineups }) {
@@ -99,7 +100,7 @@ export default function App() {
       </header>
 
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
-      <CoachChat />
+      <CoachChat teamId={teamId} lineupId={viewLineupId} />
 
       <Stepper items={stepItems} onJump={setTab} />
       {nextStep && (
@@ -138,6 +139,11 @@ export default function App() {
               </div>
               <RotationViewer lineupId={viewLineupId} />
             </>
+          )}
+          {tab === "Simulate" && (
+            lineups.length === 0
+              ? <p className="hint big-hint">Build a lineup first, then come back to simulate it.</p>
+              : <SimulationScreen lineups={lineups} />
           )}
         </>
       )}
