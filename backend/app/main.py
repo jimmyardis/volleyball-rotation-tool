@@ -14,12 +14,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import db, engine
 from .models import (
+    FormationSave,
     LineupCreate,
     LineupPositions,
     OverlapCheck,
     PlayerCreate,
     PlayerUpdate,
-    ReceiveFormation,
+    SubsSave,
     TeamCreate,
 )
 
@@ -151,23 +152,36 @@ def get_rotations(lineup_id: int, conn=Depends(get_conn)):
     states = engine.all_rotations(start)
 
     rotations = []
-    for idx, state in enumerate(states):
+    for idx, starter_state in enumerate(states):
+        # Apply this rotation's substitutions to get who's actually on court.
+        swaps = db.get_substitutions(conn, lineup_id, idx)
+        state = engine.apply_substitutions(starter_state, swaps)
+
         # Each rotation has three phase layouts (serve / receive / base).
-        # Receive uses the saved formation if the coach has built one, else a
-        # sensible default; saved spots are keyed by player, remapped to zones.
-        saved = db.get_receive_formation(conn, lineup_id, idx)
+        # Receive + base use the saved formation if the coach built one, else a
+        # default; saved spots are keyed by player, remapped to the on-court zone.
+        saved_recv = db.get_formation(conn, lineup_id, idx, "receive")
         receive = {
-            zone: list(saved[pid]) if pid in saved else list(engine.ZONE_COORDS[zone])
+            zone: list(saved_recv[pid]) if pid in saved_recv else list(engine.ZONE_COORDS[zone])
+            for zone, pid in state.items()
+        }
+        base_default = engine.base_positions(state, players)
+        saved_base = db.get_formation(conn, lineup_id, idx, "base")
+        base = {
+            zone: list(saved_base[pid]) if pid in saved_base else list(base_default[zone])
             for zone, pid in state.items()
         }
         rotations.append({
             "rotation_index": idx,  # 0..5 — Phase 2 will tag events with this.
-            "positions": state,
+            "positions": state,                 # effective on-court (subs applied)
+            "starter_positions": starter_state, # the rostered starters, pre-sub
+            "subs": swaps,                      # starter_id -> on_court_id
             "metadata": engine.rotation_metadata(state, players, lineup["system"]),
             "serve_positions": {z: list(xy) for z, xy in engine.serve_positions(state).items()},
-            "base_positions": {z: list(xy) for z, xy in engine.base_positions(state, players).items()},
+            "base_positions": base,
             "receive_positions": receive,
-            "receive_saved": bool(saved),
+            "receive_saved": bool(saved_recv),
+            "base_saved": bool(saved_base),
         })
     return {
         "lineup": lineup,
@@ -176,32 +190,63 @@ def get_rotations(lineup_id: int, conn=Depends(get_conn)):
     }
 
 
-@app.put("/lineups/{lineup_id}/rotations/{rotation_index}/receive")
-def save_receive(
-    lineup_id: int, rotation_index: int, body: ReceiveFormation, conn=Depends(get_conn)
+@app.put("/lineups/{lineup_id}/rotations/{rotation_index}/formation/{phase}")
+def save_formation(
+    lineup_id: int, rotation_index: int, phase: str, body: FormationSave, conn=Depends(get_conn)
 ):
-    """Save a serve-receive formation for one rotation, and report its legality.
+    """Save a draggable formation (phase 'receive' or 'base') for one rotation.
 
-    Saving is allowed even if illegal (so a coach can keep work in progress);
-    the response tells them whether it currently passes the overlap rules.
+    For 'receive' the response reports overlap legality (saving is allowed even
+    when illegal, so WIP can be kept). 'base' is free — no overlap rule applies
+    once the ball is in play.
     """
+    if phase not in db.VALID_PHASES:
+        raise HTTPException(422, f"phase must be one of {sorted(db.VALID_PHASES)}")
     if not db.get_lineup(conn, lineup_id):
         raise HTTPException(404, "lineup not found")
     start = db.get_lineup_positions(conn, lineup_id)
     if set(start.keys()) != set(range(1, 7)):
         raise HTTPException(409, "lineup has no complete starting positions yet")
 
-    state = engine.all_rotations(start)[rotation_index]
+    swaps = db.get_substitutions(conn, lineup_id, rotation_index)
+    state = engine.apply_substitutions(engine.all_rotations(start)[rotation_index], swaps)
     placements = {pid: tuple(xy) for pid, xy in body.placements.items()}
     try:
-        db.set_receive_formation(conn, lineup_id, rotation_index, placements)
+        db.set_formation(conn, lineup_id, rotation_index, phase, placements)
     except ValueError as e:
         raise HTTPException(422, str(e))
 
-    # Build zone -> (x, y) so the overlap rules (which are about zones) apply.
-    coords = {zone: placements[pid] for zone, pid in state.items() if pid in placements}
-    faults = engine.check_overlap(coords)
-    return {"saved": True, "legal": not faults, "faults": faults}
+    if phase == "receive":
+        coords = {zone: placements[pid] for zone, pid in state.items() if pid in placements}
+        faults = engine.check_overlap(coords)
+        return {"saved": True, "legal": not faults, "faults": faults}
+    return {"saved": True, "legal": True, "faults": []}
+
+
+@app.put("/lineups/{lineup_id}/rotations/{rotation_index}/subs")
+def save_subs(lineup_id: int, rotation_index: int, body: SubsSave, conn=Depends(get_conn)):
+    """Set who's on court for one rotation. Validates the result is still 6
+    distinct players occupying the 6 zones."""
+    if not db.get_lineup(conn, lineup_id):
+        raise HTTPException(404, "lineup not found")
+    start = db.get_lineup_positions(conn, lineup_id)
+    if set(start.keys()) != set(range(1, 7)):
+        raise HTTPException(409, "lineup has no complete starting positions yet")
+
+    starter_state = engine.all_rotations(start)[rotation_index]
+    effective = engine.apply_substitutions(starter_state, body.swaps)
+    if len(set(effective.values())) != 6:
+        raise HTTPException(422, "substitutions would put a player in two zones at once")
+
+    team_players = {p["id"] for p in db.list_players(conn, db.get_lineup(conn, lineup_id)["team_id"])}
+    if not set(effective.values()) <= team_players:
+        raise HTTPException(422, "on-court player not on this team")
+
+    try:
+        db.set_substitutions(conn, lineup_id, rotation_index, body.swaps)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    return {"saved": True, "on_court": effective}
 
 
 # ---------------------------------------------------------------- overlap (stretch)

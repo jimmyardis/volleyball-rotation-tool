@@ -160,6 +160,18 @@ def receive_default(positions: dict[int, int]) -> dict[int, tuple[float, float]]
     return {zone: ZONE_COORDS[zone] for zone in positions}
 
 
+def apply_substitutions(
+    positions: dict[int, int], swaps: dict[int, int]
+) -> dict[int, int]:
+    """Return positions with per-rotation subs applied.
+
+    `swaps` maps starter_id -> on_court_id (who actually plays that slot this
+    rotation). Zones whose starter has no swap keep the starter. A libero
+    swapping into a back-row zone is just a swap like any other.
+    """
+    return {zone: swaps.get(pid, pid) for zone, pid in positions.items()}
+
+
 def _role_lane(role: str | None) -> int:
     """Preferred left/middle/right lane (0/1/2) for a role's base position."""
     if role == "OH":

@@ -137,3 +137,27 @@ def test_base_positions_give_each_row_distinct_lanes():
     coords = engine.base_positions(START, PLAYERS)
     front_x = sorted(coords[z][0] for z in (2, 3, 4))
     assert len(set(front_x)) == 3  # no two front-row players share a lane
+
+
+# ---- Substitutions ------------------------------------------------------
+
+def test_apply_substitutions_swaps_the_right_slot():
+    # Sub bench player 201 in for starter 105 (who is in zone 5).
+    effective = engine.apply_substitutions(START, {105: 201})
+    assert effective[5] == 201
+    # everyone else unchanged
+    assert {z: effective[z] for z in (1, 2, 3, 4, 6)} == {z: START[z] for z in (1, 2, 3, 4, 6)}
+
+
+def test_apply_substitutions_no_swaps_is_identity():
+    assert engine.apply_substitutions(START, {}) == START
+
+
+def test_metadata_reflects_substituted_player():
+    # Sub a libero (no-attack) into the front-row zone holding attacker 102.
+    players = dict(PLAYERS)
+    players[201] = {"primary_role": "L", "is_libero": 1}
+    effective = engine.apply_substitutions(START, {102: 201})
+    meta = engine.rotation_metadata(effective, players)
+    assert 201 not in meta["front_row_attacker_ids"]  # libero isn't an attacker
+    assert 102 not in meta["front_row_attacker_ids"]

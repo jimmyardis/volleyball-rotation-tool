@@ -43,10 +43,15 @@ export const api = {
       body: JSON.stringify({ positions }),
     }),
   getRotations: (lineupId) => request(`/lineups/${lineupId}/rotations`),
-  saveReceive: (lineupId, rotationIndex, placements) =>
-    request(`/lineups/${lineupId}/rotations/${rotationIndex}/receive`, {
+  saveFormation: (lineupId, rotationIndex, phase, placements) =>
+    request(`/lineups/${lineupId}/rotations/${rotationIndex}/formation/${phase}`, {
       method: "PUT",
       body: JSON.stringify({ placements }),
+    }),
+  saveSubs: (lineupId, rotationIndex, swaps) =>
+    request(`/lineups/${lineupId}/rotations/${rotationIndex}/subs`, {
+      method: "PUT",
+      body: JSON.stringify({ swaps }),
     }),
   overlapCheck: (coords) =>
     request("/overlap-check", { method: "POST", body: JSON.stringify({ coords }) }),

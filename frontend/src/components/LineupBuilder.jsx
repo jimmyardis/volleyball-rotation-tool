@@ -25,7 +25,7 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
     setSaved(false);
     api
       .getRotations(selectedId)
-      .then((data) => setAssign(data.rotations[0].positions))
+      .then((data) => setAssign(data.rotations[0].starter_positions || data.rotations[0].positions))
       .catch(() => setAssign({})); // no positions set yet
   }, [selectedId]);
 

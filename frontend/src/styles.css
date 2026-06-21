@@ -143,6 +143,16 @@ button.primary { background: var(--accent-2); color: #00121f; }
 .receive-controls { margin-top: 0.5rem; }
 .receive-controls ul { margin: 0.25rem 0 0.5rem 1rem; padding: 0; }
 
+/* subs editor */
+.subs-editor h4 { margin: 0 0 0.25rem; }
+.active-ghost { border-color: var(--accent-2) !important; color: var(--accent-2) !important; }
+
+/* narration / play-by-play */
+.narration { margin-top: 1.25rem; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 0.75rem 1rem; }
+.narration-title { font-weight: 700; color: var(--accent); font-size: 0.85rem; letter-spacing: 0.5px; }
+.narration ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+.narration li { margin: 0.15rem 0; font-size: 0.92rem; }
+
 @media (max-width: 760px) {
   .two-col, .viewer-grid { grid-template-columns: 1fr; }
   .zone-grid { grid-template-columns: 1fr; }

@@ -48,17 +48,32 @@ CREATE TABLE IF NOT EXISTS lineup_positions (
     UNIQUE (lineup_id, player_id)     -- a player can't be in two zones
 );
 
--- A saved serve-receive formation: one (x, y) per player, per rotation, per
--- lineup. Coordinates are normalized (x left->right, y net->baseline). The
--- coach drags players into passing spots; this is where those spots persist.
-CREATE TABLE IF NOT EXISTS receive_formations (
+-- A saved formation: one (x, y) per player, per rotation, per phase, per
+-- lineup. Coordinates are normalized (x left->right, y net->baseline).
+--   phase 'receive' — the serve-receive formation (overlap rules apply).
+--   phase 'base'    — where players switch to after the serve (free; no overlap).
+-- This is where the coach's draggable layouts persist.
+CREATE TABLE IF NOT EXISTS formations (
     id              INTEGER PRIMARY KEY,
     lineup_id       INTEGER NOT NULL REFERENCES lineups(id),
     rotation_index  INTEGER NOT NULL CHECK (rotation_index BETWEEN 0 AND 5),
+    phase           TEXT NOT NULL CHECK (phase IN ('receive', 'base')),
     player_id       INTEGER NOT NULL REFERENCES players(id),
     x               REAL NOT NULL,
     y               REAL NOT NULL,
-    UNIQUE (lineup_id, rotation_index, player_id)
+    UNIQUE (lineup_id, rotation_index, phase, player_id)
+);
+
+-- Per-rotation substitutions: for a given rotation, a starter's slot can be
+-- played by someone off the bench (or the libero). starter_id is the rostered
+-- starter whose zone it is; on_court_id is who actually plays it this rotation.
+CREATE TABLE IF NOT EXISTS substitutions (
+    id              INTEGER PRIMARY KEY,
+    lineup_id       INTEGER NOT NULL REFERENCES lineups(id),
+    rotation_index  INTEGER NOT NULL CHECK (rotation_index BETWEEN 0 AND 5),
+    starter_id      INTEGER NOT NULL REFERENCES players(id),
+    on_court_id     INTEGER NOT NULL REFERENCES players(id),
+    UNIQUE (lineup_id, rotation_index, starter_id)
 );
 
 -- Optional in P1: records a libero swapping in for a back-row player.

@@ -44,6 +44,11 @@ class OverlapCheck(BaseModel):
     coords: dict[int, tuple[float, float]]
 
 
-class ReceiveFormation(BaseModel):
+class FormationSave(BaseModel):
     # player_id -> [x, y], normalized (x left->right, y net->baseline)
     placements: dict[int, tuple[float, float]]
+
+
+class SubsSave(BaseModel):
+    # starter_id -> on_court_id (who actually plays that slot this rotation)
+    swaps: dict[int, int]

@@ -26,9 +26,24 @@ def connect(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
 
 
 def init_db(conn: sqlite3.Connection) -> None:
-    """Create all tables (idempotent)."""
+    """Create all tables (idempotent) and run lightweight migrations."""
     conn.executescript(SCHEMA_PATH.read_text())
+    _migrate(conn)
     conn.commit()
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Fold legacy tables into the current shape, preserving data."""
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    # receive_formations -> formations(phase='receive')
+    if "receive_formations" in tables:
+        conn.execute(
+            "INSERT OR IGNORE INTO formations "
+            "(lineup_id, rotation_index, phase, player_id, x, y) "
+            "SELECT lineup_id, rotation_index, 'receive', player_id, x, y "
+            "FROM receive_formations"
+        )
+        conn.execute("DROP TABLE receive_formations")
 
 
 def _row_to_dict(row: sqlite3.Row | None) -> dict | None:
@@ -183,38 +198,81 @@ def get_lineup_positions(conn: sqlite3.Connection, lineup_id: int) -> dict[int, 
     return {r["start_zone"]: r["player_id"] for r in rows}
 
 
-# ---------------------------------------------------------------- receive formations
+# ---------------------------------------------------------------- formations
 
-def get_receive_formation(
-    conn: sqlite3.Connection, lineup_id: int, rotation_index: int
+VALID_PHASES = {"receive", "base"}
+
+
+def get_formation(
+    conn: sqlite3.Connection, lineup_id: int, rotation_index: int, phase: str
 ) -> dict[int, tuple[float, float]]:
     """Return {player_id: (x, y)} for a saved formation (empty if none)."""
     rows = conn.execute(
-        "SELECT player_id, x, y FROM receive_formations "
-        "WHERE lineup_id = ? AND rotation_index = ?",
-        (lineup_id, rotation_index),
+        "SELECT player_id, x, y FROM formations "
+        "WHERE lineup_id = ? AND rotation_index = ? AND phase = ?",
+        (lineup_id, rotation_index, phase),
     ).fetchall()
     return {r["player_id"]: (r["x"], r["y"]) for r in rows}
 
 
-def set_receive_formation(
+def set_formation(
     conn: sqlite3.Connection,
     lineup_id: int,
     rotation_index: int,
+    phase: str,
     placements: dict[int, tuple[float, float]],
 ) -> None:
-    """Replace the saved formation for one rotation with `placements`."""
+    """Replace the saved formation for one rotation + phase with `placements`."""
     if not 0 <= rotation_index <= 5:
         raise ValueError("rotation_index must be 0..5")
+    if phase not in VALID_PHASES:
+        raise ValueError(f"phase must be one of {sorted(VALID_PHASES)}")
     with conn:  # transaction
         conn.execute(
-            "DELETE FROM receive_formations WHERE lineup_id = ? AND rotation_index = ?",
+            "DELETE FROM formations WHERE lineup_id = ? AND rotation_index = ? AND phase = ?",
+            (lineup_id, rotation_index, phase),
+        )
+        conn.executemany(
+            "INSERT INTO formations (lineup_id, rotation_index, phase, player_id, x, y) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            [(lineup_id, rotation_index, phase, pid, xy[0], xy[1]) for pid, xy in placements.items()],
+        )
+
+
+# ---------------------------------------------------------------- substitutions
+
+def get_substitutions(
+    conn: sqlite3.Connection, lineup_id: int, rotation_index: int
+) -> dict[int, int]:
+    """Return {starter_id: on_court_id} swaps for one rotation (empty if none)."""
+    rows = conn.execute(
+        "SELECT starter_id, on_court_id FROM substitutions "
+        "WHERE lineup_id = ? AND rotation_index = ?",
+        (lineup_id, rotation_index),
+    ).fetchall()
+    return {r["starter_id"]: r["on_court_id"] for r in rows}
+
+
+def set_substitutions(
+    conn: sqlite3.Connection,
+    lineup_id: int,
+    rotation_index: int,
+    swaps: dict[int, int],
+) -> None:
+    """Replace all swaps for one rotation. No-op swaps (starter==on_court) are
+    dropped so the table only holds real substitutions."""
+    if not 0 <= rotation_index <= 5:
+        raise ValueError("rotation_index must be 0..5")
+    real = {s: o for s, o in swaps.items() if s != o}
+    with conn:  # transaction
+        conn.execute(
+            "DELETE FROM substitutions WHERE lineup_id = ? AND rotation_index = ?",
             (lineup_id, rotation_index),
         )
         conn.executemany(
-            "INSERT INTO receive_formations (lineup_id, rotation_index, player_id, x, y) "
-            "VALUES (?, ?, ?, ?, ?)",
-            [(lineup_id, rotation_index, pid, xy[0], xy[1]) for pid, xy in placements.items()],
+            "INSERT INTO substitutions (lineup_id, rotation_index, starter_id, on_court_id) "
+            "VALUES (?, ?, ?, ?)",
+            [(lineup_id, rotation_index, s, o) for s, o in real.items()],
         )
 
 
