@@ -1,0 +1,15 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# SQLite db (local data, not source)
+backend/volleyball.db
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# misc
+.DS_Store
