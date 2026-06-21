@@ -117,7 +117,34 @@ button.primary { background: var(--accent-2); color: #00121f; }
 .player-name { fill: var(--text); font-size: 11px; }
 .badge-serve { fill: var(--accent); font-size: 10px; font-weight: 700; }
 
+/* guided flow — stepper */
+.stepper { list-style: none; display: flex; gap: 0.5rem; padding: 0; margin: 0.75rem 0 0.25rem; flex-wrap: wrap; }
+.stepper li { flex: 1; min-width: 140px; }
+.step { width: 100%; display: flex; align-items: center; gap: 0.5rem; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.5rem 0.75rem; color: var(--text); font-weight: 400; }
+.step:disabled { cursor: default; opacity: 1; }
+.step-dot { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--panel-2); color: var(--dim); font-size: 0.8rem; font-weight: 700; flex: none; }
+.stepper li.done .step { border-color: var(--good); }
+.stepper li.done .step-dot { background: var(--good); color: #00120a; }
+.nudge { background: #2a2410; border: 1px solid #574a16; color: #f0d98a; padding: 0.5rem 0.75rem; border-radius: 8px; font-size: 0.9rem; }
+.inline-link { color: var(--accent); text-decoration: underline; padding: 0; }
+
+/* phase tabs */
+.phase-tabs { display: flex; gap: 0.25rem; align-items: center; margin: 0.5rem 0 0.25rem; }
+.phase-tabs button { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
+.phase-tabs button.active { background: var(--accent-2); color: #00121f; border-color: var(--accent-2); }
+.label-inline { color: var(--dim); font-size: 0.85rem; margin-right: 0.3rem; }
+.phase-help { margin: 0.25rem 0 0.75rem; max-width: 620px; }
+
+/* receive editing */
+.court.draggable { cursor: default; }
+.player.grab { cursor: grab; }
+.player.grab:active { cursor: grabbing; }
+.court.fault .court-outline { stroke: var(--bad); stroke-width: 3; }
+.receive-controls { margin-top: 0.5rem; }
+.receive-controls ul { margin: 0.25rem 0 0.5rem 1rem; padding: 0; }
+
 @media (max-width: 760px) {
   .two-col, .viewer-grid { grid-template-columns: 1fr; }
   .zone-grid { grid-template-columns: 1fr; }
+  .stepper li { min-width: 120px; }
 }

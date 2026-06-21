@@ -110,3 +110,30 @@ def test_left_right_order_violation_is_a_fault():
     coords[4] = (5.0, 1.0)  # left front shoved right of center/right front
     faults = engine.check_overlap(coords)
     assert any("front row" in f for f in faults)
+
+
+# ---- Phases: serve / receive / base ------------------------------------
+
+def test_serve_positions_cover_all_six_and_server_is_deep():
+    coords = engine.serve_positions(START)
+    assert set(coords.keys()) == {1, 2, 3, 4, 5, 6}
+    # server (zone 1) is pulled back to the line: largest y of all players.
+    assert coords[1][1] == max(xy[1] for xy in coords.values())
+
+
+def test_receive_default_is_overlap_legal():
+    coords = engine.receive_default(START)
+    assert engine.check_overlap(coords) == []
+
+
+def test_base_positions_put_front_row_near_net():
+    coords = engine.base_positions(START, PLAYERS)
+    front_y = max(coords[z][1] for z in (2, 3, 4))
+    back_y = min(coords[z][1] for z in (1, 5, 6))
+    assert front_y < back_y  # every front-row body nearer the net than back row
+
+
+def test_base_positions_give_each_row_distinct_lanes():
+    coords = engine.base_positions(START, PLAYERS)
+    front_x = sorted(coords[z][0] for z in (2, 3, 4))
+    assert len(set(front_x)) == 3  # no two front-row players share a lane

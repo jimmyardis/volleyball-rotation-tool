@@ -6,6 +6,31 @@ import RotationViewer from "./components/RotationViewer.jsx";
 
 const TABS = ["Roster", "Lineups", "Rotations"];
 
+// The guided path. Each step knows when it's complete and which tab it lives on.
+function steps({ teamId, players, lineups }) {
+  return [
+    { n: 1, label: "Create a team", tab: null, done: teamId != null },
+    { n: 2, label: "Add 6+ players", tab: "Roster", done: players.length >= 6 },
+    { n: 3, label: "Build a lineup", tab: "Lineups", done: lineups.length >= 1 },
+    { n: 4, label: "View rotations", tab: "Rotations", done: false },
+  ];
+}
+
+function Stepper({ items, onJump }) {
+  return (
+    <ol className="stepper">
+      {items.map((s) => (
+        <li key={s.n} className={s.done ? "done" : ""}>
+          <button className="step" disabled={!s.tab} onClick={() => s.tab && onJump(s.tab)}>
+            <span className="step-dot">{s.done ? "✓" : s.n}</span>
+            <span className="step-label">{s.label}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
 export default function App() {
   const [teams, setTeams] = useState([]);
   const [teamId, setTeamId] = useState(null);
@@ -16,13 +41,9 @@ export default function App() {
   const [newTeamName, setNewTeamName] = useState("");
   const [error, setError] = useState(null);
 
-  // load teams once
   useEffect(() => {
     api.listTeams()
-      .then((t) => {
-        setTeams(t);
-        if (t.length && teamId == null) setTeamId(t[0].id);
-      })
+      .then((t) => { setTeams(t); if (t.length && teamId == null) setTeamId(t[0].id); })
       .catch((e) => setError(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -30,8 +51,7 @@ export default function App() {
   const reloadTeam = useCallback(async () => {
     if (teamId == null) return;
     const [ps, ls] = await Promise.all([api.listPlayers(teamId), api.listLineups(teamId)]);
-    setPlayers(ps);
-    setLineups(ls);
+    setPlayers(ps); setLineups(ls);
   }, [teamId]);
 
   useEffect(() => { reloadTeam(); }, [reloadTeam]);
@@ -41,15 +61,22 @@ export default function App() {
     if (!newTeamName.trim()) return;
     const team = await api.createTeam({ name: newTeamName.trim() });
     setNewTeamName("");
-    const t = await api.listTeams();
-    setTeams(t);
+    setTeams(await api.listTeams());
     setTeamId(team.id);
+    setTab("Roster");
   }
 
-  function goToRotations(lineupId) {
-    setViewLineupId(lineupId);
-    setTab("Rotations");
-  }
+  function goToRotations(lineupId) { setViewLineupId(lineupId); setTab("Rotations"); }
+
+  const stepItems = steps({ teamId, players, lineups });
+  const nextStep = stepItems.find((s) => !s.done);
+
+  // a friendly nudge toward the next thing to do
+  const nudge =
+    teamId == null ? "Start by creating a team below."
+    : players.length < 6 ? `Add ${6 - players.length} more player${6 - players.length === 1 ? "" : "s"} on the Roster tab (you need 6 to fill a lineup).`
+    : lineups.length === 0 ? "Now build a lineup: name it, pick a system, and assign your six to the zones."
+    : "You're set — open Rotations to step through all six and try the Serving / Receiving / Base views.";
 
   return (
     <div className="app">
@@ -58,59 +85,47 @@ export default function App() {
         <div className="team-bar">
           <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>
             <option value="" disabled>Select a team</option>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}{t.season ? ` (${t.season})` : ""}</option>
-            ))}
+            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}{t.season ? ` (${t.season})` : ""}</option>)}
           </select>
           <form className="inline" onSubmit={createTeam}>
-            <input
-              placeholder="New team name"
-              value={newTeamName}
-              onChange={(e) => setNewTeamName(e.target.value)}
-            />
+            <input placeholder="New team name" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} />
             <button type="submit">+ Team</button>
           </form>
         </div>
       </header>
 
+      <Stepper items={stepItems} onJump={setTab} />
+      {nextStep && <p className="nudge">👉 {nudge}</p>}
+
       {error && <p className="error global">{error}</p>}
 
       {teamId == null ? (
-        <p className="hint big-hint">Create a team to get started.</p>
+        <p className="hint big-hint">Create a team above to get started.</p>
       ) : (
         <>
           <nav className="tabs">
             {TABS.map((t) => (
-              <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>
-                {t}
-              </button>
+              <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}</button>
             ))}
           </nav>
 
-          {tab === "Roster" && (
-            <RosterScreen teamId={teamId} players={players} reload={reloadTeam} />
-          )}
+          {tab === "Roster" && <RosterScreen teamId={teamId} players={players} reload={reloadTeam} />}
           {tab === "Lineups" && (
-            <LineupBuilder
-              teamId={teamId}
-              players={players}
-              lineups={lineups}
-              reload={reloadTeam}
-              onView={goToRotations}
-            />
+            <LineupBuilder teamId={teamId} players={players} lineups={lineups} reload={reloadTeam} onView={goToRotations} />
           )}
           {tab === "Rotations" && (
             <>
               <div className="screen lineup-picker">
-                <label>
-                  Lineup:{" "}
-                  <select value={viewLineupId ?? ""} onChange={(e) => setViewLineupId(Number(e.target.value))}>
-                    <option value="" disabled>pick a lineup</option>
-                    {lineups.map((l) => (
-                      <option key={l.id} value={l.id}>{l.name} ({l.system})</option>
-                    ))}
-                  </select>
-                </label>
+                {lineups.length === 0 ? (
+                  <p className="hint">No lineups yet — build one on the <button className="link inline-link" onClick={() => setTab("Lineups")}>Lineups</button> tab first.</p>
+                ) : (
+                  <label>Lineup:{" "}
+                    <select value={viewLineupId ?? ""} onChange={(e) => setViewLineupId(Number(e.target.value))}>
+                      <option value="" disabled>pick a lineup</option>
+                      {lineups.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.system})</option>)}
+                    </select>
+                  </label>
+                )}
               </div>
               <RotationViewer lineupId={viewLineupId} />
             </>

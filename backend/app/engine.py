@@ -123,6 +123,77 @@ def rotation_metadata(
     }
 
 
+# ---------------------------------------------------------------------------
+# Court geometry & the three on-court PHASES of a single rotation.
+#
+# A rotation is a fixed rotational ORDER (who is overlap-legal relative to whom).
+# But where the six players physically STAND changes by phase:
+#   serve   — your rotational spots, the server back at the line.
+#   receive — a serve-receive formation; players slide to passing spots but must
+#             stay overlap-legal until the opponent contacts the serve. Editable.
+#   base    — once the ball is in play they switch to base spots by role
+#             (setter right, middles middle, outsides left). The rotational slot
+#             is unchanged; they just move.
+#
+# Coordinates are NORMALIZED: x in [0,1] left->right, y in [0,1] from the net
+# (y=0) to the baseline (y=1). This matches check_overlap's convention (smaller
+# y == nearer the net), so a formation can be validated directly.
+# ---------------------------------------------------------------------------
+
+ZONE_COORDS: dict[int, tuple[float, float]] = {
+    4: (0.18, 0.30), 3: (0.50, 0.30), 2: (0.82, 0.30),  # front row
+    5: (0.18, 0.74), 6: (0.50, 0.74), 1: (0.82, 0.74),  # back row
+}
+
+
+def serve_positions(positions: dict[int, int]) -> dict[int, tuple[float, float]]:
+    """Where players stand when YOUR team is serving: rotational spots, with
+    the zone-1 server pulled back behind the baseline."""
+    coords = dict(ZONE_COORDS)
+    coords[SERVER_ZONE] = (0.82, 0.96)  # server at the service line
+    return {zone: coords[zone] for zone in positions}
+
+
+def receive_default(positions: dict[int, int]) -> dict[int, tuple[float, float]]:
+    """A sane, overlap-legal starting formation for serve-receive: everyone at
+    their rotational spot, on court, ready to pass. The coach drags from here."""
+    return {zone: ZONE_COORDS[zone] for zone in positions}
+
+
+def _role_lane(role: str | None) -> int:
+    """Preferred left/middle/right lane (0/1/2) for a role's base position."""
+    if role == "OH":
+        return 0  # outsides play the left
+    if role in ("S", "OPP"):
+        return 2  # setter / right side play the right
+    return 1      # middles, libero, DS play the middle
+
+
+def base_positions(
+    positions: dict[int, int], players: dict[int, dict]
+) -> dict[int, tuple[float, float]]:
+    """Base ("switch") spots after the serve, by role.
+
+    Front-row players line up at the net in left/middle/right lanes; back-row
+    players spread deep in the same three lanes. Lanes are assigned by role
+    preference, then de-conflicted so no two players share a lane in a row.
+    """
+    coords: dict[int, tuple[float, float]] = {}
+    lane_x = [0.18, 0.50, 0.82]
+    for zones_in_row, y in (([2, 3, 4], 0.13), ([1, 5, 6], 0.86)):
+        members = [
+            (z, _role_lane(players.get(positions[z], {}).get("primary_role")))
+            for z in zones_in_row
+            if z in positions
+        ]
+        # Sort by desired lane, tie-break by current left->right spot for
+        # stability, then drop into distinct left/middle/right slots.
+        members.sort(key=lambda m: (m[1], ZONE_COORDS[m[0]][0]))
+        for slot, (zone, _) in enumerate(members):
+            coords[zone] = (lane_x[slot], y)
+    return coords
+
+
 def check_overlap(coords: dict[int, tuple[float, float]]) -> list[str]:
     """Validate serve-receive positional (overlap) rules for custom spots.
 

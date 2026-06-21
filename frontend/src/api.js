@@ -43,6 +43,13 @@ export const api = {
       body: JSON.stringify({ positions }),
     }),
   getRotations: (lineupId) => request(`/lineups/${lineupId}/rotations`),
+  saveReceive: (lineupId, rotationIndex, placements) =>
+    request(`/lineups/${lineupId}/rotations/${rotationIndex}/receive`, {
+      method: "PUT",
+      body: JSON.stringify({ placements }),
+    }),
+  overlapCheck: (coords) =>
+    request("/overlap-check", { method: "POST", body: JSON.stringify({ coords }) }),
 };
 
 export const ROLES = [

@@ -19,6 +19,7 @@ from .models import (
     OverlapCheck,
     PlayerCreate,
     PlayerUpdate,
+    ReceiveFormation,
     TeamCreate,
 )
 
@@ -151,16 +152,56 @@ def get_rotations(lineup_id: int, conn=Depends(get_conn)):
 
     rotations = []
     for idx, state in enumerate(states):
+        # Each rotation has three phase layouts (serve / receive / base).
+        # Receive uses the saved formation if the coach has built one, else a
+        # sensible default; saved spots are keyed by player, remapped to zones.
+        saved = db.get_receive_formation(conn, lineup_id, idx)
+        receive = {
+            zone: list(saved[pid]) if pid in saved else list(engine.ZONE_COORDS[zone])
+            for zone, pid in state.items()
+        }
         rotations.append({
             "rotation_index": idx,  # 0..5 — Phase 2 will tag events with this.
             "positions": state,
             "metadata": engine.rotation_metadata(state, players, lineup["system"]),
+            "serve_positions": {z: list(xy) for z, xy in engine.serve_positions(state).items()},
+            "base_positions": {z: list(xy) for z, xy in engine.base_positions(state, players).items()},
+            "receive_positions": receive,
+            "receive_saved": bool(saved),
         })
     return {
         "lineup": lineup,
         "players": list(players.values()),
         "rotations": rotations,
     }
+
+
+@app.put("/lineups/{lineup_id}/rotations/{rotation_index}/receive")
+def save_receive(
+    lineup_id: int, rotation_index: int, body: ReceiveFormation, conn=Depends(get_conn)
+):
+    """Save a serve-receive formation for one rotation, and report its legality.
+
+    Saving is allowed even if illegal (so a coach can keep work in progress);
+    the response tells them whether it currently passes the overlap rules.
+    """
+    if not db.get_lineup(conn, lineup_id):
+        raise HTTPException(404, "lineup not found")
+    start = db.get_lineup_positions(conn, lineup_id)
+    if set(start.keys()) != set(range(1, 7)):
+        raise HTTPException(409, "lineup has no complete starting positions yet")
+
+    state = engine.all_rotations(start)[rotation_index]
+    placements = {pid: tuple(xy) for pid, xy in body.placements.items()}
+    try:
+        db.set_receive_formation(conn, lineup_id, rotation_index, placements)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+    # Build zone -> (x, y) so the overlap rules (which are about zones) apply.
+    coords = {zone: placements[pid] for zone, pid in state.items() if pid in placements}
+    faults = engine.check_overlap(coords)
+    return {"saved": True, "legal": not faults, "faults": faults}
 
 
 # ---------------------------------------------------------------- overlap (stretch)

@@ -42,3 +42,8 @@ class LineupPositions(BaseModel):
 class OverlapCheck(BaseModel):
     # zone -> [x, y]
     coords: dict[int, tuple[float, float]]
+
+
+class ReceiveFormation(BaseModel):
+    # player_id -> [x, y], normalized (x left->right, y net->baseline)
+    placements: dict[int, tuple[float, float]]

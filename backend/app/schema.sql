@@ -48,6 +48,19 @@ CREATE TABLE IF NOT EXISTS lineup_positions (
     UNIQUE (lineup_id, player_id)     -- a player can't be in two zones
 );
 
+-- A saved serve-receive formation: one (x, y) per player, per rotation, per
+-- lineup. Coordinates are normalized (x left->right, y net->baseline). The
+-- coach drags players into passing spots; this is where those spots persist.
+CREATE TABLE IF NOT EXISTS receive_formations (
+    id              INTEGER PRIMARY KEY,
+    lineup_id       INTEGER NOT NULL REFERENCES lineups(id),
+    rotation_index  INTEGER NOT NULL CHECK (rotation_index BETWEEN 0 AND 5),
+    player_id       INTEGER NOT NULL REFERENCES players(id),
+    x               REAL NOT NULL,
+    y               REAL NOT NULL,
+    UNIQUE (lineup_id, rotation_index, player_id)
+);
+
 -- Optional in P1: records a libero swapping in for a back-row player.
 CREATE TABLE IF NOT EXISTS libero_replacements (
     id              INTEGER PRIMARY KEY,

@@ -7,20 +7,21 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State
-Phase 1 built and verified end-to-end. Engine-first architecture: pure Python
-rotation engine (`backend/app/engine.py`) with 20 passing tests, SQLite data
-model designed simulator-ready (permanent `players.id`, `rotation_index`,
-unused `dominant_hand` hook), FastAPI server computing all 6 rotations + coach
-metadata on the fly, and a React/Vite/SVG frontend (roster CRUD, lineup
-builder, rotation viewer with court diagram). Frontend builds clean; live API
-returns correct rotation metadata (back-row setter → 3 attackers, front-row
-setter → 2). Overlap checker (stretch) implemented in engine + exposed via API,
-not yet wired into UI.
+Phase 1 built + extended. Engine-first: pure Python rotation engine
+(`backend/app/engine.py`) with 24 passing tests, simulator-ready SQLite model
+(permanent `players.id`, `rotation_index`, `dominant_hand` hook), FastAPI
+server, React/Vite/SVG frontend. NEW (2026-06-21 session 2): each rotation now
+has three on-court PHASES — Serve / Receive / Base. Receive is a draggable
+serve-receive formation with live overlap-legality checking and per-rotation
+SAVE (new `receive_formations` table). Base shows role-based switch positions.
+UI reworked into a guided flow (progress stepper + contextual nudges). Verified
+end-to-end through the user's own running WSL stack (backend :8000 --reload,
+frontend :5173); all 24 tests pass; frontend builds clean.
 
 ## Next Action
-`git add` the new `volleyball-app/` dir and commit (currently untracked); then
-optionally wire the overlap checker / base-positions stretch features into the
-frontend.
+Commit the new work (untracked changes in `volleyball-app/`). Optional next:
+libero swap-in for receive/base views; or begin Phase 2 (stat tracking) against
+the stable player IDs + rotation_index.
 
 ## Blockers
 None.
@@ -31,6 +32,23 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-06-21 (session 2)
+- Added on-court PHASES to each rotation: Serve / Receive / Base. Decision
+  (user grilled): Receive formations are SAVED per rotation (new
+  `receive_formations` table), not just a scratchpad; UI reworked as a guided
+  flow (not a full wizard).
+- Engine: added normalized court coords (x left→right, y net→baseline) +
+  `serve_positions`, `receive_default`, `base_positions`. Base assigns role
+  lanes (OH=left, MB/L/DS=middle, S/OPP=right) and de-conflicts per row.
+- Receive view is draggable (SVG pointer events) with live overlap checking via
+  the existing `check_overlap`; saving allowed even when illegal (returns
+  legality so a coach can keep WIP).
+- 4 new engine tests (24 total pass). Verified the new endpoints through the
+  user's own --reload backend — schema table auto-created on reload, no data
+  migration needed (CREATE TABLE IF NOT EXISTS).
+- Note: user runs the app from Windows via WSL; localhost:5173 forwards to the
+  Windows browser. Their --reload backend + Vite HMR picked up all changes live.
+
 ### 2026-06-21
 - Built Phase 1 from the design spec: backend (engine + db + FastAPI + tests)
   and frontend (React/Vite/SVG).

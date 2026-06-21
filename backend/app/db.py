@@ -183,6 +183,41 @@ def get_lineup_positions(conn: sqlite3.Connection, lineup_id: int) -> dict[int, 
     return {r["start_zone"]: r["player_id"] for r in rows}
 
 
+# ---------------------------------------------------------------- receive formations
+
+def get_receive_formation(
+    conn: sqlite3.Connection, lineup_id: int, rotation_index: int
+) -> dict[int, tuple[float, float]]:
+    """Return {player_id: (x, y)} for a saved formation (empty if none)."""
+    rows = conn.execute(
+        "SELECT player_id, x, y FROM receive_formations "
+        "WHERE lineup_id = ? AND rotation_index = ?",
+        (lineup_id, rotation_index),
+    ).fetchall()
+    return {r["player_id"]: (r["x"], r["y"]) for r in rows}
+
+
+def set_receive_formation(
+    conn: sqlite3.Connection,
+    lineup_id: int,
+    rotation_index: int,
+    placements: dict[int, tuple[float, float]],
+) -> None:
+    """Replace the saved formation for one rotation with `placements`."""
+    if not 0 <= rotation_index <= 5:
+        raise ValueError("rotation_index must be 0..5")
+    with conn:  # transaction
+        conn.execute(
+            "DELETE FROM receive_formations WHERE lineup_id = ? AND rotation_index = ?",
+            (lineup_id, rotation_index),
+        )
+        conn.executemany(
+            "INSERT INTO receive_formations (lineup_id, rotation_index, player_id, x, y) "
+            "VALUES (?, ?, ?, ?, ?)",
+            [(lineup_id, rotation_index, pid, xy[0], xy[1]) for pid, xy in placements.items()],
+        )
+
+
 # ---------------------------------------------------------------- libero swaps
 
 def set_libero_replacement(
