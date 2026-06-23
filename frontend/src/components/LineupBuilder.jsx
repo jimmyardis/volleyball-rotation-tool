@@ -98,7 +98,7 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
                 <button className="link" onClick={() => setSelectedId(l.id)}>
                   {l.name} <span className="tag">{l.system}</span>
                 </button>
-                <button className="ghost danger" onClick={() => remove(l.id)}>×</button>
+                <button className="ghost danger" onClick={() => remove(l.id)}>Delete</button>
               </li>
             ))}
           </ul>
@@ -152,7 +152,7 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
                 <button onClick={savePositions}>Save starting six</button>
                 {saved && (
                   <button className="primary" onClick={() => onView(selected.id)}>
-                    View rotations →
+                    View rotations
                   </button>
                 )}
               </div>

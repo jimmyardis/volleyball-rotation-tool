@@ -106,8 +106,8 @@ export default function SubstitutionSetup({ lineupId, onGenerated }) {
       <ul className="pair-list">
         {pairs.map(([f, b], i) => (
           <li key={i}>
-            <span>{name(f)} <span className="dim">(front)</span> ⇄ {name(b)} <span className="dim">(back)</span></span>
-            <button className="ghost danger" onClick={() => removePair(i)}>×</button>
+            <span>{name(f)} <span className="dim">(front)</span> with {name(b)} <span className="dim">(back)</span></span>
+            <button className="ghost danger" onClick={() => removePair(i)}>Remove</button>
           </li>
         ))}
       </ul>
@@ -116,7 +116,7 @@ export default function SubstitutionSetup({ lineupId, onGenerated }) {
           <option value="">front-row player…</option>
           {frontChoices.map((p) => <option key={p.id} value={p.id}>{name(p.id)}</option>)}
         </select>
-        <span>⇄</span>
+        <span className="dim">with</span>
         <select value={pendBack} onChange={(e) => setPendBack(e.target.value)}>
           <option value="">back-row partner…</option>
           {backChoices.map((p) => <option key={p.id} value={p.id}>{name(p.id)}</option>)}
@@ -129,12 +129,12 @@ export default function SubstitutionSetup({ lineupId, onGenerated }) {
 
       {unpaired.length > 0 && (
         <p className="warn">
-          ⚠ Unpaired specialist{unpaired.length > 1 ? "s" : ""}: {unpaired.map((p) => p.name).join(", ")} — they’ll stay on all 6 rotations until paired.
+          Unpaired specialist{unpaired.length > 1 ? "s" : ""}: {unpaired.map((p) => p.name).join(", ")} — they’ll stay on all 6 rotations until paired.
         </p>
       )}
 
       <div className="form-row generate-row">
-        <button className="primary" onClick={generate}>⚙ Generate subs from pairings</button>
+        <button className="primary" onClick={generate}>Generate subs from pairings</button>
         <span className="dim">Overwrites the subs in all 6 rotations, then you hand-edit.</span>
       </div>
       {msg && <p className="ok">{msg}</p>}

@@ -1,14 +1,19 @@
 :root {
-  --bg: #0f1419;
-  --panel: #1a2230;
-  --panel-2: #222d40;
-  --line: #2e3a52;
-  --text: #e6edf3;
-  --dim: #8a98ad;
-  --accent: #ffb02e;     /* volleyball orange */
-  --accent-2: #4aa3ff;   /* setter blue */
-  --good: #3ecf8e;
-  --bad: #ff6b6b;
+  /* ONE cohesive palette: a single warm amber accent on cool slate neutrals.
+     Amber is the only brand color. Teal marks the setter and nothing else.
+     Green/red are reserved strictly for status (success / error). */
+  --bg:        #16181d;   /* page background */
+  --panel:     #1e2128;   /* cards, panels */
+  --panel-2:   #272b34;   /* inputs, hover, chips */
+  --line:      #333845;   /* borders, dividers */
+  --text:      #e9ebef;   /* primary text */
+  --dim:       #969cab;   /* secondary text */
+  --accent:    #e08a3c;   /* the brand color — warm amber */
+  --accent-ink:#1c1206;   /* text that sits on amber */
+  --accent-2:  #3a9aa0;   /* teal — setter marker ONLY */
+  --good:      #4f9d77;   /* status: success */
+  --bad:       #cf6a6a;   /* status: error */
+  --radius:    6px;       /* one corner radius everywhere */
 }
 
 * { box-sizing: border-box; }
@@ -24,6 +29,10 @@ body {
 
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
 header h1 { font-size: 1.4rem; margin: 0.4rem 0; }
+
+/* the one allowed mark: a clean flat volleyball in the top-left corner */
+.brand { display: flex; align-items: center; gap: 0.6rem; }
+.vb-mark { color: var(--accent); flex: none; }
 
 .team-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .inline { display: flex; gap: 0.4rem; }
@@ -49,14 +58,14 @@ input, select, button {
 input.narrow { width: 60px; }
 select option:disabled { color: var(--dim); }
 
-button { cursor: pointer; background: var(--accent); color: #1a1300; border: none; font-weight: 600; }
+button { cursor: pointer; background: var(--accent); color: var(--accent-ink); border: none; font-weight: 600; }
 button.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); font-weight: 400; }
 button.ghost.danger { color: var(--bad); }
 button.link { background: none; border: none; color: var(--text); padding: 0.3rem 0; text-align: left; font-weight: 500; }
-button.primary { background: var(--accent-2); color: #00121f; }
+button.primary { background: var(--accent); color: var(--accent-ink); }
 .checkbox { display: flex; align-items: center; gap: 0.35rem; color: var(--dim); }
 
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin: 0.75rem 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; margin: 0.75rem 0; }
 .form-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 
 .error { color: var(--bad); }
@@ -97,15 +106,15 @@ button.primary { background: var(--accent-2); color: #00121f; }
 .dim { color: var(--dim); font-size: 0.85rem; }
 .attacker-names { color: var(--dim); font-size: 0.85rem; margin-top: 0.2rem; }
 .pill { font-size: 0.7rem; padding: 0.1rem 0.5rem; border-radius: 999px; margin-left: 0.4rem; }
-.pill.front { background: #4a2c1c; color: var(--accent); }
-.pill.back { background: #1c324a; color: var(--accent-2); }
+.pill.front { background: var(--panel-2); color: var(--accent); }
+.pill.back { background: var(--panel-2); color: var(--accent-2); }
 
-/* court SVG */
-.court { width: 100%; height: auto; background: #11324a; border-radius: 10px; }
+/* court SVG — neutral slate surface so the amber/teal markers read clearly */
+.court { width: 100%; height: auto; background: #15171c; border-radius: var(--radius); }
 .net-label { fill: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: 2px; }
-.net-line { stroke: #e6edf3; stroke-width: 3; stroke-dasharray: 4 3; }
-.court-outline { fill: #15507a; stroke: #fff; stroke-width: 2; }
-.court-line { stroke: #ffffff88; stroke-width: 1; }
+.net-line { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 4 3; }
+.court-outline { fill: #232730; stroke: var(--line); stroke-width: 2; }
+.court-line { stroke: #ffffff33; stroke-width: 1; }
 .zone-num { fill: #ffffff66; font-size: 12px; font-weight: 700; }
 .player-circle { fill: var(--panel); stroke: var(--accent); stroke-width: 2; }
 .is-setter .player-circle { stroke: var(--accent-2); stroke-width: 3; }
@@ -131,7 +140,7 @@ button.primary { background: var(--accent-2); color: #00121f; }
 /* phase tabs */
 .phase-tabs { display: flex; gap: 0.25rem; align-items: center; margin: 0.5rem 0 0.25rem; }
 .phase-tabs button { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); }
-.phase-tabs button.active { background: var(--accent-2); color: #00121f; border-color: var(--accent-2); }
+.phase-tabs button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .label-inline { color: var(--dim); font-size: 0.85rem; margin-right: 0.3rem; }
 .phase-help { margin: 0.25rem 0 0.75rem; max-width: 620px; }
 
@@ -180,7 +189,7 @@ button.primary { background: var(--accent-2); color: #00121f; }
 
 /* help / guide modal */
 .help-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: flex-start; padding: 2rem 1rem; z-index: 50; overflow-y: auto; }
-.help-modal { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem; max-width: 760px; width: 100%; }
+.help-modal { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem; max-width: 760px; width: 100%; }
 .help-head { display: flex; justify-content: space-between; align-items: center; }
 .help-head h2 { margin: 0; }
 .help-modal h3 { margin: 1.4rem 0 0.5rem; color: var(--accent); border-bottom: 1px solid var(--line); padding-bottom: 0.25rem; }
@@ -196,14 +205,14 @@ button.primary { background: var(--accent-2); color: #00121f; }
 .help-recs li { margin: 0.35rem 0; font-size: 0.92rem; }
 
 /* coach chat */
-.chat-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 40; background: var(--accent-2); color: #00121f; border-radius: 999px; padding: 0.6rem 1rem; box-shadow: 0 4px 14px rgba(0,0,0,0.4); font-weight: 700; }
-.chat-panel { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 40; width: 360px; max-width: calc(100vw - 2rem); height: 520px; max-height: calc(100vh - 2rem); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.5); }
+.chat-fab { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 40; background: var(--accent); color: var(--accent-ink); border-radius: var(--radius); padding: 0.6rem 1rem; font-weight: 700; }
+.chat-panel { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 40; width: 360px; max-width: calc(100vw - 2rem); height: 520px; max-height: calc(100vh - 2rem); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
 .chat-head { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--line); font-weight: 600; }
 .chat-body { flex: 1; overflow-y: auto; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
 .chat-intro { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; }
 .chip { background: var(--panel-2); border: 1px solid var(--line); color: var(--text); border-radius: 999px; padding: 0.35rem 0.7rem; font-size: 0.82rem; font-weight: 400; text-align: left; }
 .bubble { padding: 0.5rem 0.7rem; border-radius: 10px; font-size: 0.9rem; white-space: pre-wrap; max-width: 90%; line-height: 1.35; }
-.bubble.user { background: var(--accent-2); color: #00121f; align-self: flex-end; border-bottom-right-radius: 3px; }
+.bubble.user { background: var(--accent); color: var(--accent-ink); align-self: flex-end; border-bottom-right-radius: 3px; }
 .bubble.assistant { background: var(--panel-2); align-self: flex-start; border-bottom-left-radius: 3px; }
 .bubble.system { background: rgba(62,207,142,0.14); border: 1px solid var(--good); align-self: stretch; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
 .chat-input { display: flex; gap: 0.4rem; padding: 0.6rem; border-top: 1px solid var(--line); }

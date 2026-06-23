@@ -118,7 +118,7 @@ export default function RosterScreen({ teamId, players, reload }) {
 
         <div className="attrs-editor">
           <span className="label-inline">Skill ratings (0–100, used by the simulator):</span>
-          <button type="button" className="ghost" onClick={applyPreset}>↻ Use {form.primary_role} preset</button>
+          <button type="button" className="ghost" onClick={applyPreset}>Use {form.primary_role} preset</button>
           <div className="attrs-grid">
             {ATTRS.map((a) => (
               <label key={a.key} className="attr-field">
@@ -153,7 +153,7 @@ export default function RosterScreen({ teamId, players, reload }) {
               <td>{p.name}</td>
               <td>{p.primary_role}</td>
               <td>{p.secondary_role ?? "–"}</td>
-              <td>{p.is_libero ? "✓" : ""}</td>
+              <td>{p.is_libero ? "Yes" : ""}</td>
               <td className="actions">
                 <button className="ghost" onClick={() => startEdit(p)}>Edit</button>
                 <button className="ghost danger" onClick={() => remove(p.id)}>Delete</button>

@@ -96,7 +96,7 @@ export default function Court({ placements, draggable = false, onDrag, fault = f
             <text x={cx} y={cy + 12} textAnchor="middle" className="player-role">{p.role}</text>
             <text x={cx} y={cy + 40} textAnchor="middle" className="player-name">{p.name}</text>
             {p.isServer && (
-              <text x={cx} y={cy - 32} textAnchor="middle" className="badge-serve">★ SERVE</text>
+              <text x={cx} y={cy - 32} textAnchor="middle" className="badge-serve">SERVE</text>
             )}
           </g>
         );

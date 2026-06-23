@@ -58,7 +58,7 @@ export default function SimulationScreen({ lineups }) {
           Opponent skill: <strong>{opponent}</strong>
           <input type="range" min="1" max="100" value={opponent} onChange={(e) => setOpponent(Number(e.target.value))} />
         </label>
-        <button onClick={run} disabled={busy || !lineupId}>{busy ? "Simulating…" : "▶ Run 10,000 games"}</button>
+        <button onClick={run} disabled={busy || !lineupId}>{busy ? "Simulating…" : "Run 10,000 games"}</button>
       </div>
 
       {error && <p className="error">{error}</p>}
@@ -66,7 +66,7 @@ export default function SimulationScreen({ lineups }) {
       {result && (
         <>
           <div className="sim-best card">
-            🏆 Best rotation: <strong>Rotation {result.best_rotation + 1}</strong>
+            Best rotation: <strong>Rotation {result.best_rotation + 1}</strong>
             {" "}— weakest is Rotation {result.worst_rotation + 1}.
             <span className="dim"> ({result.games_per_rotation.toLocaleString()} games each)</span>
           </div>
@@ -95,7 +95,7 @@ export default function SimulationScreen({ lineups }) {
           </table>
           <p className="hint">
             Tip: a back-row setter (3 attackers) usually rates higher than a
-            front-row setter (2 attackers). Ask the 💬 Coach Assistant why a
+            front-row setter (2 attackers). Ask the Coach Assistant why a
             rotation is weak and how to drill it.
           </p>
         </>

@@ -39,7 +39,7 @@ export default function CoachChat({ teamId, lineupId, onLineupCreated, onViewLin
       if (res.created_lineups?.length) {
         onLineupCreated?.(res.created_lineups);
         for (const l of res.created_lineups) {
-          added.push({ role: "system", content: `✅ Added “${l.name}” (${l.system}) to your lineups.`, lineupId: l.id });
+          added.push({ role: "system", content: `Added “${l.name}” (${l.system}) to your lineups.`, lineupId: l.id });
         }
       }
       setMessages(added);
@@ -54,7 +54,7 @@ export default function CoachChat({ teamId, lineupId, onLineupCreated, onViewLin
   if (!open) {
     return (
       <button className="chat-fab" onClick={() => setOpen(true)} title="Ask the coaching assistant">
-        💬 Coach Assistant
+        Coach Assistant
       </button>
     );
   }
@@ -62,8 +62,8 @@ export default function CoachChat({ teamId, lineupId, onLineupCreated, onViewLin
   return (
     <div className="chat-panel">
       <header className="chat-head">
-        <span>💬 Coach Assistant <span className="dim">drills & player help</span></span>
-        <button className="ghost" onClick={() => setOpen(false)}>×</button>
+        <span>Coach Assistant <span className="dim">drills & player help</span></span>
+        <button className="ghost" onClick={() => setOpen(false)}>Close</button>
       </header>
 
       <div className="chat-body" ref={bodyRef}>
@@ -83,7 +83,7 @@ export default function CoachChat({ teamId, lineupId, onLineupCreated, onViewLin
             <div key={i} className="bubble system">
               {m.content}
               {m.lineupId != null && onViewLineup && (
-                <button className="link inline-link" onClick={() => onViewLineup(m.lineupId)}>View in Rotations →</button>
+                <button className="link inline-link" onClick={() => onViewLineup(m.lineupId)}>View in Rotations</button>
               )}
             </div>
           ) : (

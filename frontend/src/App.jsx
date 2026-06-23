@@ -6,6 +6,7 @@ import RotationViewer from "./components/RotationViewer.jsx";
 import HelpPanel from "./components/HelpPanel.jsx";
 import CoachChat from "./components/CoachChat.jsx";
 import SimulationScreen from "./components/SimulationScreen.jsx";
+import Volleyball from "./components/Volleyball.jsx";
 
 const TABS = ["Roster", "Lineups", "Rotations", "Simulate"];
 
@@ -25,7 +26,7 @@ function Stepper({ items, onJump }) {
       {items.map((s) => (
         <li key={s.n} className={s.done ? "done" : ""}>
           <button className="step" disabled={!s.tab} onClick={() => s.tab && onJump(s.tab)}>
-            <span className="step-dot">{s.done ? "✓" : s.n}</span>
+            <span className="step-dot">{s.n}</span>
             <span className="step-label">{s.label}</span>
           </button>
         </li>
@@ -85,16 +86,16 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>🏐 Rotation &amp; Lineup Tool</h1>
+        <h1 className="brand"><Volleyball size={26} /> Rotation &amp; Lineup Tool</h1>
         <div className="team-bar">
-          <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">? Guide</button>
+          <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
           <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>
             <option value="" disabled>Select a team</option>
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}{t.season ? ` (${t.season})` : ""}</option>)}
           </select>
           <form className="inline" onSubmit={createTeam}>
             <input placeholder="New team name" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} />
-            <button type="submit">+ Team</button>
+            <button type="submit">Add team</button>
           </form>
         </div>
       </header>
@@ -109,7 +110,7 @@ export default function App() {
 
       <Stepper items={stepItems} onJump={setTab} />
       {nextStep && (
-        <p className="nudge">👉 {nudge} <button className="link inline-link" onClick={() => setShowHelp(true)}>New here? Open the guide.</button></p>
+        <p className="nudge">{nudge} <button className="link inline-link" onClick={() => setShowHelp(true)}>New here? Open the guide.</button></p>
       )}
 
       {error && <p className="error global">{error}</p>}

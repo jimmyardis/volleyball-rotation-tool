@@ -125,11 +125,11 @@ export default function RotationViewer({ lineupId }) {
   const narration = [];
   narration.push(`Rotation ${idx + 1} of 6 — ${phaseDef.label}.`);
   const srv = playersById[meta.server_id];
-  narration.push(`🏐 Serving: ${srv?.name} (${jersey(srv)}) from zone 1.`);
+  narration.push(`Serving: ${srv?.name} (${jersey(srv)}) from zone 1.`);
   if (meta.setter_id != null) {
     const s = playersById[meta.setter_id];
     narration.push(
-      `Setter ${s?.name} is in the ${meta.setter_location} row → ${meta.front_row_attacker_count} front-row attacker${meta.front_row_attacker_count === 1 ? "" : "s"} (${meta.front_row_attacker_ids.map((id) => playersById[id]?.name).join(", ")}).`
+      `Setter ${s?.name} is in the ${meta.setter_location} row — ${meta.front_row_attacker_count} front-row attacker${meta.front_row_attacker_count === 1 ? "" : "s"} (${meta.front_row_attacker_ids.map((id) => playersById[id]?.name).join(", ")}).`
     );
   }
   const subEntries = Object.entries(rot.subs || {});
@@ -138,7 +138,7 @@ export default function RotationViewer({ lineupId }) {
   } else {
     for (const [starterId, oncId] of subEntries) {
       const inP = playersById[oncId], outP = playersById[Number(starterId)];
-      narration.push(`🔁 ${inP?.name} (${jersey(inP)})${inP?.is_libero ? " [libero]" : ""} in for ${outP?.name} (${jersey(outP)}).`);
+      narration.push(`${inP?.name} (${jersey(inP)})${inP?.is_libero ? " [libero]" : ""} in for ${outP?.name} (${jersey(outP)}).`);
     }
   }
 
@@ -154,8 +154,8 @@ export default function RotationViewer({ lineupId }) {
           </button>
         ))}
         <span className="spacer" />
-        <button className="ghost" onClick={() => setIdx((i) => (i + 5) % 6)}>‹ Prev</button>
-        <button className="ghost" onClick={() => setIdx((i) => (i + 1) % 6)}>Next ›</button>
+        <button className="ghost" onClick={() => setIdx((i) => (i + 5) % 6)}>Prev</button>
+        <button className="ghost" onClick={() => setIdx((i) => (i + 1) % 6)}>Next</button>
       </div>
 
       <div className="phase-tabs">
@@ -165,7 +165,7 @@ export default function RotationViewer({ lineupId }) {
         ))}
         <span className="spacer" />
         <button className={`ghost ${showSubs ? "active-ghost" : ""}`} onClick={() => setShowSubs((s) => !s)}>
-          Substitutions {showSubs ? "▾" : "▸"}{subEntries.length ? ` (${subEntries.length})` : ""}
+          Substitutions {showSubs ? "(hide)" : "(show)"}{subEntries.length ? ` (${subEntries.length})` : ""}
         </button>
       </div>
       <p className="hint phase-help">{phaseDef.help}</p>
@@ -181,7 +181,7 @@ export default function RotationViewer({ lineupId }) {
                 <select value={rot.positions[zone]} onChange={(e) => changeOnCourt(zone, e.target.value)}>
                   {candidatesFor(zone).map((p) => (
                     <option key={p.id} value={p.id}>
-                      {jersey(p)} {p.name} ({p.primary_role}){p.id === rot.starter_positions[zone] ? " — starter" : ""}{p.is_libero ? " ⓛ" : ""}
+                      {jersey(p)} {p.name} ({p.primary_role}){p.id === rot.starter_positions[zone] ? " — starter" : ""}{p.is_libero ? " — libero" : ""}
                     </option>
                   ))}
                 </select>
@@ -203,7 +203,7 @@ export default function RotationViewer({ lineupId }) {
           {editable && (
             <div className="receive-controls">
               {phase === "receive" && overlap == null && <p className="hint">Drag a player, then release to check the formation.</p>}
-              {phase === "receive" && overlap?.legal && <p className="ok">✓ Legal formation — no overlap faults.</p>}
+              {phase === "receive" && overlap?.legal && <p className="ok">Legal formation — no overlap faults.</p>}
               {phase === "receive" && overlap && !overlap.legal && (
                 <div className="error"><strong>Overlap fault{overlap.faults.length > 1 ? "s" : ""}:</strong>
                   <ul>{overlap.faults.map((f, i) => <li key={i}>{f}</li>)}</ul>
@@ -237,7 +237,7 @@ export default function RotationViewer({ lineupId }) {
 
       {/* play-by-play narration */}
       <div className="narration">
-        <span className="narration-title">📣 On this rotation</span>
+        <span className="narration-title">On this rotation</span>
         <ul>{narration.map((line, i) => <li key={i}>{line}</li>)}</ul>
       </div>
     </div>
