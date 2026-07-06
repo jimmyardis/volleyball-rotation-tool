@@ -571,6 +571,13 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
     return {"reply": "(I made several changes — check your lineups.)", "created_lineups": created}
 
 
+# ---------------------------------------------------------------- player side
+# The player-facing companion surface (accounts, plans, logs, personal coach).
+from . import player as player_side  # noqa: E402
+
+app.include_router(player_side.router)
+
+
 # ---------------------------------------------------------------- static frontend
 # Serve the built React app (if present) from the same service, so the whole app
 # lives at one URL. Mounted LAST so it never shadows the API routes above.

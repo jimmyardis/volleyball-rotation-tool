@@ -33,11 +33,41 @@ def connect(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
     return conn
 
 
+def resolve_db_path() -> Path:
+    """The one place the DB location is decided (env override for Railway)."""
+    import os
+    return Path(os.getenv("VB_DB_PATH") or DEFAULT_DB_PATH)
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     """Create all tables (idempotent) and run lightweight migrations."""
     conn.executescript(SCHEMA_PATH.read_text())
     _migrate(conn)
+    _seed_player_content(conn)
     conn.commit()
+
+
+def _seed_player_content(conn: sqlite3.Connection) -> None:
+    """Seed the player-side skill taxonomy + drill library (idempotent).
+    Re-running updates drill text in place so knowledge.py stays the source
+    of truth."""
+    from . import knowledge
+
+    for i, s in enumerate(knowledge.SKILLS):
+        conn.execute(
+            "INSERT INTO skills (key, name, sort) VALUES (?, ?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET name = excluded.name, sort = excluded.sort",
+            (s["key"], s["name"], i),
+        )
+    for d in knowledge.DRILLS:
+        conn.execute(
+            "INSERT INTO drills (key, name, skill_key, positions, level, equipment, solo, how_to) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET name = excluded.name, skill_key = excluded.skill_key, "
+            "positions = excluded.positions, level = excluded.level, equipment = excluded.equipment, "
+            "solo = excluded.solo, how_to = excluded.how_to",
+            (d["key"], d["name"], d["skill_key"], d["positions"], d["level"], d["equipment"], d["solo"], d["how_to"]),
+        )
 
 
 def _migrate(conn: sqlite3.Connection) -> None:

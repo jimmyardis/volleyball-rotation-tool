@@ -115,3 +115,107 @@ CREATE TABLE IF NOT EXISTS libero_replacements (
     libero_id       INTEGER NOT NULL REFERENCES players(id),
     replaces_id     INTEGER NOT NULL REFERENCES players(id)
 );
+
+-- ============================================================ player side
+-- The player-facing companion app (spec: player-side-spec.md). One backend,
+-- one database; players are USER accounts, optionally linkable to a roster
+-- players.id later (CoachLink deferred past MVP).
+
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY,
+    username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    display_name  TEXT NOT NULL,
+    role          TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player', 'coach')),
+    password_hash TEXT NOT NULL,     -- pbkdf2-sha256, format: salt$hexdigest
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    token       TEXT NOT NULL UNIQUE,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS player_profiles (
+    id                 INTEGER PRIMARY KEY,
+    user_id            INTEGER NOT NULL UNIQUE REFERENCES users(id),
+    position           TEXT CHECK (position IN ('S','OH','MB','OPP','L','DS')),
+    secondary_position TEXT,
+    level_band         TEXT DEFAULT 'high_school',  -- rec|club|middle_school|high_school
+    roster_player_id   INTEGER REFERENCES players(id),  -- optional coach-app link
+    created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- The 8-skill taxonomy (6 fundamentals + movement + game IQ). Seeded in code.
+CREATE TABLE IF NOT EXISTS skills (
+    id    INTEGER PRIMARY KEY,
+    key   TEXT NOT NULL UNIQUE,
+    name  TEXT NOT NULL,
+    sort  INTEGER NOT NULL DEFAULT 0
+);
+
+-- Timestamped, re-takeable assessments: levels 1-5
+-- (Foundation / Developing / Proficient / Advanced / Mastery).
+CREATE TABLE IF NOT EXISTS skill_assessments (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    skill_key   TEXT NOT NULL,
+    level       INTEGER NOT NULL CHECK (level BETWEEN 1 AND 5),
+    source      TEXT NOT NULL DEFAULT 'self' CHECK (source IN ('self','coach','video')),
+    assessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS plans (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    position    TEXT NOT NULL,
+    status      TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','archived')),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Mastery-gated blocks: 'locked' -> 'active' -> 'done'. One active at a time.
+CREATE TABLE IF NOT EXISTS plan_blocks (
+    id               INTEGER PRIMARY KEY,
+    plan_id          INTEGER NOT NULL REFERENCES plans(id),
+    block_order      INTEGER NOT NULL,
+    skill_key        TEXT NOT NULL,
+    title            TEXT NOT NULL,
+    level_target     INTEGER NOT NULL,
+    success_criteria TEXT NOT NULL,
+    drill_keys       TEXT NOT NULL DEFAULT '[]',   -- JSON list of drills.key
+    status           TEXT NOT NULL DEFAULT 'locked' CHECK (status IN ('locked','active','done'))
+);
+
+CREATE TABLE IF NOT EXISTS plan_checkpoints (
+    id           INTEGER PRIMARY KEY,
+    block_id     INTEGER NOT NULL REFERENCES plan_blocks(id),
+    cp_order     INTEGER NOT NULL,
+    text         TEXT NOT NULL,
+    done         INTEGER NOT NULL DEFAULT 0
+);
+
+-- Drill library (seeded from knowledge.py; coach-pushed drills come later).
+CREATE TABLE IF NOT EXISTS drills (
+    id         INTEGER PRIMARY KEY,
+    key        TEXT NOT NULL UNIQUE,
+    name       TEXT NOT NULL,
+    skill_key  TEXT NOT NULL,
+    positions  TEXT NOT NULL DEFAULT 'all',  -- 'all' or CSV of position codes
+    level      INTEGER NOT NULL DEFAULT 1,   -- 1-5 entry level
+    equipment  TEXT NOT NULL DEFAULT 'ball',
+    solo       INTEGER NOT NULL DEFAULT 1,   -- 1 = can do alone
+    how_to     TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS training_logs (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    log_date    TEXT NOT NULL,               -- YYYY-MM-DD
+    skills      TEXT NOT NULL DEFAULT '[]',  -- JSON list of skill keys
+    drill_keys  TEXT NOT NULL DEFAULT '[]',  -- JSON list of drills.key
+    quality     INTEGER CHECK (quality BETWEEN 1 AND 5),
+    minutes     INTEGER,
+    notes       TEXT,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
