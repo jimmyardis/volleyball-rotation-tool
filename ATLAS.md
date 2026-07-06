@@ -21,8 +21,9 @@ pass; full player journey verified via Playwright screenshots. Player Zone is
 built + committed locally, NOT yet deployed.
 
 ## Next Action
-Deploy the Player Zone build to Railway (`railway up` from backend — webdist
-is current) + subtree-push GitHub, then have the daughter create her account.
+Add-to-Home-Screen web app packaging (manifest + icons + theme colors) —
+user approved the approach, said "not just yet"; do when asked. Then: camera
+serve-assessment v1 (client-side MediaPipe, serve-only, metrics-only upload).
 
 ## Blockers
 None.
@@ -33,6 +34,21 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-06 (session 10b) — Player Zone deployed + floating coach bubble
+- Player Zone DEPLOYED (deployment 8b0fbd56 SUCCESS; new /player/* tables
+  auto-created on startup; coach data intact) + GitHub subtree pushed.
+- Added floating "My Coach" bubble on every Player Zone tab (except Coach
+  tab): `PlayerCoachBubble.jsx` + `useCoachChat.js` hook; thread state lifted
+  to PlayerApp so bubble + Coach tab are ONE conversation; Expand button
+  jumps to the full pane. Verified via Playwright (fab on Home/Train, absent
+  on Coach, Expand navigates). Deployed (49b0ff69 SUCCESS) + GitHub pushed
+  (5339958..cd3f03b). NOTE: `git subtree split` must run from the repo
+  toplevel (/home/wner), not a subdir.
+- Decisions this session: web-first stays (camera feature works in Safari
+  via MediaPipe WASM — no native app needed); iPhone path = Add to Home
+  Screen now, Capacitor only if it outgrows family use. User wants the
+  home-screen packaging LATER, not yet.
+
 ### 2026-07-06 (session 10) — Player Zone (player-side MVP)
 - Built the MVP scope of `player-side-spec.md` (spec provided by user; key
   adjustments, documented here because the spec predates reality):
