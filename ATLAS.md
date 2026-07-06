@@ -16,12 +16,14 @@ rotation/phase transitions, drag-and-drop lineup builder (bench → court),
 trading-card roster with radar charts, mini-court thumbnails as rotation tabs,
 tap-a-chip substitution panel, geometric overlap-fault lines (backend now
 returns structured `fault_pairs`), and ranked simulation cards. 35 backend
-tests pass; every screen verified via Playwright screenshots. NOT yet
-committed or deployed to Railway.
+tests pass; every screen verified via Playwright screenshots. Committed
+(81bddc7 + 401a270), DEPLOYED to Railway (2026-07-06, deployment 03fb8812
+SUCCESS, live site verified serving the new build, volume data intact), and
+pushed to the standalone GitHub repo (5f8a8e8..3e6fc56).
 
 ## Next Action
-Commit + push the redesign, then redeploy (rebuild frontend → copy dist to
-backend/webdist → `railway up` from backend). webdist already has the new build.
+Have the daughter play with the new UI and collect her reactions. Then:
+Phase 2 (stat tracking) or the tabled diagonal opposite-pairing feature.
 
 ## Blockers
 None.
@@ -67,7 +69,11 @@ None.
   extracted libasound2 — no sudo): screenshots of all screens, real drag on
   receive (fault lines render), bench→court swap drag in the editor, sim run.
   Test server ran on :8010 against a COPY of the db; real db untouched.
-- webdist refreshed with the new build. Left NOT committed / NOT deployed.
+- webdist refreshed with the new build. Committed (81bddc7 mid-session sweep
+  by a concurrent agent + 401a270 finishing fixes), then user said "push":
+  `railway up` deploy 03fb8812 SUCCESS, live site confirmed on the new asset
+  hashes with /health + /teams intact; subtree split pushed to
+  jimmyardis/volleyball-rotation-tool (5f8a8e8..3e6fc56).
 - DEPLOYED to Railway as a single service. Live:
   https://volleyball-api-production.up.railway.app
 - Prep: FastAPI serves the built frontend from `backend/webdist` (mounted last so
