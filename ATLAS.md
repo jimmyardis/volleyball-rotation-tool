@@ -10,20 +10,19 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
-Full visual redesign shipped locally (2026-07-06, for the user's daughter):
-role-colored player tokens everywhere, FIVB-style orange/teal court, animated
-rotation/phase transitions, drag-and-drop lineup builder (bench → court),
-trading-card roster with radar charts, mini-court thumbnails as rotation tabs,
-tap-a-chip substitution panel, geometric overlap-fault lines (backend now
-returns structured `fault_pairs`), and ranked simulation cards. 35 backend
-tests pass; every screen verified via Playwright screenshots. Committed
-(81bddc7 + 401a270), DEPLOYED to Railway (2026-07-06, deployment 03fb8812
-SUCCESS, live site verified serving the new build, volume data intact), and
-pushed to the standalone GitHub repo (5f8a8e8..3e6fc56).
+Two surfaces now: the coach tool (visually redesigned 2026-07-06 and deployed)
+and the new PLAYER ZONE (#player) — the player-side MVP from
+player-side-spec.md: player accounts (PBKDF2 + session tokens), onboarding
+(position + 8-skill self-assessment), position-weighted mastery-gated
+progression plans, training log + 24-drill library, progress radar/streaks,
+and a personalized AI coach grounded in the player's own data + a curated
+knowledge module (no vector store needed at this scale). 40 backend tests
+pass; full player journey verified via Playwright screenshots. Player Zone is
+built + committed locally, NOT yet deployed.
 
 ## Next Action
-Have the daughter play with the new UI and collect her reactions. Then:
-Phase 2 (stat tracking) or the tabled diagonal opposite-pairing feature.
+Deploy the Player Zone build to Railway (`railway up` from backend — webdist
+is current) + subtree-push GitHub, then have the daughter create her account.
 
 ## Blockers
 None.
@@ -34,6 +33,43 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-06 (session 10) — Player Zone (player-side MVP)
+- Built the MVP scope of `player-side-spec.md` (spec provided by user; key
+  adjustments, documented here because the spec predates reality):
+  SQLite not Postgres (matches actual stack); curated `knowledge.py` module
+  instead of a vector store (corpus is small; swappable later); web surface in
+  the SAME React SPA behind `#player` hash (no separate client, reuses the
+  redesign's visual system); auth is player-side only (coach tool stays open
+  as before); solo-first — CoachLink/parent/video all deferred per spec's
+  own phasing.
+- Backend: 10 new tables (users/sessions/player_profiles/skills/
+  skill_assessments/plans/plan_blocks/plan_checkpoints/drills/training_logs),
+  `player.py` router (~20 endpoints), `progression.py` (pure position-weighted
+  plan builder: weakest primary skills first, blocks target current+1, mastery
+  gating with unlock-next + reopen-on-uncheck), `knowledge.py` (8-skill
+  taxonomy, cues + error→cause→correction tables per skill, position guides,
+  24 seeded drills). Auth = PBKDF2-SHA256 (200k iters) + bearer session
+  tokens; skills/drills seeded idempotently in db.init_db (upsert — knowledge
+  module stays source of truth).
+- Player AI coach: `/player/coach-chat` — encouragement-first / one-priority /
+  always-a-next-action system prompt; context = profile + latest levels +
+  active block + last 3 logs; grounded with knowledge snippets selected from
+  the question text (alias matcher) + active block skill. Uses CHAT_MODEL env
+  (default claude-sonnet-4-6). NO paid calls made in build/tests.
+- Frontend: `src/player/` — PlayerApp (position color becomes the surface's
+  --accent), AuthScreen, 2-step Onboarding (role-colored position picker +
+  level-named sliders), Home (today's focus/streak/ask-coach), Plan (gated
+  block cards), Train (drill library w/ filters + session log), Progress
+  (8-axis radar via generalized RadarChart + history + streaks), Coach chat,
+  Profile. RadarChart now takes axes/max props (roster cards unchanged).
+- Tests: 5 new API tests incl. full mastery-gating walk + coach-context
+  assembly (40 total pass). Playwright journey on a fresh scratch DB:
+  register → onboard (Libero) → auto-generated plan led with Digging (weakest
+  primary — correct) → checkpoints toggled → session logged → radar/streaks
+  correct. Screenshots reviewed; fixed minutes-input truncation.
+- NOT deployed yet (webdist has the build). No coach-side auth added — the
+  coach tool is as open as before; revisit before any real launch.
+
 ### 2026-07-06 (session 9) — visual redesign ("less database, more shapes & colors")
 - Built the full visual package the user's daughter asked for:
   1. Role color system (`frontend/src/roles.js`) — one CVD-validated hue per

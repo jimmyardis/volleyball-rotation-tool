@@ -88,6 +88,7 @@ export default function App() {
       <header>
         <h1 className="brand"><Volleyball size={26} /> Rotation &amp; Lineup Tool</h1>
         <div className="team-bar">
+          <a className="pz-switch" href="#player">Player Zone</a>
           <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
           <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>
             <option value="" disabled>Select a team</option>

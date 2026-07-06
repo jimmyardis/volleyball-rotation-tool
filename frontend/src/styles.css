@@ -304,3 +304,99 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
   .zone-grid { grid-template-columns: 1fr; }
   .stepper li { min-width: 120px; }
 }
+
+/* ============================================================ player zone
+   The player-facing surface. The player's POSITION COLOR is injected as
+   --accent on .player-zone, so the whole surface takes their identity. */
+
+.pz-switch { color: var(--dim); font-size: 0.88rem; text-decoration: underline; align-self: center; }
+.pz-whoami { color: var(--dim); font-size: 0.9rem; }
+
+/* auth */
+.pz-auth { display: flex; justify-content: center; margin-top: 2.5rem; }
+.pz-auth-card { max-width: 420px; width: 100%; }
+.pz-auth-form { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.75rem 0 0.5rem; }
+
+/* onboarding — position picker */
+.pz-positions { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.6rem; margin: 0.75rem 0 1rem; }
+.pz-pos {
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+  background: var(--panel-2); border: 2px solid var(--line); border-radius: 10px;
+  padding: 0.7rem 0.5rem; color: var(--text); font-weight: 400;
+}
+.pz-pos.active { border-color: var(--pos-color); background: var(--pos-color); color: var(--pos-ink); }
+.pz-pos-code { font-size: 1.3rem; font-weight: 800; }
+.pz-pos-label { font-size: 0.75rem; opacity: 0.85; text-align: center; }
+
+/* assessment sliders */
+.pz-assess { display: flex; flex-direction: column; gap: 0.45rem; margin: 0.75rem 0; }
+.pz-assess-row { display: grid; grid-template-columns: 200px 1fr 110px; align-items: center; gap: 0.75rem; }
+.pz-assess-name { font-size: 0.92rem; }
+.pz-assess-level { color: var(--accent); font-weight: 600; font-size: 0.88rem; }
+
+/* home */
+.pz-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.9rem; }
+.pz-card-title { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; color: var(--dim); text-transform: uppercase; margin-bottom: 0.4rem; }
+.pz-today h3, .pz-streak h3 { margin: 0.2rem 0 0.4rem; }
+.pz-next-cp { background: var(--panel-2); border-left: 3px solid var(--accent); border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.9rem; }
+.pz-stats-row { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: 0.5rem 0 0.75rem; }
+.pz-stat { display: flex; flex-direction: column; align-items: center; }
+.pz-stat-num { font-size: 1.7rem; font-weight: 800; color: var(--accent); }
+.pz-stat-label { font-size: 0.72rem; color: var(--dim); text-align: center; }
+
+/* plan */
+.pz-plan-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+.pz-celebrate { background: rgba(79,157,119,0.15); border: 1px solid var(--good); color: var(--good); border-radius: 8px; padding: 0.55rem 0.8rem; font-weight: 600; }
+.pz-block.locked { opacity: 0.55; }
+.pz-block.active { border-color: var(--accent); }
+.pz-block.done { border-color: var(--good); }
+.pz-block-head { display: flex; align-items: center; gap: 0.6rem; }
+.pz-block-head h3 { margin: 0; flex: 1; }
+.pz-block-num { width: 26px; height: 26px; border-radius: 50%; background: var(--panel-2); color: var(--dim); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.pz-block.active .pz-block-num { background: var(--accent); color: var(--accent-ink); }
+.pz-block.done .pz-block-num { background: var(--good); color: #00120a; }
+.pz-block-status { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px; border-radius: 4px; padding: 0.15rem 0.45rem; background: var(--panel-2); color: var(--dim); }
+.pz-block-status.active { background: rgba(224,138,60,0.16); color: var(--accent); }
+.pz-block-status.done { background: rgba(79,157,119,0.16); color: var(--good); }
+.pz-checkpoints { list-style: none; padding: 0; margin: 0.6rem 0 0.4rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.pz-checkpoints .checkbox { color: var(--text); align-items: flex-start; }
+.pz-checkpoints input[type="checkbox"] { margin-top: 0.2rem; accent-color: var(--accent); }
+.pz-cp-done { text-decoration: line-through; color: var(--dim); }
+.pz-block-drills { font-size: 0.88rem; color: var(--dim); display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+
+/* train */
+.pz-log-form { display: flex; flex-direction: column; gap: 0.5rem; }
+.pz-chip-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.pz-skill-chip.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.pz-notes { flex: 1; min-width: 220px; }
+.pz-minutes { width: 90px; }
+.pz-drill-filter { align-items: center; gap: 0.75rem; margin-top: 1rem; }
+.pz-drill-filter h3 { margin: 0; flex: none; }
+.pz-drills { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 0.75rem; }
+.pz-drill { margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.pz-drill.off-position { opacity: 0.6; }
+.pz-drill-head { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.pz-drill-lvl { color: var(--accent); font-size: 0.7rem; letter-spacing: 2px; margin-left: auto; }
+.pz-drill-how { margin: 0; font-size: 0.88rem; color: var(--text); }
+.pz-drill-meta { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin-top: auto; }
+.pz-log-list { list-style: none; padding: 0; margin: 0.5rem 0; }
+.pz-log-item { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; padding: 0.5rem 0.8rem; margin: 0.4rem 0; }
+.pz-log-date { color: var(--dim); font-size: 0.82rem; font-variant-numeric: tabular-nums; flex: none; }
+.pz-log-notes { color: var(--dim); font-size: 0.85rem; font-style: italic; width: 100%; }
+
+/* progress */
+.pz-progress-grid { display: grid; grid-template-columns: minmax(260px, 340px) 1fr; gap: 0.9rem; align-items: start; }
+.pz-radar-card { display: flex; flex-direction: column; align-items: center; }
+.pz-radar-card .radar { max-width: 240px; }
+.pz-radar-caption { text-align: center; margin: 0.3rem 0 0.6rem; }
+.pz-history { display: flex; gap: 0.7rem; align-items: baseline; padding: 0.5rem 0.8rem; margin: 0.4rem 0; flex-wrap: wrap; font-size: 0.9rem; }
+
+/* coach chat (full pane) */
+.pz-chat { padding: 0; display: flex; flex-direction: column; height: 480px; }
+.pz-chat-body { flex: 1; }
+.pz-coach .warn { max-width: 640px; }
+
+@media (max-width: 760px) {
+  .pz-assess-row { grid-template-columns: 1fr; gap: 0.15rem; }
+  .pz-progress-grid { grid-template-columns: 1fr; }
+}
