@@ -21,9 +21,10 @@ pass; full player journey verified via Playwright screenshots. Player Zone is
 built + committed locally, NOT yet deployed.
 
 ## Next Action
-Add-to-Home-Screen web app packaging (manifest + icons + theme colors) —
-user approved the approach, said "not just yet"; do when asked. Then: camera
-serve-assessment v1 (client-side MediaPipe, serve-only, metrics-only upload).
+Have the daughter install it (Safari → Share → Add to Home Screen) and use it
+for a week. PINNED (user's call, revisit later): camera serve-assessment v1
+(client-side MediaPipe, serve-only, metrics-only upload). Pre-launch list
+still has: coach-tool auth.
 
 ## Blockers
 None.
@@ -34,6 +35,20 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-06 (session 10c) — installable web app + mobile fix (deployed)
+- Add-to-Home-Screen packaging: manifest.webmanifest (standalone, start_url
+  /#player — installed app launches into the Player Zone), icon set generated
+  from the brand mark with PIL (512/192/apple-touch/favicon in
+  frontend/public/), apple web-app metas + black-translucent status bar +
+  viewport-fit=cover, safe-area insets for notch/home-indicator.
+- Mobile bug found at iPhone viewport (390px): 6 tabs overflowed nav.tabs,
+  Progress/Profile unreachable. Fixed: horizontal-scroll tab bar (no wrap,
+  hidden scrollbar), tighter padding <480px. Verified via Playwright mobile
+  emulation (login → Home → Plan → Progress).
+- Deployed (6f55c092 SUCCESS; manifest + icons verified live) + GitHub
+  subtree pushed (cd3f03b..c5082f5).
+- Camera/pose feature PINNED by user for later.
+
 ### 2026-07-06 (session 10b) — Player Zone deployed + floating coach bubble
 - Player Zone DEPLOYED (deployment 8b0fbd56 SUCCESS; new /player/* tables
   auto-created on startup; coach data intact) + GitHub subtree pushed.
