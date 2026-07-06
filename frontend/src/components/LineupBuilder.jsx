@@ -1,16 +1,9 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import SubstitutionSetup from "./SubstitutionSetup.jsx";
+import CourtEditor from "./CourtEditor.jsx";
 
 const SYSTEMS = ["5-1", "6-2", "4-2"];
-const ZONE_LABELS = {
-  1: "Zone 1 — right back (server)",
-  2: "Zone 2 — right front",
-  3: "Zone 3 — center front",
-  4: "Zone 4 — left front",
-  5: "Zone 5 — left back",
-  6: "Zone 6 — center back",
-};
 
 export default function LineupBuilder({ teamId, players, lineups, reload, onView }) {
   const [newLineup, setNewLineup] = useState({ name: "", system: "5-1", notes: "" });
@@ -47,16 +40,6 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
     } catch (err) {
       setError(err.message);
     }
-  }
-
-  function setZone(zone, playerId) {
-    setAssign((a) => ({ ...a, [zone]: playerId ? Number(playerId) : undefined }));
-    setSaved(false);
-  }
-
-  // a player already placed in another zone (to grey out duplicates)
-  function placedElsewhere(zone, playerId) {
-    return Object.entries(assign).some(([z, pid]) => Number(z) !== zone && pid === playerId);
   }
 
   async function savePositions() {
@@ -128,26 +111,15 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
                 Starting six — {selected.name} <span className="tag">{selected.system}</span>
               </h3>
               <p className="hint">
-                Assign one player per zone. The other 5 rotations are computed from this.
+                Drag each player from the bench into a zone — drop one player on
+                another to swap them, or drag them off the court to bench them.
+                The other 5 rotations are computed from this.
               </p>
-              <div className="zone-grid">
-                {[4, 3, 2, 5, 6, 1].map((zone) => (
-                  <label key={zone} className="zone-assign">
-                    <span className="zone-tag">{ZONE_LABELS[zone]}</span>
-                    <select
-                      value={assign[zone] ?? ""}
-                      onChange={(e) => setZone(zone, e.target.value)}
-                    >
-                      <option value="">— pick —</option>
-                      {players.map((p) => (
-                        <option key={p.id} value={p.id} disabled={placedElsewhere(zone, p.id)}>
-                          #{p.jersey_number ?? "–"} {p.name} ({p.primary_role})
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ))}
-              </div>
+              <CourtEditor
+                players={players}
+                assign={assign}
+                onChange={(next) => { setAssign(next); setSaved(false); }}
+              />
               <div className="form-row">
                 <button onClick={savePositions}>Save starting six</button>
                 {saved && (

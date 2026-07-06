@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../api.js";
 import Court from "./Court.jsx";
+import MiniCourt from "./MiniCourt.jsx";
+import { roleColor, roleInk } from "../roles.js";
 
 const PHASES = [
   { key: "serve", label: "Serving", editable: false,
@@ -18,7 +20,7 @@ function buildPlacements(coords, positions, playersById, meta) {
     const p = playersById[pid] || {};
     const [x, y] = coords[zone];
     return {
-      key: pid, playerId: pid, x, y,
+      key: pid, playerId: pid, zone: Number(zone), x, y,
       jersey: p.jersey_number, role: p.primary_role, name: p.name,
       isServer: pid === meta.server_id,
       isSetter: pid === meta.setter_id,
@@ -83,7 +85,7 @@ export default function RotationViewer({ lineupId }) {
     const byPlayer = {};
     for (const [zone, pid] of Object.entries(rot.positions)) byPlayer[pid] = editCoords[zone];
     const res = await api.saveFormation(lineupId, idx, phase, byPlayer);
-    setOverlap(phase === "receive" ? { legal: res.legal, faults: res.faults } : null);
+    setOverlap(phase === "receive" ? { legal: res.legal, faults: res.faults, fault_pairs: res.fault_pairs } : null);
     setDirty(false);
     setSavedMsg(phase === "receive" && !res.legal ? "Saved (still has overlap faults)." : "Saved.");
     setData(await api.getRotations(lineupId));
@@ -147,10 +149,20 @@ export default function RotationViewer({ lineupId }) {
       <h2>Rotations — {data.lineup.name} <span className="tag">{data.lineup.system}</span></h2>
 
       <div className="rotation-tabs">
-        <span className="label-inline">Rotation:</span>
         {data.rotations.map((r) => (
-          <button key={r.rotation_index} className={r.rotation_index === idx ? "active" : ""} onClick={() => setIdx(r.rotation_index)}>
-            R{r.rotation_index + 1}
+          <button
+            key={r.rotation_index}
+            className={`rotation-thumb ${r.rotation_index === idx ? "active" : ""}`}
+            onClick={() => setIdx(r.rotation_index)}
+            title={`Rotation ${r.rotation_index + 1}`}
+          >
+            <MiniCourt
+              positions={r.positions}
+              playersById={playersById}
+              serverId={r.metadata.server_id}
+              setterId={r.metadata.setter_id}
+            />
+            <span>R{r.rotation_index + 1}</span>
           </button>
         ))}
         <span className="spacer" />
@@ -173,19 +185,34 @@ export default function RotationViewer({ lineupId }) {
       {showSubs && (
         <div className="card subs-editor">
           <h4>Who's on court — Rotation {idx + 1}</h4>
-          <p className="hint">Pick the player for each zone. Bench players (and the libero) can come in for a starter; leave the starter selected to keep them in.</p>
+          <p className="hint">Tap a player to put them on court in that zone. The outlined chip is who's in now; starters are marked with a dot.</p>
           <div className="zone-grid">
             {[4, 3, 2, 5, 6, 1].map((zone) => (
-              <label key={zone} className="zone-assign">
+              <div key={zone} className="zone-assign">
                 <span className="zone-tag">Zone {zone}{zone === 1 ? " (server)" : ""}</span>
-                <select value={rot.positions[zone]} onChange={(e) => changeOnCourt(zone, e.target.value)}>
-                  {candidatesFor(zone).map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {jersey(p)} {p.name} ({p.primary_role}){p.id === rot.starter_positions[zone] ? " — starter" : ""}{p.is_libero ? " — libero" : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                <div className="sub-chips">
+                  {candidatesFor(zone).map((p) => {
+                    const onCourt = rot.positions[zone] === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`sub-chip ${onCourt ? "on-court" : ""}`}
+                        onClick={() => !onCourt && changeOnCourt(zone, p.id)}
+                        title={`${p.name}${p.id === rot.starter_positions[zone] ? " — starter" : ""}${p.is_libero ? " — libero" : ""}`}
+                      >
+                        <span className="chip-dot" style={{ background: roleColor(p.primary_role), color: roleInk(p.primary_role) }}>
+                          {p.jersey_number ?? "–"}
+                        </span>
+                        <span className="chip-name">
+                          {p.name}
+                          {p.id === rot.starter_positions[zone] && <span className="starter-dot" title="starter" />}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             ))}
           </div>
           <div className="form-row">
@@ -198,7 +225,8 @@ export default function RotationViewer({ lineupId }) {
       <div className="viewer-grid">
         <div>
           <Court placements={placements} draggable={editable} onDrag={onDrag}
-                 fault={phase === "receive" && overlap && !overlap.legal} />
+                 fault={phase === "receive" && overlap && !overlap.legal}
+                 faultPairs={phase === "receive" ? (overlap?.fault_pairs ?? []) : []} />
 
           {editable && (
             <div className="receive-controls">

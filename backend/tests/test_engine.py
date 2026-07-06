@@ -112,6 +112,17 @@ def test_left_right_order_violation_is_a_fault():
     assert any("front row" in f for f in faults)
 
 
+def test_overlap_detail_names_the_zone_pair_and_axis():
+    coords = _legal_coords()
+    coords[1] = (3.0, 0.5)  # right back creeps ahead of right front (zone 2)
+    detail = engine.check_overlap_detail(coords)
+    assert {"zone_a": 2, "zone_b": 1, "axis": "front_back"} == {
+        k: detail[0][k] for k in ("zone_a", "zone_b", "axis")
+    }
+    # the string version stays derived from the detail
+    assert engine.check_overlap(coords) == [f["text"] for f in detail]
+
+
 # ---- Phases: serve / receive / base ------------------------------------
 
 def test_serve_positions_cover_all_six_and_server_is_deep():

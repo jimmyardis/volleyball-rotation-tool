@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ROLES, ATTRS } from "../api.js";
+import { roleMeta, overallRating } from "../roles.js";
+import RadarChart from "./RadarChart.jsx";
 
 const EMPTY_ATTRS = { setting: 50, attacking: 50, blocking: 50, defense: 50, confidence: 50, pressure: 50 };
 const EMPTY = {
@@ -78,6 +80,7 @@ export default function RosterScreen({ teamId, players, reload }) {
       is_libero: !!p.is_libero,
       attrs: Object.fromEntries(ATTRS.map((a) => [a.key, p[a.key] ?? 50])),
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function remove(id) {
@@ -94,11 +97,11 @@ export default function RosterScreen({ teamId, players, reload }) {
     <div className="screen">
       <h2>Roster</h2>
       <p className="hint">
-        Every player gets a permanent ID. Stats (Phase 2) and the simulator
-        (Phase 3) will all hang off these IDs.
+        Every player gets a card. The skill radar drives the game simulator.
       </p>
 
       <form className="card" onSubmit={submit}>
+        <h4 className="form-title">{editingId ? "Edit player" : "Add a player"}</h4>
         <div className="form-row">
           <input placeholder="Name" value={form.name} onChange={(e) => set("name", e.target.value)} />
           <input type="number" placeholder="#" className="narrow"
@@ -122,8 +125,8 @@ export default function RosterScreen({ teamId, players, reload }) {
           <div className="attrs-grid">
             {ATTRS.map((a) => (
               <label key={a.key} className="attr-field">
-                <span>{a.label}</span>
-                <input type="number" min="0" max="100" value={form.attrs[a.key]}
+                <span>{a.label} <strong className="attr-val">{form.attrs[a.key]}</strong></span>
+                <input type="range" min="0" max="100" value={form.attrs[a.key] || 0}
                        onChange={(e) => setAttr(a.key, e.target.value)} />
               </label>
             ))}
@@ -139,29 +142,35 @@ export default function RosterScreen({ teamId, players, reload }) {
       </form>
       {error && <p className="error">{error}</p>}
 
-      <table className="roster-table">
-        <thead>
-          <tr><th>#</th><th>Name</th><th>Role</th><th>2nd</th><th>Libero</th><th></th></tr>
-        </thead>
-        <tbody>
-          {players.length === 0 && (
-            <tr><td colSpan={6} className="empty">No players yet — add some above.</td></tr>
-          )}
-          {players.map((p) => (
-            <tr key={p.id}>
-              <td>{p.jersey_number ?? "–"}</td>
-              <td>{p.name}</td>
-              <td>{p.primary_role}</td>
-              <td>{p.secondary_role ?? "–"}</td>
-              <td>{p.is_libero ? "Yes" : ""}</td>
-              <td className="actions">
+      {players.length === 0 && <p className="empty">No players yet — add some above.</p>}
+
+      <div className="player-cards">
+        {players.map((p) => {
+          const meta = roleMeta(p.primary_role);
+          const overall = overallRating(p);
+          return (
+            <div key={p.id} className={`player-card ${editingId === p.id ? "editing" : ""}`}>
+              <div className="pc-band" style={{ background: meta.color, color: meta.ink }}>
+                <span className="pc-jersey">{p.jersey_number ?? "–"}</span>
+                <span className="pc-nameblock">
+                  <span className="pc-name">{p.name}</span>
+                  <span className="pc-role">
+                    {meta.label}
+                    {p.secondary_role ? ` · ${p.secondary_role}` : ""}
+                  </span>
+                </span>
+                {overall != null && <span className="pc-overall" title="Overall (average of skills)">{overall}</span>}
+              </div>
+              {p.is_libero && <span className="pc-libero">LIBERO</span>}
+              <RadarChart attrs={p} color={meta.color} />
+              <div className="pc-actions">
                 <button className="ghost" onClick={() => startEdit(p)}>Edit</button>
                 <button className="ghost danger" onClick={() => remove(p.id)}>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

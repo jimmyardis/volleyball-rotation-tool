@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api } from "../api.js";
+import MiniCourt from "./MiniCourt.jsx";
 
 const STAKES = [
   { label: "Low (scrimmage)", value: 0.2 },
@@ -12,6 +13,7 @@ export default function SimulationScreen({ lineups }) {
   const [stakes, setStakes] = useState(0.5);
   const [opponent, setOpponent] = useState(60);
   const [result, setResult] = useState(null);
+  const [rotations, setRotations] = useState(null); // for the mini-court per rank card
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -19,8 +21,12 @@ export default function SimulationScreen({ lineups }) {
     if (!lineupId) return;
     setBusy(true); setError(null); setResult(null);
     try {
-      const res = await api.simulate(lineupId, { stakes, opponent_skill: opponent, games: 10000 });
+      const [res, rots] = await Promise.all([
+        api.simulate(lineupId, { stakes, opponent_skill: opponent, games: 10000 }),
+        api.getRotations(lineupId),
+      ]);
       setResult(res);
+      setRotations(rots);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -31,6 +37,9 @@ export default function SimulationScreen({ lineups }) {
   const playersById = result ? Object.fromEntries(result.players.map((p) => [p.id, p])) : {};
   const ranked = result ? [...result.per_rotation].sort((a, b) => b.win_pct - a.win_pct) : [];
   const maxWin = ranked.length ? ranked[0].win_pct : 100;
+  const rotByIndex = rotations
+    ? Object.fromEntries(rotations.rotations.map((r) => [r.rotation_index, r]))
+    : {};
 
   return (
     <div className="screen">
@@ -71,28 +80,39 @@ export default function SimulationScreen({ lineups }) {
             <span className="dim"> ({result.games_per_rotation.toLocaleString()} games each)</span>
           </div>
 
-          <table className="sim-table">
-            <thead>
-              <tr><th>Rank</th><th>Rotation</th><th>Serving</th><th>Setter</th><th>Attackers</th><th>Win %</th></tr>
-            </thead>
-            <tbody>
-              {ranked.map((r, i) => (
-                <tr key={r.rotation_index} className={r.rotation_index === result.best_rotation ? "best" : ""}>
-                  <td>{i + 1}</td>
-                  <td>R{r.rotation_index + 1}</td>
-                  <td>{playersById[r.server_id]?.name ?? "—"}</td>
-                  <td>{r.setter_location} row</td>
-                  <td>{r.attacker_count}</td>
-                  <td>
-                    <div className="winbar-wrap">
-                      <div className="winbar" style={{ width: `${(r.win_pct / maxWin) * 100}%` }} />
-                      <span>{r.win_pct}%</span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="sim-cards">
+            {ranked.map((r, i) => {
+              const rot = rotByIndex[r.rotation_index];
+              const isBest = r.rotation_index === result.best_rotation;
+              const isWorst = r.rotation_index === result.worst_rotation;
+              return (
+                <div key={r.rotation_index} className={`sim-card ${isBest ? "best" : ""} ${isWorst ? "worst" : ""}`}>
+                  <div className="sim-card-head">
+                    <span className="sim-rank">#{i + 1}</span>
+                    <strong>Rotation {r.rotation_index + 1}</strong>
+                    {isBest && <span className="sim-flag good-flag">BEST</span>}
+                    {isWorst && <span className="sim-flag bad-flag">WORK ON THIS</span>}
+                  </div>
+                  {rot && (
+                    <MiniCourt
+                      positions={rot.positions}
+                      playersById={playersById}
+                      serverId={rot.metadata.server_id}
+                      setterId={rot.metadata.setter_id}
+                    />
+                  )}
+                  <div className="winbar-wrap">
+                    <div className="winbar" style={{ width: `${(r.win_pct / maxWin) * 100}%` }} />
+                    <span className="win-pct">{r.win_pct}%</span>
+                  </div>
+                  <div className="sim-card-meta">
+                    <span>{playersById[r.server_id]?.name ?? "—"} serving</span>
+                    <span>{r.setter_location}-row setter · {r.attacker_count} attackers</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
           <p className="hint">
             Tip: a back-row setter (3 attackers) usually rates higher than a
             front-row setter (2 attackers). Ask the Coach Assistant why a

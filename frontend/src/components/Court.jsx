@@ -2,27 +2,28 @@
 // y 0..1 net->baseline). The net is at the top. Works for every phase:
 // serve and base are read-only; receive passes `draggable` + `onDrag` so the
 // coach can slide players to passing spots.
+//
+// Players are role-colored tokens that ANIMATE between positions (CSS
+// transform transition), so switching rotation or phase slides everyone to
+// their new spot instead of teleporting. `faultPairs` draws the overlap
+// violations as red lines between the two offending players.
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { roleColor, roleInk, ZONE_CELLS } from "../roles.js";
 
 const W = 400;
-const H = 300;
+const H = 310;
 const OX = 24;     // court origin x
-const OY = 44;     // court origin y (room for the net label on top)
+const OY = 52;     // court origin y (room for the net band on top)
 const CW = W - OX * 2;
-const CH = H - OY - 20;
-
-// faint zone-cell guides (where each rotational zone nominally sits)
-const ZONE_CELLS = {
-  4: [0, 0], 3: [1, 0], 2: [2, 0],
-  5: [0, 1], 6: [1, 1], 1: [2, 1],
-};
+const CH = H - OY - 26;
 
 const toSvg = (x, y) => [OX + x * CW, OY + y * CH];
 
-export default function Court({ placements, draggable = false, onDrag, fault = false }) {
+export default function Court({ placements, draggable = false, onDrag, fault = false, faultPairs = [] }) {
   const svgRef = useRef(null);
   const dragId = useRef(null);
+  const [draggingId, setDraggingId] = useState(null); // transition off while dragging
 
   function clientToNorm(e) {
     const pt = svgRef.current.createSVGPoint();
@@ -37,6 +38,7 @@ export default function Court({ placements, draggable = false, onDrag, fault = f
   function onPointerDown(e, playerId) {
     if (!draggable) return;
     dragId.current = playerId;
+    setDraggingId(playerId);
     e.target.setPointerCapture?.(e.pointerId);
   }
   function onPointerMove(e) {
@@ -49,8 +51,11 @@ export default function Court({ placements, draggable = false, onDrag, fault = f
     const [nx, ny] = clientToNorm(e);
     const id = dragId.current;
     dragId.current = null;
+    setDraggingId(null);
     onDrag?.(id, nx, ny, true); // committed = true -> revalidate
   }
+
+  const byZone = Object.fromEntries(placements.filter((p) => p.zone != null).map((p) => [p.zone, p]));
 
   return (
     <svg
@@ -63,17 +68,20 @@ export default function Court({ placements, draggable = false, onDrag, fault = f
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
     >
-      <text x={W / 2} y={24} textAnchor="middle" className="net-label">NET</text>
-      <line x1={OX} y1={OY - 8} x2={OX + CW} y2={OY - 8} className="net-line" />
+      {/* net band */}
+      <rect x={OX - 6} y={OY - 14} width={CW + 12} height={8} className="net-band" />
+      <text x={W / 2} y={OY - 22} textAnchor="middle" className="net-label">NET</text>
 
+      {/* playing surface: FIVB-style orange court on a teal free zone */}
       <rect x={OX} y={OY} width={CW} height={CH} className="court-outline" />
+      {/* attack (3 m) line */}
       <line x1={OX} y1={OY + CH / 2} x2={OX + CW} y2={OY + CH / 2} className="court-line" />
 
       {/* faint zone guides */}
       {Object.entries(ZONE_CELLS).map(([zone, [col, row]]) => (
         <text
           key={zone}
-          x={OX + col * (CW / 3) + 8}
+          x={OX + col * (CW / 3) + 9}
           y={OY + row * (CH / 2) + 18}
           className="zone-num"
         >
@@ -81,22 +89,42 @@ export default function Court({ placements, draggable = false, onDrag, fault = f
         </text>
       ))}
 
+      {/* overlap fault lines — drawn under the players */}
+      {faultPairs.map((f, i) => {
+        const a = byZone[f.zone_a], b = byZone[f.zone_b];
+        if (!a || !b) return null;
+        const [ax, ay] = toSvg(a.x, a.y);
+        const [bx, by] = toSvg(b.x, b.y);
+        return (
+          <g key={i} className="fault-pair">
+            <line x1={ax} y1={ay} x2={bx} y2={by} className="fault-line" />
+            <circle cx={ax} cy={ay} r={29} className="fault-ring" />
+            <circle cx={bx} cy={by} r={29} className="fault-ring" />
+          </g>
+        );
+      })}
+
       {placements.map((p) => {
         const [cx, cy] = toSvg(p.x, p.y);
+        const color = roleColor(p.role);
+        const ink = roleInk(p.role);
         return (
           <g
             key={p.key ?? p.playerId}
-            className={`player ${p.isServer ? "is-server" : ""} ${p.isSetter ? "is-setter" : ""} ${draggable ? "grab" : ""}`}
+            className={`player ${draggable ? "grab" : ""} ${p.playerId === draggingId ? "dragging" : ""}`}
+            style={{ transform: `translate(${cx}px, ${cy}px)` }}
             onPointerDown={(e) => onPointerDown(e, p.playerId)}
           >
-            <circle cx={cx} cy={cy} r={24} className="player-circle" />
-            <text x={cx} y={cy - 1} textAnchor="middle" className="player-jersey">
+            {p.isServer && <circle r={30} className="server-halo" />}
+            <circle r={24} className="player-circle" style={{ fill: color }} />
+            {p.isSetter && <circle r={27} className="setter-ring" />}
+            <text y={-1} textAnchor="middle" className="player-jersey" style={{ fill: ink }}>
               {p.jersey ?? "–"}
             </text>
-            <text x={cx} y={cy + 12} textAnchor="middle" className="player-role">{p.role}</text>
-            <text x={cx} y={cy + 40} textAnchor="middle" className="player-name">{p.name}</text>
+            <text y={12} textAnchor="middle" className="player-role" style={{ fill: ink }}>{p.role}</text>
+            <text y={40} textAnchor="middle" className="player-name">{p.name}</text>
             {p.isServer && (
-              <text x={cx} y={cy - 32} textAnchor="middle" className="badge-serve">SERVE</text>
+              <text y={-36} textAnchor="middle" className="badge-serve">SERVE</text>
             )}
           </g>
         );

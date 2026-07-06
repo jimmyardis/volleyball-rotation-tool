@@ -260,9 +260,12 @@ def save_formation(
 
     if phase == "receive":
         coords = {zone: placements[pid] for zone, pid in state.items() if pid in placements}
-        faults = engine.check_overlap(coords)
-        return {"saved": True, "legal": not faults, "faults": faults}
-    return {"saved": True, "legal": True, "faults": []}
+        detail = engine.check_overlap_detail(coords)
+        return {
+            "saved": True, "legal": not detail,
+            "faults": [f["text"] for f in detail], "fault_pairs": detail,
+        }
+    return {"saved": True, "legal": True, "faults": [], "fault_pairs": []}
 
 
 @app.put("/lineups/{lineup_id}/rotations/{rotation_index}/subs")
@@ -360,8 +363,12 @@ def generate_subs(lineup_id: int, conn=Depends(get_conn)):
 
 @app.post("/overlap-check")
 def overlap_check(body: OverlapCheck):
-    faults = engine.check_overlap({z: tuple(xy) for z, xy in body.coords.items()})
-    return {"legal": not faults, "faults": faults}
+    detail = engine.check_overlap_detail({z: tuple(xy) for z, xy in body.coords.items()})
+    return {
+        "legal": not detail,
+        "faults": [f["text"] for f in detail],
+        "fault_pairs": detail,
+    }
 
 
 # ---------------------------------------------------------------- simulation

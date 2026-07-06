@@ -20,8 +20,14 @@ VALID_SYSTEMS = {"5-1", "6-2", "4-2"}
 
 
 def connect(db_path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
-    """Open a connection with foreign keys on and row access by column name."""
-    conn = sqlite3.connect(str(db_path))
+    """Open a connection with foreign keys on and row access by column name.
+
+    check_same_thread=False: FastAPI may run a sync dependency's setup and
+    teardown in different threadpool threads, which intermittently 500'd every
+    endpoint. Each request still gets its own connection, so there is no
+    concurrent cross-thread use.
+    """
+    conn = sqlite3.connect(str(db_path), check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn

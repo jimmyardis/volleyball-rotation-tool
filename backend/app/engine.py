@@ -378,6 +378,38 @@ def simulate_rotations(
     }
 
 
+def check_overlap_detail(coords: dict[int, tuple[float, float]]) -> list[dict]:
+    """Structured version of check_overlap: each fault names the two zones in
+    conflict plus the violated axis, so a UI can draw the fault between the two
+    players instead of only printing text.
+
+    Fault dict: {"zone_a", "zone_b", "axis": "front_back"|"left_right", "text"}
+    where zone_a is the player who must be nearer the net / further left.
+    """
+    faults: list[dict] = []
+
+    for front_z, back_z in FRONT_BEHIND_PAIRS:
+        if front_z in coords and back_z in coords:
+            if coords[front_z][1] >= coords[back_z][1]:
+                faults.append({
+                    "zone_a": front_z, "zone_b": back_z, "axis": "front_back",
+                    "text": f"Overlap: front-row zone {front_z} must be nearer "
+                            f"the net than back-row zone {back_z}.",
+                })
+
+    for row_name, order in (("front", FRONT_LEFT_TO_RIGHT), ("back", BACK_LEFT_TO_RIGHT)):
+        present = [z for z in order if z in coords]
+        for left_z, right_z in zip(present, present[1:]):
+            if coords[left_z][0] >= coords[right_z][0]:
+                faults.append({
+                    "zone_a": left_z, "zone_b": right_z, "axis": "left_right",
+                    "text": f"Overlap: in the {row_name} row, zone {left_z} must "
+                            f"be to the left of zone {right_z}.",
+                })
+
+    return faults
+
+
 def check_overlap(coords: dict[int, tuple[float, float]]) -> list[str]:
     """Validate serve-receive positional (overlap) rules for custom spots.
 
@@ -394,23 +426,4 @@ def check_overlap(coords: dict[int, tuple[float, float]]) -> list[str]:
     Returns a list of human-readable fault strings; empty list == legal.
     Only checks zones present in `coords`, so it degrades gracefully.
     """
-    faults: list[str] = []
-
-    for front_z, back_z in FRONT_BEHIND_PAIRS:
-        if front_z in coords and back_z in coords:
-            if coords[front_z][1] >= coords[back_z][1]:
-                faults.append(
-                    f"Overlap: front-row zone {front_z} must be nearer the net "
-                    f"than back-row zone {back_z}."
-                )
-
-    for row_name, order in (("front", FRONT_LEFT_TO_RIGHT), ("back", BACK_LEFT_TO_RIGHT)):
-        present = [z for z in order if z in coords]
-        for left_z, right_z in zip(present, present[1:]):
-            if coords[left_z][0] >= coords[right_z][0]:
-                faults.append(
-                    f"Overlap: in the {row_name} row, zone {left_z} must be to "
-                    f"the left of zone {right_z}."
-                )
-
-    return faults
+    return [f["text"] for f in check_overlap_detail(coords)]

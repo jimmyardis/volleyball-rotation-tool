@@ -90,11 +90,24 @@ button.primary { background: var(--accent); color: var(--accent-ink); }
 .zone-assign { display: flex; flex-direction: column; gap: 0.25rem; }
 .zone-tag { font-size: 0.7rem; color: var(--dim); }
 
-/* rotation viewer */
-.rotation-tabs { display: flex; gap: 0.25rem; align-items: center; margin: 0.75rem 0; }
-.rotation-tabs button { background: var(--panel-2); color: var(--text); border: 1px solid var(--line); min-width: 42px; }
-.rotation-tabs button.active { background: var(--accent); color: #1a1300; border-color: var(--accent); }
+/* rotation viewer — mini-court thumbnails as tabs */
+.rotation-tabs { display: flex; gap: 0.4rem; align-items: flex-end; margin: 0.75rem 0; flex-wrap: wrap; }
+.rotation-thumb {
+  background: var(--panel); border: 2px solid var(--line); border-radius: 8px;
+  padding: 4px 4px 2px; display: flex; flex-direction: column; align-items: center;
+  gap: 2px; color: var(--dim); font-size: 0.78rem; font-weight: 600;
+}
+.rotation-thumb.active { border-color: var(--accent); color: var(--accent); }
 .rotation-tabs .spacer { flex: 1; }
+
+/* mini court thumbnails (rotation tabs + simulation cards) */
+.mini-court { width: 84px; height: auto; display: block; background: #17333c; border-radius: 4px; }
+.mini-net { stroke: #e9ebef; stroke-width: 2.5; }
+.mini-surface { fill: #b06229; }
+.mini-line { stroke: #f2ede466; stroke-width: 1; }
+.mini-dot { stroke: #10131a; stroke-width: 1; }
+.mini-dot.is-setter { stroke: #e9ebef; stroke-width: 1.5; }
+.mini-server-halo { fill: var(--accent); }
 
 .viewer-grid { display: grid; grid-template-columns: 1fr 280px; gap: 1.25rem; align-items: start; }
 .lineup-picker { margin-bottom: 0; }
@@ -109,22 +122,29 @@ button.primary { background: var(--accent); color: var(--accent-ink); }
 .pill.front { background: var(--panel-2); color: var(--accent); }
 .pill.back { background: var(--panel-2); color: var(--accent-2); }
 
-/* court SVG — neutral slate surface so the amber/teal markers read clearly */
-.court { width: 100%; height: auto; background: #15171c; border-radius: var(--radius); }
-.net-label { fill: var(--accent); font-size: 13px; font-weight: 700; letter-spacing: 2px; }
-.net-line { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 4 3; }
-.court-outline { fill: #232730; stroke: var(--line); stroke-width: 2; }
-.court-line { stroke: #ffffff33; stroke-width: 1; }
-.zone-num { fill: #ffffff66; font-size: 12px; font-weight: 700; }
-.player-circle { fill: var(--panel); stroke: var(--accent); stroke-width: 2; }
-.is-setter .player-circle { stroke: var(--accent-2); stroke-width: 3; }
-.is-server .player-circle { fill: var(--accent); }
-.player-jersey { fill: var(--text); font-size: 16px; font-weight: 700; }
-.is-server .player-jersey { fill: #1a1300; }
-.player-role { fill: var(--dim); font-size: 9px; font-weight: 600; }
-.is-server .player-role { fill: #1a1300; }
-.player-name { fill: var(--text); font-size: 11px; }
-.badge-serve { fill: var(--accent); font-size: 10px; font-weight: 700; }
+/* court SVG — FIVB look: orange playing surface inside a deep-teal free zone.
+   Players are role-colored tokens (see roles.js) that animate between spots. */
+.court { width: 100%; height: auto; background: #17333c; border-radius: var(--radius); touch-action: none; }
+.net-band { fill: #e9ebef; opacity: 0.85; rx: 2px; }
+.net-label { fill: #e9ebef99; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
+.court-outline { fill: #b06229; stroke: #f2ede4; stroke-width: 2.5; }
+.court-line { stroke: #f2ede4aa; stroke-width: 1.5; }
+.zone-num { fill: #00000055; font-size: 12px; font-weight: 700; }
+
+.player { transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1); }
+.player.dragging { transition: none; }
+.player-circle { stroke: #10131a; stroke-width: 2; }
+.setter-ring { fill: none; stroke: #e9ebef; stroke-width: 2; stroke-dasharray: 4 3; }
+.server-halo { fill: var(--accent); }
+.player-jersey { font-size: 16px; font-weight: 700; }
+.player-role { font-size: 9px; font-weight: 600; opacity: 0.85; }
+.player-name { fill: #fff; font-size: 11px; paint-order: stroke; stroke: #00000088; stroke-width: 2px; }
+.badge-serve { fill: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: 1px; paint-order: stroke; stroke: #10131a; stroke-width: 3px; }
+
+/* overlap fault geometry: red line between the two offending players */
+.fault-line { stroke: var(--bad); stroke-width: 3; stroke-dasharray: 6 4; }
+.fault-ring { fill: none; stroke: var(--bad); stroke-width: 2.5; }
+.court.fault .court-outline { stroke: var(--bad); stroke-width: 3; }
 
 /* guided flow — stepper */
 .stepper { list-style: none; display: flex; gap: 0.5rem; padding: 0; margin: 0.75rem 0 0.25rem; flex-wrap: wrap; }
@@ -152,27 +172,79 @@ button.primary { background: var(--accent); color: var(--accent-ink); }
 .receive-controls { margin-top: 0.5rem; }
 .receive-controls ul { margin: 0.25rem 0 0.5rem 1rem; padding: 0; }
 
-/* attribute editor (roster) */
+/* attribute editor (roster) — sliders */
 .attrs-editor { margin: 0.75rem 0; border-top: 1px dashed var(--line); padding-top: 0.6rem; }
-.attrs-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem; margin-top: 0.4rem; }
+.attrs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem 1rem; margin-top: 0.4rem; }
 .attr-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.78rem; color: var(--dim); }
 .attr-field input { width: 100%; }
+.attr-val { color: var(--text); font-size: 0.85rem; }
+input[type="range"] { accent-color: var(--accent); background: transparent; border: none; padding: 0; }
+.form-title { margin: 0 0 0.6rem; }
+
+/* roster — trading cards */
+.player-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 0.9rem; margin-top: 1rem; }
+.player-card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; padding-bottom: 0.55rem; }
+.player-card.editing { border-color: var(--accent); }
+.pc-band { display: flex; align-items: center; gap: 0.55rem; padding: 0.55rem 0.7rem; }
+.pc-jersey { font-size: 1.5rem; font-weight: 800; min-width: 2rem; text-align: center; }
+.pc-nameblock { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.pc-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-role { font-size: 0.72rem; opacity: 0.85; }
+.pc-overall { font-size: 1.35rem; font-weight: 800; }
+.pc-libero { position: absolute; right: 0.6rem; top: 3.1rem; background: rgba(201, 133, 0, 0.16); color: #c98500; font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px; border-radius: 4px; padding: 0.12rem 0.4rem; }
+.pc-actions { display: flex; gap: 0.4rem; justify-content: center; }
+.pc-actions .ghost { padding: 0.25rem 0.6rem; font-size: 0.82rem; }
+
+/* radar (spider) chart on player cards */
+.radar { width: 100%; max-width: 175px; margin: 0.3rem auto 0.4rem; display: block; }
+.radar-ring { fill: none; stroke: var(--line); stroke-width: 1; }
+.radar-axis { stroke: var(--line); stroke-width: 1; }
+.radar-value { fill-opacity: 0.35; stroke-width: 2; stroke-linejoin: round; }
+.radar-label { fill: var(--dim); font-size: 9px; font-weight: 600; }
 
 /* simulation */
 .sim-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
 .slider-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.9rem; min-width: 200px; }
 .sim-best { font-size: 1.05rem; border-left: 3px solid var(--accent); }
-.sim-table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; }
-.sim-table th, .sim-table td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--line); font-size: 0.9rem; }
-.sim-table th { color: var(--dim); font-weight: 500; }
-.sim-table tr.best { background: rgba(255,176,46,0.12); }
-.winbar-wrap { position: relative; display: flex; align-items: center; gap: 0.5rem; min-width: 160px; }
-.winbar { height: 14px; background: var(--accent); border-radius: 3px; min-width: 2px; }
-.sim-table tr.best .winbar { background: var(--good); }
+.winbar-wrap { position: relative; display: flex; align-items: center; gap: 0.5rem; min-width: 120px; }
+.winbar { height: 12px; background: var(--accent); border-radius: 3px; min-width: 2px; flex: none; }
+.win-pct { font-weight: 700; font-size: 0.9rem; }
 
-/* subs editor */
+/* simulation result cards (ranked, with a mini court each) */
+.sim-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.8rem; margin-top: 0.75rem; }
+.sim-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.6rem 0.7rem; display: flex; flex-direction: column; gap: 0.5rem; }
+.sim-card.best { border-color: var(--good); }
+.sim-card.worst { border-color: var(--bad); }
+.sim-card .mini-court { width: 100%; }
+.sim-card-head { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.sim-rank { color: var(--dim); font-weight: 700; }
+.sim-flag { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.5px; border-radius: 4px; padding: 0.12rem 0.4rem; }
+.sim-flag.good-flag, .good-flag { background: rgba(79, 157, 119, 0.18); color: var(--good); }
+.sim-flag.bad-flag, .bad-flag { background: rgba(207, 106, 106, 0.18); color: var(--bad); }
+.sim-card-meta { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.8rem; color: var(--dim); }
+
+/* subs editor — tap-a-chip substitution panel */
 .subs-editor h4 { margin: 0 0 0.25rem; }
 .active-ghost { border-color: var(--accent-2) !important; color: var(--accent-2) !important; }
+.sub-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.sub-chip {
+  display: inline-flex; align-items: center; gap: 0.35rem;
+  background: var(--panel-2); border: 1.5px solid transparent; border-radius: 999px;
+  padding: 0.18rem 0.55rem 0.18rem 0.2rem; font-size: 0.82rem; color: var(--text); font-weight: 400;
+}
+.sub-chip.on-court { border-color: var(--accent); background: rgba(224, 138, 60, 0.12); cursor: default; }
+.chip-dot { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex: none; }
+.chip-name { display: inline-flex; align-items: center; gap: 0.3rem; }
+.starter-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); display: inline-block; }
+
+/* lineup court editor (drag & drop) */
+.court.editor { overflow: visible; }
+.slot-circle { fill: rgba(0, 0, 0, 0.16); stroke: #f2ede4aa; stroke-width: 1.5; stroke-dasharray: 5 4; }
+.slot-num { fill: #f2ede4cc; font-size: 14px; font-weight: 700; }
+.slot-label { fill: #f2ede4aa; font-size: 9px; }
+.zone-slot.over .slot-circle { stroke: var(--accent); stroke-width: 2.5; fill: rgba(224, 138, 60, 0.18); }
+.slot-highlight { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-dasharray: 5 4; }
+.bench-title { fill: #e9ebef88; font-size: 10px; font-weight: 700; letter-spacing: 1.5px; }
 
 /* substitution setup */
 .subs-setup { margin-top: 1rem; }
