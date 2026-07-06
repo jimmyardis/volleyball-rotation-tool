@@ -1,21 +1,14 @@
-// The personal AI coach: full-pane chat grounded in the player's own data.
+// The personal AI coach, full-pane. Shares its thread with the floating
+// bubble (state lives in PlayerApp), so it's one continuous conversation.
 
 import { useEffect, useRef, useState } from "react";
 import { playerApi } from "./api.js";
+import { COACH_STARTERS, useCoachChat } from "./useCoachChat.js";
 
-const STARTERS = [
-  "What should I work on this week?",
-  "Why do my serves keep going into the net?",
-  "Give me a 20-minute solo practice for today.",
-  "How do I know if I passed my current block?",
-];
-
-export default function CoachScreen({ me }) {
+export default function CoachScreen({ me, messages, setMessages }) {
   const [available, setAvailable] = useState(null);
-  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const { busy, error, send } = useCoachChat(messages, setMessages);
   const bodyRef = useRef(null);
 
   useEffect(() => {
@@ -26,24 +19,11 @@ export default function CoachScreen({ me }) {
     bodyRef.current?.scrollTo({ top: bodyRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  async function send(text) {
-    const content = (text ?? input).trim();
-    if (!content || busy) return;
-    setError(null);
-    const next = [...messages, { role: "user", content }];
-    setMessages(next);
+  async function submit(text) {
+    const content = text ?? input;
     setInput("");
-    setBusy(true);
-    try {
-      const res = await playerApi.coachChat(next);
-      setMessages((m) => [...m, { role: "assistant", content: res.reply }]);
-    } catch (e) {
-      setError(e.message);
-      setMessages(messages); // roll back the optimistic user turn
-      setInput(content);
-    } finally {
-      setBusy(false);
-    }
+    const ok = await send(content);
+    if (!ok) setInput(content);
   }
 
   return (
@@ -62,8 +42,8 @@ export default function CoachScreen({ me }) {
           {messages.length === 0 && (
             <div className="chat-intro">
               <p className="hint">Try one of these:</p>
-              {STARTERS.map((s) => (
-                <button key={s} className="chip" onClick={() => send(s)}>{s}</button>
+              {COACH_STARTERS.map((s) => (
+                <button key={s} className="chip" onClick={() => submit(s)}>{s}</button>
               ))}
             </div>
           )}
@@ -72,7 +52,7 @@ export default function CoachScreen({ me }) {
           ))}
           {busy && <div className="bubble assistant dim">Coach is thinking…</div>}
         </div>
-        <form className="chat-input" onSubmit={(e) => { e.preventDefault(); send(); }}>
+        <form className="chat-input" onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <input placeholder="Ask your coach…" value={input}
                  onChange={(e) => setInput(e.target.value)} disabled={busy || available === false} />
           <button type="submit" disabled={busy || available === false}>Send</button>

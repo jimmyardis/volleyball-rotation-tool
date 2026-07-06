@@ -10,6 +10,7 @@ import AuthScreen from "./AuthScreen.jsx";
 import Onboarding from "./Onboarding.jsx";
 import HomeScreen from "./HomeScreen.jsx";
 import CoachScreen from "./CoachScreen.jsx";
+import PlayerCoachBubble from "./PlayerCoachBubble.jsx";
 import PlanScreen from "./PlanScreen.jsx";
 import TrainScreen from "./TrainScreen.jsx";
 import ProgressScreen from "./ProgressScreen.jsx";
@@ -22,6 +23,8 @@ export default function PlayerApp() {
   const [authed, setAuthed] = useState(!!getToken());
   const [tab, setTab] = useState("Home");
   const [error, setError] = useState(null);
+  // ONE coach conversation, shared by the floating bubble and the Coach tab
+  const [coachThread, setCoachThread] = useState([]);
 
   const loadMe = useCallback(async () => {
     if (!getToken()) { setMe(null); setAuthed(false); return; }
@@ -75,11 +78,20 @@ export default function PlayerApp() {
             ))}
           </nav>
           {tab === "Home" && <HomeScreen me={me} goTo={setTab} />}
-          {tab === "Coach" && <CoachScreen me={me} />}
+          {tab === "Coach" && <CoachScreen me={me} messages={coachThread} setMessages={setCoachThread} />}
           {tab === "Plan" && <PlanScreen me={me} goTo={setTab} />}
           {tab === "Train" && <TrainScreen me={me} />}
           {tab === "Progress" && <ProgressScreen me={me} reloadMe={loadMe} />}
           {tab === "Profile" && <ProfileScreen me={me} reloadMe={loadMe} onSignOut={signOut} />}
+
+          {/* the coach travels with you — hidden on the Coach tab itself */}
+          {tab !== "Coach" && (
+            <PlayerCoachBubble
+              messages={coachThread}
+              setMessages={setCoachThread}
+              onExpand={() => setTab("Coach")}
+            />
+          )}
         </>
       )}
 
