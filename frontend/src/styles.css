@@ -27,6 +27,13 @@ body {
 
 .app { max-width: 1000px; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
 
+/* installed (home-screen) mode: keep content and the chat bubble clear of
+   the iPhone status bar / home indicator */
+@media (display-mode: standalone) {
+  .app { padding-top: calc(1rem + env(safe-area-inset-top)); }
+  .chat-fab, .chat-panel { bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+}
+
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
 header h1 { font-size: 1.4rem; margin: 0.4rem 0; }
 
@@ -37,10 +44,16 @@ header h1 { font-size: 1.4rem; margin: 0.4rem 0; }
 .team-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .inline { display: flex; gap: 0.4rem; }
 
-nav.tabs { display: flex; gap: 0.25rem; margin: 1rem 0; border-bottom: 1px solid var(--line); }
+/* tab bar scrolls horizontally when it doesn't fit (phones) */
+nav.tabs { display: flex; gap: 0.25rem; margin: 1rem 0; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+nav.tabs::-webkit-scrollbar { display: none; }
 nav.tabs button {
   background: none; border: none; color: var(--dim); padding: 0.6rem 1rem;
   cursor: pointer; font-size: 0.95rem; border-bottom: 2px solid transparent;
+  flex: none; white-space: nowrap;
+}
+@media (max-width: 480px) {
+  nav.tabs button { padding: 0.55rem 0.7rem; font-size: 0.9rem; }
 }
 nav.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
 
