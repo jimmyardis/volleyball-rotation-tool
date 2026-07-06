@@ -12,11 +12,11 @@ import { useRef, useState } from "react";
 import { roleColor, roleInk, ZONE_CELLS } from "../roles.js";
 
 const W = 400;
-const H = 310;
+const H = 330;
 const OX = 24;     // court origin x
 const OY = 52;     // court origin y (room for the net band on top)
 const CW = W - OX * 2;
-const CH = H - OY - 26;
+const CH = H - OY - 46;   // bottom margin fits a served player's name label
 
 const toSvg = (x, y) => [OX + x * CW, OY + y * CH];
 
@@ -97,6 +97,7 @@ export default function Court({ placements, draggable = false, onDrag, fault = f
         const [bx, by] = toSvg(b.x, b.y);
         return (
           <g key={i} className="fault-pair">
+            <line x1={ax} y1={ay} x2={bx} y2={by} className="fault-casing" />
             <line x1={ax} y1={ay} x2={bx} y2={by} className="fault-line" />
             <circle cx={ax} cy={ay} r={29} className="fault-ring" />
             <circle cx={bx} cy={by} r={29} className="fault-ring" />

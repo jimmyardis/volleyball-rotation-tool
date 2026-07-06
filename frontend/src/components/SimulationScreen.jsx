@@ -102,7 +102,9 @@ export default function SimulationScreen({ lineups }) {
                     />
                   )}
                   <div className="winbar-wrap">
-                    <div className="winbar" style={{ width: `${(r.win_pct / maxWin) * 100}%` }} />
+                    <div className="winbar-track">
+                      <div className="winbar" style={{ width: `${(r.win_pct / maxWin) * 100}%` }} />
+                    </div>
                     <span className="win-pct">{r.win_pct}%</span>
                   </div>
                   <div className="sim-card-meta">

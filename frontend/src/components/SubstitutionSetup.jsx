@@ -87,7 +87,7 @@ export default function SubstitutionSetup({ lineupId, onGenerated }) {
             <span className="cov-name">
               #{p.jersey_number ?? "–"} {p.name} <span className="dim">({p.primary_role})</span>
               {starterIds.has(p.id) && <span className="tag">starter</span>}
-              {p.is_libero && <span className="pill back">libero</span>}
+              {!!p.is_libero && <span className="pill back">libero</span>}
             </span>
             <select
               value={coverage[p.id]}

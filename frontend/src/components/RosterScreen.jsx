@@ -161,7 +161,7 @@ export default function RosterScreen({ teamId, players, reload }) {
                 </span>
                 {overall != null && <span className="pc-overall" title="Overall (average of skills)">{overall}</span>}
               </div>
-              {p.is_libero && <span className="pc-libero">LIBERO</span>}
+              {!!p.is_libero && <span className="pc-libero">LIBERO</span>}
               <RadarChart attrs={p} color={meta.color} />
               <div className="pc-actions">
                 <button className="ghost" onClick={() => startEdit(p)}>Edit</button>

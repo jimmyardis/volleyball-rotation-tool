@@ -124,7 +124,7 @@ button.primary { background: var(--accent); color: var(--accent-ink); }
 
 /* court SVG — FIVB look: orange playing surface inside a deep-teal free zone.
    Players are role-colored tokens (see roles.js) that animate between spots. */
-.court { width: 100%; height: auto; background: #17333c; border-radius: var(--radius); touch-action: none; }
+.court { width: 100%; height: auto; background: #17333c; border-radius: var(--radius); touch-action: none; user-select: none; -webkit-user-select: none; }
 .net-band { fill: #e9ebef; opacity: 0.85; rx: 2px; }
 .net-label { fill: #e9ebef99; font-size: 11px; font-weight: 700; letter-spacing: 3px; }
 .court-outline { fill: #b06229; stroke: #f2ede4; stroke-width: 2.5; }
@@ -141,10 +141,12 @@ button.primary { background: var(--accent); color: var(--accent-ink); }
 .player-name { fill: #fff; font-size: 11px; paint-order: stroke; stroke: #00000088; stroke-width: 2px; }
 .badge-serve { fill: var(--accent); font-size: 10px; font-weight: 800; letter-spacing: 1px; paint-order: stroke; stroke: #10131a; stroke-width: 3px; }
 
-/* overlap fault geometry: red line between the two offending players */
-.fault-line { stroke: var(--bad); stroke-width: 3; stroke-dasharray: 6 4; }
-.fault-ring { fill: none; stroke: var(--bad); stroke-width: 2.5; }
-.court.fault .court-outline { stroke: var(--bad); stroke-width: 3; }
+/* overlap fault geometry: red line (with a white casing so it reads on the
+   orange court) between the two offending players */
+.fault-casing { stroke: #ffffff; stroke-width: 6; opacity: 0.85; }
+.fault-line { stroke: #d03b3b; stroke-width: 3; stroke-dasharray: 7 5; }
+.fault-ring { fill: none; stroke: #d03b3b; stroke-width: 3; }
+.court.fault .court-outline { stroke: #d03b3b; stroke-width: 3; }
 
 /* guided flow — stepper */
 .stepper { list-style: none; display: flex; gap: 0.5rem; padding: 0; margin: 0.75rem 0 0.25rem; flex-wrap: wrap; }
@@ -206,9 +208,10 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 .sim-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
 .slider-field { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.9rem; min-width: 200px; }
 .sim-best { font-size: 1.05rem; border-left: 3px solid var(--accent); }
-.winbar-wrap { position: relative; display: flex; align-items: center; gap: 0.5rem; min-width: 120px; }
-.winbar { height: 12px; background: var(--accent); border-radius: 3px; min-width: 2px; flex: none; }
-.win-pct { font-weight: 700; font-size: 0.9rem; }
+.winbar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+.winbar-track { flex: 1; min-width: 0; background: var(--panel-2); border-radius: 3px; }
+.winbar { height: 12px; background: var(--accent); border-radius: 3px; min-width: 2px; }
+.win-pct { font-weight: 700; font-size: 0.9rem; flex: none; }
 
 /* simulation result cards (ranked, with a mini court each) */
 .sim-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.8rem; margin-top: 0.75rem; }

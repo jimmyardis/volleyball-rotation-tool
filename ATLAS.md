@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-06-21 |
+| Last Active | 2026-07-06 |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -10,21 +10,18 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
-Phase 1 built + extended. Engine-first: pure Python rotation engine
-(`backend/app/engine.py`) with 27 passing tests, simulator-ready SQLite model
-(permanent `players.id`, `rotation_index`, `dominant_hand` hook), FastAPI
-server, React/Vite/SVG frontend with a guided flow. Each rotation has three
-draggable/savable on-court PHASES — Serve (read-only) / Receive (overlap-checked)
-/ Base (free after-serve sandbox) — stored in a generalized `formations` table.
-Per-rotation SUBSTITUTIONS (`substitutions` table + `engine.apply_substitutions`):
-the coach picks who's on court each rotation; the court, metadata, and a
-play-by-play narration box all reflect the effective six. Verified live through
-the user's running WSL stack (backend :8000 --reload, frontend :5173).
+Full visual redesign shipped locally (2026-07-06, for the user's daughter):
+role-colored player tokens everywhere, FIVB-style orange/teal court, animated
+rotation/phase transitions, drag-and-drop lineup builder (bench → court),
+trading-card roster with radar charts, mini-court thumbnails as rotation tabs,
+tap-a-chip substitution panel, geometric overlap-fault lines (backend now
+returns structured `fault_pairs`), and ranked simulation cards. 35 backend
+tests pass; every screen verified via Playwright screenshots. NOT yet
+committed or deployed to Railway.
 
 ## Next Action
-Commit the new work (untracked changes in `volleyball-app/`). Optional next:
-libero swap-in for receive/base views; or begin Phase 2 (stat tracking) against
-the stable player IDs + rotation_index.
+Commit + push the redesign, then redeploy (rebuild frontend → copy dist to
+backend/webdist → `railway up` from backend). webdist already has the new build.
 
 ## Blockers
 None.
@@ -35,7 +32,42 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
-### 2026-06-21 (session 8)
+### 2026-07-06 (session 9) — visual redesign ("less database, more shapes & colors")
+- Built the full visual package the user's daughter asked for:
+  1. Role color system (`frontend/src/roles.js`) — one CVD-validated hue per
+     role (OH blue, S aqua, MB green, OPP violet, L gold, DS magenta; amber
+     stays UI accent, red reserved for faults). Palette validated with the
+     dataviz six-checks script against the app surface.
+  2. Court.jsx: FIVB-style orange court on teal free zone, role-colored
+     tokens, CSS-transform transitions so rotation/phase switches SLIDE
+     players (drag disables transition), server halo + SERVE badge, dashed
+     white setter ring.
+  3. Overlap faults drawn geometrically: engine got `check_overlap_detail()`
+     (structured zone pairs; string version derived from it), endpoints return
+     `fault_pairs`, Court draws white-cased red dashed lines + rings between
+     offending players. New engine test (35 total pass).
+  4. CourtEditor.jsx: drag-and-drop lineup builder (bench strip under the
+     court; drop to place, drop on occupant to swap, drag off to bench) —
+     replaced the six zone dropdowns in LineupBuilder.
+  5. RosterScreen: trading-card grid (role-color band, jersey, overall
+     rating, RadarChart.jsx spider chart) + slider attribute editor.
+  6. RotationViewer: MiniCourt.jsx thumbnails replace R1–R6 buttons; subs
+     panel is now tap-a-chip (role-dot chips, starter dot, amber outline for
+     on-court player).
+  7. SimulationScreen: ranked cards with mini-courts + win bars; best/worst
+     get status flags (green BEST / red WORK ON THIS).
+- BUGFIX (backend, latent): sqlite connections created with default
+  check_same_thread=True intermittently 500'd ALL endpoints — FastAPI runs
+  sync dependency setup/teardown on different threadpool threads. Fixed in
+  db.connect (check_same_thread=False; still one connection per request).
+  This likely explains any past sporadic blank screens.
+- BUGFIX (React): `{p.is_libero && ...}` rendered a stray "0" (SQLite ints,
+  not bools) on roster cards + SubstitutionSetup — now `!!p.is_libero`.
+- Verified end-to-end with Playwright (headless chromium; needed a locally
+  extracted libasound2 — no sudo): screenshots of all screens, real drag on
+  receive (fault lines render), bench→court swap drag in the editor, sim run.
+  Test server ran on :8010 against a COPY of the db; real db untouched.
+- webdist refreshed with the new build. Left NOT committed / NOT deployed.
 - DEPLOYED to Railway as a single service. Live:
   https://volleyball-api-production.up.railway.app
 - Prep: FastAPI serves the built frontend from `backend/webdist` (mounted last so
