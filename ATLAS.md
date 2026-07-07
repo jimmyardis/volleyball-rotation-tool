@@ -35,6 +35,15 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-06 (session 10d) — landscape rotation (deployed)
+- Daughter request: app should rotate to landscape. Removed the manifest
+  `orientation: portrait` lock; added landscape safe-area side insets (notch)
+  and capped the coach chat pane to viewport height on short screens.
+  Verified at 844x390 via Playwright. Deployed (c7ad8337 SUCCESS; live
+  manifest confirmed lock-free) + GitHub pushed (c5082f5..ff73c7b).
+- NOTE: iOS caches the manifest at install time — if the icon was already
+  added to the home screen, remove + re-add it to pick up rotation.
+
 ### 2026-07-06 (session 10c) — installable web app + mobile fix (deployed)
 - Add-to-Home-Screen packaging: manifest.webmanifest (standalone, start_url
   /#player — installed app launches into the Player Zone), icon set generated
