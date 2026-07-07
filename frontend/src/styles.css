@@ -28,10 +28,17 @@ body {
 .app { max-width: 1000px; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
 
 /* installed (home-screen) mode: keep content and the chat bubble clear of
-   the iPhone status bar / home indicator */
+   the iPhone status bar / home indicator / notch (side insets in landscape) */
 @media (display-mode: standalone) {
-  .app { padding-top: calc(1rem + env(safe-area-inset-top)); }
-  .chat-fab, .chat-panel { bottom: calc(1.25rem + env(safe-area-inset-bottom)); }
+  .app {
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    padding-left: calc(1.25rem + env(safe-area-inset-left));
+    padding-right: calc(1.25rem + env(safe-area-inset-right));
+  }
+  .chat-fab, .chat-panel {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    right: calc(1.25rem + env(safe-area-inset-right));
+  }
 }
 
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
@@ -407,8 +414,8 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 .pz-bubble-actions { display: flex; gap: 0.35rem; }
 .pz-bubble-actions .ghost { padding: 0.25rem 0.55rem; font-size: 0.82rem; }
 
-/* coach chat (full pane) */
-.pz-chat { padding: 0; display: flex; flex-direction: column; height: 480px; }
+/* coach chat (full pane) — never taller than the screen (landscape phones) */
+.pz-chat { padding: 0; display: flex; flex-direction: column; height: min(480px, calc(100vh - 180px)); min-height: 240px; }
 .pz-chat-body { flex: 1; }
 .pz-coach .warn { max-width: 640px; }
 
