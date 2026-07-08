@@ -121,10 +121,25 @@ export default function CourtEditor({ players, assign, onChange }) {
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerUp}
     >
+      <defs>
+        <pattern id="wood-editor" width="96" height="36" patternUnits="userSpaceOnUse">
+          <rect width="96" height="12" fill="#e6bd86" />
+          <rect y="12" width="96" height="12" fill="#ddad72" />
+          <rect y="24" width="96" height="12" fill="#e2b67e" />
+          <g stroke="#c79a5d" strokeWidth="0.8">
+            <line x1="0" y1="12" x2="96" y2="12" />
+            <line x1="0" y1="24" x2="96" y2="24" />
+            <line x1="30" y1="0" x2="30" y2="12" />
+            <line x1="78" y1="12" x2="78" y2="24" />
+            <line x1="14" y1="24" x2="14" y2="36" />
+            <line x1="60" y1="24" x2="60" y2="36" />
+          </g>
+        </pattern>
+      </defs>
       <rect x={OX - 6} y={OY - 14} width={CW + 12} height={8} className="net-band" />
       <text x={W / 2} y={OY - 22} textAnchor="middle" className="net-label">NET</text>
-      <rect x={OX} y={OY} width={CW} height={CH} className="court-outline" />
-      <line x1={OX} y1={OY + CH / 2} x2={OX + CW} y2={OY + CH / 2} className="court-line" />
+      <rect x={OX} y={OY} width={CW} height={CH} fill="url(#wood-editor)" className="court-outline" />
+      <line x1={OX} y1={OY + CH / 2} x2={OX + CW} y2={OY + CH / 2} className="attack-line" />
 
       {/* zone slots (empty targets) */}
       {Object.keys(ZONE_CELLS).map((z) => {

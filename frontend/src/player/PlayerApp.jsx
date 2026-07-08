@@ -1,9 +1,8 @@
 // Player Zone: the player-facing surface (spec: player-side-spec.md MVP).
-// Lives behind #player in the same SPA; the player's position color becomes
-// their personal accent throughout.
+// Lives behind #player in the same SPA and shares the app's brand accent;
+// the player's position shows in labels and their token, not by recoloring.
 
 import { useCallback, useEffect, useState } from "react";
-import { roleColor, roleMeta } from "../roles.js";
 import Volleyball from "../components/Volleyball.jsx";
 import { playerApi, getToken, setToken } from "./api.js";
 import AuthScreen from "./AuthScreen.jsx";
@@ -48,11 +47,8 @@ export default function PlayerApp() {
     setTab("Home");
   }
 
-  const accent = me?.profile?.position ? roleColor(me.profile.position) : null;
-  const posMeta = me?.profile?.position ? roleMeta(me.profile.position) : null;
-
   return (
-    <div className="app player-zone" style={accent ? { "--accent": accent, "--accent-ink": posMeta.ink } : undefined}>
+    <div className="app player-zone">
       <header>
         <h1 className="brand"><Volleyball size={26} /> Player Zone</h1>
         <div className="team-bar">

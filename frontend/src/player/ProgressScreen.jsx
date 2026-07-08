@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import RadarChart from "../components/RadarChart.jsx";
-import { roleColor } from "../roles.js";
 import { playerApi, SKILL_SHORT } from "./api.js";
 import { AssessmentSliders } from "./Onboarding.jsx";
 
@@ -19,7 +18,7 @@ export default function ProgressScreen({ me, reloadMe }) {
     load();
   }, []);
 
-  const color = roleColor(me.profile?.position);
+  const color = "var(--accent)"; // the player's own progress reads in the brand pink
   const axes = skills.map((s) => ({ key: s.key, label: s.name, short: SKILL_SHORT[s.key] }));
   const values = Object.fromEntries(skills.map((s) => [s.key, prog?.levels?.[s.key]?.level ?? 0]));
 

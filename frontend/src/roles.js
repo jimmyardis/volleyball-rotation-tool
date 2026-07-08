@@ -1,21 +1,21 @@
 // One visual identity per ROLE, used everywhere a player appears: roster
 // cards, the bench, the court, mini-courts, and the substitution panel.
-// Palette validated for CVD separation + contrast on the app's dark surface
-// (dataviz six-checks validator). Amber stays the brand/UI accent and red
-// stays reserved for faults — neither is a role color. Every colored mark
-// always carries its role code + jersey number as a direct label, so color
-// never works alone.
+// Monochrome scheme: charcoal/gray tokens stepped by role, with the LIBERO
+// in white — mirroring the real-game contrasting jersey. Pink is reserved
+// for highlights (server halo, setter ring, selection) and red for faults —
+// neither is a role color. Every mark always carries its role code + jersey
+// number as a direct label, so shade never works alone.
 
 export const ROLE_META = {
-  OH:  { label: "Outside Hitter",        color: "#3987e5", ink: "#ffffff" },
-  S:   { label: "Setter",                color: "#199e70", ink: "#ffffff" },
-  MB:  { label: "Middle Blocker",        color: "#008300", ink: "#ffffff" },
-  OPP: { label: "Opposite / Right Side", color: "#9085e9", ink: "#10131a" },
-  L:   { label: "Libero",                color: "#c98500", ink: "#10131a" },
-  DS:  { label: "Defensive Specialist",  color: "#d55181", ink: "#10131a" },
+  OH:  { label: "Outside Hitter",        color: "#1c1c21", ink: "#ffffff" },
+  S:   { label: "Setter",                color: "#33333b", ink: "#ffffff" },
+  MB:  { label: "Middle Blocker",        color: "#4a4a54", ink: "#ffffff" },
+  OPP: { label: "Opposite / Right Side", color: "#5f5f6a", ink: "#ffffff" },
+  DS:  { label: "Defensive Specialist",  color: "#75757f", ink: "#ffffff" },
+  L:   { label: "Libero",                color: "#ffffff", ink: "#1c1c21" },
 };
 
-const FALLBACK = { label: "Player", color: "#969cab", ink: "#10131a" };
+const FALLBACK = { label: "Player", color: "#9a9aa3", ink: "#1c1c21" };
 
 export const roleMeta = (code) => ROLE_META[code] || FALLBACK;
 export const roleColor = (code) => roleMeta(code).color;

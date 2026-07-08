@@ -14,6 +14,9 @@ export default function MiniCourt({ positions, playersById, serverId, setterId }
     <svg viewBox={`0 0 ${W} ${H}`} className="mini-court" aria-hidden="true">
       <line x1={OX - 3} y1={OY - 4} x2={OX + CW + 3} y2={OY - 4} className="mini-net" />
       <rect x={OX} y={OY} width={CW} height={CH} className="mini-surface" />
+      {/* faint plank seams so the thumbnail reads as the same wood floor */}
+      <line x1={OX} y1={OY + CH / 3} x2={OX + CW} y2={OY + CH / 3} stroke="#c79a5d" strokeWidth="0.6" />
+      <line x1={OX} y1={OY + (2 * CH) / 3} x2={OX + CW} y2={OY + (2 * CH) / 3} stroke="#c79a5d" strokeWidth="0.6" />
       <line x1={OX} y1={OY + CH / 2} x2={OX + CW} y2={OY + CH / 2} className="mini-line" />
       {Object.entries(positions).map(([zone, pid]) => {
         const [nx, ny] = zoneCenter(Number(zone));
