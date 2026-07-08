@@ -34,6 +34,26 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-08 (session 12c) — BUGFIX: all-5s self-assessment dead-ended with no plan
+- Live report: Player Zone "says building your plan.. and then never does
+  it". Railway logs showed POST /player/plan/generate → 409 right after a
+  200 assessment. Root cause: player self-rated EVERY skill 5/5 (kids max
+  the sliders) → progression.build_plan skipped all at-Mastery skills →
+  empty → 409 "every skill is already at Mastery" — silently swallowed by
+  Onboarding's try/except, so no plan ever appeared and Plan tab's "Build
+  my plan" hit the same wall.
+- Fix: build_plan never returns empty — with nothing below level 5 it
+  builds PROVE-IT blocks (the position's primary skills held at Mastery
+  under the hardest success criteria, e.g. "Attacking / Spiking →
+  Mastery"). Regression test added (63 pass). Backend-only change.
+- Deployed + verified LIVE with a scratch player account `plan_smoketest`
+  (left in the prod users table; harmless, invisible to other players):
+  all-5s OH assessment → 200 with 3 prove-it blocks. The daughter's stuck
+  account self-heals: Home/Plan → "Build my plan" now generates.
+- Also in logs: two /player/register 422s before her login — probably a
+  username with spaces or short password; client shows those errors, no
+  action taken. Commit 771d287.
+
 ### 2026-07-08 (session 12b) — level of play + loader + icon polish (deployed)
 - Level of play per TEAM (rec | middle_school | high_school | club |
   college): rally.LEVEL_PROFILES — `err` multiplies every unforced-error
