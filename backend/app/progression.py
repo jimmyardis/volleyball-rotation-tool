@@ -79,4 +79,11 @@ def build_plan(position: str, levels: dict[str, int]) -> list[dict]:
     for group in (emphasis["primary"], emphasis["secondary"]):
         ordered.extend(sorted((k for k in group if lvl(k) < 5), key=lvl))
 
+    # Never return an empty plan. A player who self-rates everything at
+    # Mastery (kids max the sliders) gets PROVE-IT blocks: their primary
+    # skills held at level 5 under the hardest success criteria. Without
+    # this, onboarding ends with no plan and no way forward.
+    if not ordered:
+        ordered = list(emphasis["primary"])
+
     return [_block_for(k, position, lvl(k)) for k in ordered[:MAX_BLOCKS]]

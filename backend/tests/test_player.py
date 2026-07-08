@@ -97,6 +97,25 @@ def test_plan_generation_and_mastery_gating(client, auth):
     assert reopened["plan"]["blocks"][0]["status"] == "active"
 
 
+def test_all_fives_assessment_still_gets_a_plan(client, auth):
+    """A kid who maxes every slider must NOT dead-end (the live
+    'Building your plan… and then never does it' bug): they get
+    prove-it blocks holding Mastery under the hardest criteria."""
+    client.put("/player/profile", headers=auth,
+               json={"position": "OH", "level_band": "high_school"})
+    all5 = {k: 5 for k in ["serve", "passing", "setting", "attacking",
+                           "blocking", "digging", "movement", "game_iq"]}
+    assert client.post("/player/assessment", headers=auth,
+                       json={"ratings": all5}).status_code == 200
+    r = client.post("/player/plan/generate", headers=auth)
+    assert r.status_code == 200, r.text
+    blocks = r.json()["blocks"]
+    assert blocks, "plan must never be empty"
+    assert all(b["level_target"] == 5 for b in blocks)
+    # OH prove-it blocks lead with the position's primary skills
+    assert blocks[0]["skill_key"] in {"attacking", "passing", "serve"}
+
+
 def test_drills_and_logs(client, auth):
     client.put("/player/profile", headers=auth, json={"position": "S"})
     drills = client.get("/player/drills?skill_key=setting", headers=auth).json()["drills"]
