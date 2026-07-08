@@ -34,6 +34,29 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-08 (session 12d) — player coach chat + My Plan simplification (deployed)
+- Live feedback: coach bot referenced a nonexistent "quiz", pushed prompts
+  every message; My Plan "confusing"; drills under-explained. (User likes
+  Train as-is.)
+- PLAYER_COACH_SYSTEM rewritten: natural conversation (no forced praise-
+  open / call-to-action close — those formulas were making the model
+  invent next-step app features); hard feature list with "NO quizzes,
+  tests, videos, badges" so it can't hallucinate app features; DRILLS rule
+  (purpose, setup, steps, reps, one cue, done-well). Chat context now
+  includes full drill-library entries via new knowledge.drill_snippets
+  (matched to mentioned skills + active block, position-fit, ≤6).
+- Removed COACH_STARTERS chips from CoachScreen + PlayerCoachBubble —
+  plain "ask anything" empty state (user: "no nonsense prompts").
+- PlanScreen rebuilt simple: WORKING ON NOW card (big skill + goal chip +
+  checklist + drill tags), UP NEXT numbered names only, FINISHED ✓ rows.
+  No LOCKED badges/criteria dumps. Gating engine + endpoints unchanged.
+  progression checkpoint wording friendlier ("Beat the challenge: …") —
+  old plans keep old text until rebuilt.
+- 63 tests pass; verified phone-size via Playwright (seeded plan w/ one
+  finished block). Deployed (asset flip confirmed) + pushed. Commit 8bdbe13.
+- NOTE: chat behavior change verified by prompt/grounding content only —
+  no paid model call made; user should sanity-check one real chat.
+
 ### 2026-07-08 (session 12c) — BUGFIX: all-5s self-assessment dead-ended with no plan
 - Live report: Player Zone "says building your plan.. and then never does
   it". Railway logs showed POST /player/plan/generate → 409 right after a
