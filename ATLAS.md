@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-06 |
+| Last Active | 2026-07-08 |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -10,21 +10,20 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
-Two surfaces now: the coach tool (visually redesigned 2026-07-06 and deployed)
-and the new PLAYER ZONE (#player) — the player-side MVP from
-player-side-spec.md: player accounts (PBKDF2 + session tokens), onboarding
-(position + 8-skill self-assessment), position-weighted mastery-gated
-progression plans, training log + 24-drill library, progress radar/streaks,
-and a personalized AI coach grounded in the player's own data + a curated
-knowledge module (no vector store needed at this scale). 40 backend tests
-pass; full player journey verified via Playwright screenshots. Player Zone is
-built + committed locally, NOT yet deployed.
+Whole app rethemed 2026-07-08 per user feedback ("looks AI / like a
+database"): light professional gray/pink/white/black design, Inter type,
+wood-gym-floor court with painted lines, monochrome player tokens (pink =
+server/setter highlights), landscape-phone layout rules. DEPLOYED to Railway
+and pushed to GitHub. Both surfaces (coach tool + Player Zone) share the one
+pink brand accent now — per-position accent recoloring removed.
 
 ## Next Action
 Have the daughter install it (Safari → Share → Add to Home Screen) and use it
-for a week. PINNED (user's call, revisit later): camera serve-assessment v1
-(client-side MediaPipe, serve-only, metrics-only upload). Pre-launch list
-still has: coach-tool auth.
+for a week — iOS caches the manifest at install time, so if the icon was
+already on her home screen, remove + re-add it to pick up the light theme.
+PINNED (user's call, revisit later): camera serve-assessment v1 (client-side
+MediaPipe, serve-only, metrics-only upload). Pre-launch list still has:
+coach-tool auth.
 
 ## Blockers
 None.
@@ -35,6 +34,37 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-08 (session 11) — clean light retheme + wood court (deployed)
+- User feedback: app "looks AI, almost like a database" — asked for a clean
+  professional gray/pink/white/black look, better font, a court that looks
+  like a real court, and phone-rotation adaptation. Design calls confirmed
+  via Q&A: wood gym floor, monochrome+pink tokens, whole app (both surfaces).
+- Theme: styles.css rewritten as a LIGHT theme — white cards on soft gray
+  (#f7f7f8), near-black text, single pink accent (#d6336c), Inter typeface
+  (Google Fonts + system fallback), subtle card shadows, uppercase micro-
+  labels. Green/red still status-only; amber only for warning nudges.
+- Court: SVG wood-plank pattern (defs/pattern in Court.jsx + CourtEditor.jsx,
+  flat wood tone + seams in MiniCourt.jsx), painted white boundary/lines,
+  pink attack line, dark net band. Fault red lines/white casing kept.
+- Tokens: roles.js monochrome — charcoal ladder by role (OH darkest → DS
+  lightest), LIBERO WHITE like the real contrasting jersey; pink = server
+  halo + SERVE badge + setter ring (dashed). Roster cards/chips/mini-dots
+  inherit automatically.
+- Player Zone: removed per-position --accent injection (PlayerApp.jsx) —
+  one brand accent everywhere; Progress skill radar now draws in pink.
+- Orientation: new `(orientation: landscape) and (max-height: 540px)` block —
+  viewer/lineup grids go two-column (court beside panel) even under the
+  760px breakpoint, court capped at 72vh, stepper hidden for height; the
+  portrait-only guard added to the old phone block. Manifest/theme-color →
+  #f7f7f8; apple status bar black-translucent → default (light bg).
+- Verified via Playwright on :8010 against a DB COPY (real db untouched):
+  desktop/portrait/landscape shots of roster, lineups editor (bench drag UI),
+  rotations serve+receive, simulate, and the full Player Zone (scratch
+  account, plan generated). Frontend build clean; no backend changes.
+- Deployed: `railway up` (live asset hash confirmed flipped, /health +
+  /teams intact, live manifest theme #f7f7f8). GitHub subtree pushed
+  (ff73c7b..85721fc). Monorepo commit 5c81006.
+
 ### 2026-07-06 (session 10d) — landscape rotation (deployed)
 - Daughter request: app should rotate to landscape. Removed the manifest
   `orientation: portrait` lock; added landscape safe-area side insets (notch)
