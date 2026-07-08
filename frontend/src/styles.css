@@ -327,6 +327,29 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 .narration ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
 .narration li { margin: 0.15rem 0; font-size: 0.92rem; }
 
+/* loader — a volleyball being set: the ball floats up off the hands and
+   drops back in. One brand color, pure CSS. */
+.loader { display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  padding: 2.25rem 1rem; }
+.loader-scene { position: relative; width: 44px; height: 66px; color: var(--accent); }
+.loader-ball { position: absolute; left: 7px; bottom: 14px; line-height: 0;
+  animation: vb-set 1.15s cubic-bezier(0.33, 0, 0.3, 1) infinite; }
+.loader-hands { position: absolute; left: 0; bottom: 0; color: var(--text);
+  animation: vb-flick 1.15s ease-in-out infinite; transform-origin: 50% 100%; }
+.loader-label { color: var(--dim); font-size: 0.9rem; }
+@keyframes vb-set {
+  0%   { transform: translateY(0) scale(1, 0.94); }
+  12%  { transform: translateY(-4px) scale(1, 1); }
+  50%  { transform: translateY(-34px) scale(1, 1); }
+  88%  { transform: translateY(-4px) scale(1, 1); }
+  100% { transform: translateY(0) scale(1, 0.94); }
+}
+@keyframes vb-flick {
+  0%, 100% { transform: scaleY(0.92); }
+  10%, 90% { transform: scaleY(1); }
+  50%      { transform: scaleY(0.98); }
+}
+
 /* landing page — who are you? */
 .landing-choice { max-width: 620px; margin: 3rem auto 0; text-align: center; }
 .landing-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.25rem; }
@@ -336,7 +359,7 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
   padding: 1.5rem 1rem; color: var(--text); font-weight: 500; box-shadow: var(--shadow);
 }
 .landing-card:hover { border-color: var(--accent); }
-.landing-emoji { font-size: 2rem; }
+.landing-icon { color: var(--accent); line-height: 0; margin-bottom: 0.25rem; }
 .landing-title { font-size: 1.1rem; font-weight: 700; }
 .landing-sub { font-size: 0.82rem; color: var(--dim); font-weight: 400; }
 @media (max-width: 560px) { .landing-cards { grid-template-columns: 1fr; } }

@@ -7,6 +7,7 @@ const BANDS = [
   { code: "middle_school", label: "Middle school" },
   { code: "high_school", label: "High school" },
   { code: "club", label: "Club" },
+  { code: "college", label: "College" },
 ];
 
 export default function ProfileScreen({ me, reloadMe, onSignOut }) {

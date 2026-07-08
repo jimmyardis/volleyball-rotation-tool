@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS teams (
     -- coach accounts; the first coach to register claims them (db._migrate
     -- adds the column on old databases, coach.register does the claim).
     owner_user_id INTEGER REFERENCES users(id),
+    -- Level of play (rally.LEVEL_PROFILES key) — scales unforced errors in
+    -- the simulator for BOTH sides. NULL = high_school baseline.
+    level         TEXT,
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

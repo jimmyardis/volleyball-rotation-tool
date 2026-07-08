@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
 import { zoneCenter } from "../roles.js";
 import Court from "./Court.jsx";
+import Loader from "./Loader.jsx";
 import { narrate, eventDelay } from "../narrate.js";
 
 export default function WatchGame({ lineupId, opponent }) {
@@ -104,12 +105,18 @@ export default function WatchGame({ lineupId, opponent }) {
   if (!game) {
     return (
       <div className="watch-empty">
-        <p className="hint">Play a full set touch by touch — serves, passes, kills, and every
-        tagged mistake, narrated as it happens.</p>
-        {error && <p className="error">{error}</p>}
-        <button className="primary" disabled={busy || lineupId == null} onClick={start}>
-          {busy ? "Setting up the court…" : "▶ Watch one set"}
-        </button>
+        {busy ? (
+          <Loader label="Setting up the court…" />
+        ) : (
+          <>
+            <p className="hint">Play a full set touch by touch — serves, passes, kills, and every
+            tagged mistake, narrated as it happens.</p>
+            {error && <p className="error">{error}</p>}
+            <button className="primary" disabled={lineupId == null} onClick={start}>
+              ▶ Watch one set
+            </button>
+          </>
+        )}
       </div>
     );
   }

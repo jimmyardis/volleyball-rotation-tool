@@ -5,9 +5,14 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
+class TeamLevel(BaseModel):
+    level: str  # rally.LEVEL_PROFILES key
+
+
 class TeamCreate(BaseModel):
     name: str
     season: str | None = None
+    level: str | None = None  # rally.LEVEL_PROFILES key
 
 
 class PlayerAttrs(BaseModel):

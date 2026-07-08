@@ -35,6 +35,7 @@ from .models import (
     SimRequest,
     SubsSave,
     TeamCreate,
+    TeamLevel,
 )
 
 # Pull ANTHROPIC_API_KEY from the user's ~/.env (and any local .env) for the
@@ -137,8 +138,28 @@ def list_teams(request: Request, conn=Depends(get_conn)):
 
 @app.post("/teams", status_code=201)
 def create_team(body: TeamCreate, request: Request, conn=Depends(get_conn)):
+    if body.level is not None and body.level not in rally.LEVEL_PROFILES:
+        raise HTTPException(422, f"level must be one of {list(rally.LEVEL_PROFILES)}")
     return db.create_team(conn, body.name, body.season,
-                          owner_user_id=request.state.coach["id"])
+                          owner_user_id=request.state.coach["id"], level=body.level)
+
+
+@app.put("/teams/{team_id}/level")
+def set_team_level(team_id: int, body: TeamLevel, conn=Depends(get_conn)):
+    """Level of play (rec … college) — scales unforced errors in the sim."""
+    if body.level not in rally.LEVEL_PROFILES:
+        raise HTTPException(422, f"level must be one of {list(rally.LEVEL_PROFILES)}")
+    team = db.set_team_level(conn, team_id, body.level)
+    if not team:
+        raise HTTPException(404, "team not found")
+    return team
+
+
+@app.get("/levels")
+def levels():
+    """Level-of-play options for setup screens (coach + player side)."""
+    return {"levels": [{"code": k, **v} for k, v in rally.LEVEL_PROFILES.items()],
+            "default": rally.DEFAULT_LEVEL}
 
 
 # ---------------------------------------------------------------- players
@@ -414,7 +435,8 @@ def role_presets():
 
 def _sim_inputs(conn, lineup_id: int):
     """Shared loader for both sim endpoints: lineup, players, effective
-    rotations (subs applied), and the roster's tagged mistakes."""
+    rotations (subs applied), the roster's tagged mistakes, and the team's
+    level of play."""
     lineup = db.get_lineup(conn, lineup_id)
     if not lineup:
         raise HTTPException(404, "lineup not found")
@@ -427,18 +449,19 @@ def _sim_inputs(conn, lineup_id: int):
         for idx, state in enumerate(engine.all_rotations(start))
     ]
     mistakes = db.team_mistakes(conn, lineup["team_id"])
-    return lineup, start, players, effective, mistakes
+    team = db.get_team(conn, lineup["team_id"]) or {}
+    return lineup, start, players, effective, mistakes, team.get("level")
 
 
 @app.post("/lineups/{lineup_id}/simulate")
 def simulate(lineup_id: int, body: SimRequest, conn=Depends(get_conn)):
     """Rally-engine batch: many simulated sets, aggregated per rotation and
     per player, with plain-English best/worst insights."""
-    lineup, start, players, effective, mistakes = _sim_inputs(conn, lineup_id)
+    lineup, start, players, effective, mistakes, level = _sim_inputs(conn, lineup_id)
     opponent = max(1, min(100, body.opponent_skill))
     sets = max(20, min(500, body.sets))
     batch = rally.simulate_batch(start, players, mistakes, opponent,
-                                 sets=sets, rotations=effective)
+                                 sets=sets, rotations=effective, level=level)
     batch["insights"] = rally.generate_insights(batch, players)
     for r in batch["rotations"]:
         meta = engine.rotation_metadata(effective[r["rot"]], players, lineup["system"])
@@ -454,11 +477,11 @@ def simulate_game(lineup_id: int, body: SimGameRequest, conn=Depends(get_conn)):
     """Play ONE full set touch-by-touch and return the whole event stream —
     the frontend plays it back like a broadcast (court + narration box)."""
     import random as _random
-    lineup, start, players, effective, mistakes = _sim_inputs(conn, lineup_id)
+    lineup, start, players, effective, mistakes, level = _sim_inputs(conn, lineup_id)
     opponent = max(1, min(100, body.opponent_skill))
     rng = _random.Random(body.seed)
     result = rally.simulate_set(start, players, mistakes, opponent, rng,
-                                rotations=effective)
+                                rotations=effective, level=level)
     return {
         "lineup": lineup,
         "players": list(players.values()),

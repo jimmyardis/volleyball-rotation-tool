@@ -1,17 +1,21 @@
-// Quick 3-step team setup for a fresh coach account:
-//   1) team name + season  2) rapid roster entry  3) offense system.
+// Quick 4-step team setup for a fresh coach account:
+//   1) team name + season  2) rapid roster entry  3) level of play
+//   4) offense system.
 // Under two minutes; ratings and mistake tags come later on player cards.
 
 import { useState } from "react";
-import { api, ROLES } from "../api.js";
+import { api, LEVELS, ROLES } from "../api.js";
+import Loader from "./Loader.jsx";
 
 const EMPTY_ROW = { name: "", jersey: "", role: "OH" };
+const STEPS = 4;
 
 export default function TeamSetup({ onDone, onCancel }) {
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [season, setSeason] = useState("");
   const [rows, setRows] = useState([{ ...EMPTY_ROW }]);
+  const [level, setLevel] = useState("high_school");
   const [system, setSystem] = useState("unsure");
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -31,7 +35,9 @@ export default function TeamSetup({ onDone, onCancel }) {
     setBusy(true);
     setError(null);
     try {
-      const team = await api.createTeam({ name: name.trim(), season: season.trim() || null });
+      const team = await api.createTeam({
+        name: name.trim(), season: season.trim() || null, level,
+      });
       for (const r of filled) {
         await api.createPlayer(team.id, {
           name: r.name.trim(),
@@ -53,7 +59,7 @@ export default function TeamSetup({ onDone, onCancel }) {
     <div className="card setup-wizard">
       <div className="setup-head">
         <h2>Set up your team</h2>
-        <span className="dim">step {step} of 3</span>
+        <span className="dim">step {step} of {STEPS}</span>
       </div>
 
       {step === 1 && (
@@ -97,6 +103,26 @@ export default function TeamSetup({ onDone, onCancel }) {
 
       {step === 3 && (
         <>
+          <p className="hint">What level do you play at? The game simulator uses this — lower
+          levels play more error-driven volleyball, higher levels earn their points.</p>
+          <div className="setup-systems">
+            {LEVELS.map((l) => (
+              <button key={l.code} className={`setup-system ${level === l.code ? "active" : ""}`}
+                      onClick={() => setLevel(l.code)}>
+                <span className="landing-title">{l.label}</span>
+                <span className="landing-sub">{l.sub}</span>
+              </button>
+            ))}
+          </div>
+          <div className="setup-nav">
+            <button className="ghost" onClick={() => setStep(2)}>Back</button>
+            <button className="primary" onClick={() => setStep(4)}>Next</button>
+          </div>
+        </>
+      )}
+
+      {step === 4 && (
+        <>
           <p className="hint">How do you run your offense? This names your first lineup — nothing is locked in.</p>
           <div className="setup-systems">
             {[
@@ -112,12 +138,14 @@ export default function TeamSetup({ onDone, onCancel }) {
             ))}
           </div>
           {error && <p className="error">{error}</p>}
-          <div className="setup-nav">
-            <button className="ghost" onClick={() => setStep(2)}>Back</button>
-            <button className="primary" disabled={busy} onClick={finish}>
-              {busy ? "Setting up…" : "Finish setup"}
-            </button>
-          </div>
+          {busy ? (
+            <Loader label="Building your team…" />
+          ) : (
+            <div className="setup-nav">
+              <button className="ghost" onClick={() => setStep(3)}>Back</button>
+              <button className="primary" onClick={finish}>Finish setup</button>
+            </div>
+          )}
         </>
       )}
     </div>

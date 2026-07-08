@@ -79,6 +79,7 @@ export default function Onboarding({ me, onDone }) {
                 <option value="middle_school">Middle school</option>
                 <option value="high_school">High school</option>
                 <option value="club">Club</option>
+                <option value="college">College</option>
               </select>
             </label>
             <button disabled={!position} onClick={() => setStep(2)}>Next: rate your skills</button>

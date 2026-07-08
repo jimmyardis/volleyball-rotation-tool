@@ -46,6 +46,25 @@ _SEV_MULT = {"sometimes": 1.0, "often": 2.2}
 
 SCORE_CAP = 40  # runtime bound; a real set practically never gets here
 
+# Level of play — set on the TEAM, applied to BOTH sides of the net (it
+# describes the whole match, not one roster). The big statistical truth of
+# level is unforced errors: rec ball is decided by mistakes, college ball by
+# earned points. `err` multiplies every unforced-error probability (serve
+# errors, shanked passes, attack errors); `dig` shifts how often attacks are
+# dug up, so higher levels also play longer rallies.
+LEVEL_PROFILES: dict[str, dict] = {
+    "rec":           {"label": "Recreational",  "err": 1.6,  "dig": -0.05},
+    "middle_school": {"label": "Middle school", "err": 1.3,  "dig": -0.02},
+    "high_school":   {"label": "High school",   "err": 1.0,  "dig": 0.0},   # baseline
+    "club":          {"label": "Club",          "err": 0.85, "dig": 0.04},
+    "college":       {"label": "College",       "err": 0.65, "dig": 0.08},
+}
+DEFAULT_LEVEL = "high_school"
+
+
+def level_profile(level: str | None) -> dict:
+    return LEVEL_PROFILES.get(level or "", LEVEL_PROFILES[DEFAULT_LEVEL])
+
 # Probability constants, grouped for tuning. All skills are 0-100.
 SERVE_ERR_BASE = 0.045
 SERVE_ERR_SKILL = 0.07      # + this much at skill 0, scaled down to 0 at 100
@@ -162,9 +181,10 @@ def _weighted(rng, items, weight):
 # One rally
 # ---------------------------------------------------------------------------
 
-def _play_rally(serve_side: _Side, recv_side: _Side, stakes, rng, emit):
+def _play_rally(serve_side: _Side, recv_side: _Side, stakes, rng, emit, lvl):
     """Play one point. Returns (winner_key, reason, credit) where credit is
-    {player_id: {stat: +n}} increments for OUR players only."""
+    {player_id: {stat: +n}} increments for OUR players only.
+    `lvl` is a LEVEL_PROFILES entry scaling unforced errors for both sides."""
     credit: dict[int, dict] = {}
 
     def bump(side, pid, stat, n=1):
@@ -187,7 +207,7 @@ def _play_rally(serve_side: _Side, recv_side: _Side, stakes, rng, emit):
 
     # -- serve
     emit({"k": "serve", "tm": serve_side.key, "p": sid})
-    p_err = SERVE_ERR_BASE + SERVE_ERR_SKILL * (1 - _a(server, "serving") / 100)
+    p_err = (SERVE_ERR_BASE + SERVE_ERR_SKILL * (1 - _a(server, "serving") / 100)) * lvl["err"]
     sev_net = _sev(serve_side.mistakes, sid, "serve_net")
     sev_long = _sev(serve_side.mistakes, sid, "serve_long")
     p_err += MISTAKE_SERVE * (sev_net + sev_long) * press
@@ -210,7 +230,7 @@ def _play_rally(serve_side: _Side, recv_side: _Side, stakes, rng, emit):
         lambda p: (1.7 if p.get("is_libero") else 1.0)
         * (1.25 if _sev(recv_side.mistakes, p["id"], "shank_pass") else 1.0))
     d = (_a(passer, "defense") - 0.75 * toughness) / 100.0
-    p_shank = min(0.5, max(0.02, SHANK_BASE - 0.30 * d))
+    p_shank = min(0.5, max(0.02, SHANK_BASE - 0.30 * d)) * lvl["err"]
     sev_shank = _sev(recv_side.mistakes, passer["id"], "shank_pass")
     if sev_shank and toughness > 55:
         p_shank *= 1 + MISTAKE_SHANK * sev_shank * mistake_multiplier(
@@ -247,13 +267,15 @@ def _play_rally(serve_side: _Side, recv_side: _Side, stakes, rng, emit):
 
         p_kill = max(0.08, min(0.85, 0.16 + 0.52 * _a(attacker, "attacking") / 100
                                + 0.20 * (set_q - 0.5)
-                               - 0.30 * (0.5 * blk + 0.5 * dig) / 100))
+                               - 0.30 * (0.5 * blk + 0.5 * dig) / 100
+                               - lvl["dig"]))
         for p in def_side.on_court():
             if _sev(def_side.mistakes, p["id"], "ball_watch"):
                 p_kill += BALL_WATCH_KILL * _sev(def_side.mistakes, p["id"], "ball_watch")
         sev_nh = _sev(atk_side.mistakes, aid, "net_hit")
         sev_ho = _sev(atk_side.mistakes, aid, "hit_out") if blk > 58 else 0.0
-        p_err = 0.06 + 0.05 * (1 - set_q) + MISTAKE_ATTACK * (sev_nh + sev_ho) * apress
+        p_err = (0.06 + 0.05 * (1 - set_q)) * lvl["err"] \
+            + MISTAKE_ATTACK * (sev_nh + sev_ho) * apress
         p_stuff = max(0.01, min(0.2, 0.03 + 0.09 * blk / 100 - 0.03 * set_q))
 
         roll = rng.random()
@@ -313,7 +335,7 @@ def _stakes(us: int, them: int, target: int) -> float:
 
 
 def simulate_set(start, players, mistakes, opponent_skill, rng, target=25,
-                 rotations=None, collect_events=True):
+                 rotations=None, collect_events=True, level=None):
     """Simulate one rally-scored set. We serve first (rotation 0's server).
 
     start:      {zone: player_id} for OUR starting six.
@@ -321,7 +343,9 @@ def simulate_set(start, players, mistakes, opponent_skill, rng, target=25,
     mistakes:   {player_id: {mistake_key: severity}}.
     rotations:  optional 6 effective positions dicts (subs applied); falls
                 back to pure clockwise rotation of `start`.
+    level:      LEVEL_PROFILES key (team's level of play); None = baseline.
     """
+    lvl = level_profile(level)
     opp_players = phantom_team(opponent_skill, rng)
     us = _Side("us", players, (rotations[0] if rotations else start),
                mistakes, rotations)
@@ -342,7 +366,7 @@ def simulate_set(start, players, mistakes, opponent_skill, rng, target=25,
               "score": [score["us"], score["them"]]})
         stakes = _stakes(score["us"], score["them"], target)
         serve_side, recv_side = (us, them) if serving == "us" else (them, us)
-        winner, reason, credit = _play_rally(serve_side, recv_side, stakes, rng, emit)
+        winner, reason, credit = _play_rally(serve_side, recv_side, stakes, rng, emit, lvl)
 
         for pid, stats in credit.items():
             for stat, n in stats.items():
@@ -387,7 +411,7 @@ def simulate_set(start, players, mistakes, opponent_skill, rng, target=25,
 # ---------------------------------------------------------------------------
 
 def simulate_batch(start, players, mistakes, opponent_skill, sets=200, seed=None,
-                   rotations=None):
+                   rotations=None, level=None):
     """Run many sets and aggregate per-rotation and per-player numbers."""
     import random as _random
     rng = _random.Random(seed)
@@ -399,7 +423,7 @@ def simulate_batch(start, players, mistakes, opponent_skill, sets=200, seed=None
     won = 0
     for _ in range(sets):
         r = simulate_set(start, players, mistakes, opponent_skill, rng,
-                         rotations=rots, collect_events=False)
+                         rotations=rots, collect_events=False, level=level)
         won += r["won"]
         for i, b in enumerate(r["rotation_stats"]):
             for k, v in b.items():

@@ -26,7 +26,7 @@ from . import db, knowledge, progression
 router = APIRouter(prefix="/player", tags=["player"])
 
 POSITIONS = {"S", "OH", "MB", "OPP", "L", "DS"}
-LEVEL_BANDS = {"rec", "club", "middle_school", "high_school"}
+LEVEL_BANDS = {"rec", "club", "middle_school", "high_school", "college"}
 _PBKDF2_ITERATIONS = 200_000
 
 

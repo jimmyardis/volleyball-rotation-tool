@@ -3,7 +3,6 @@
 // the player's position shows in labels and their token, not by recoloring.
 
 import { useCallback, useEffect, useState } from "react";
-import Volleyball from "../components/Volleyball.jsx";
 import { playerApi, getToken, setToken } from "./api.js";
 import AuthScreen from "./AuthScreen.jsx";
 import Onboarding from "./Onboarding.jsx";
@@ -50,7 +49,7 @@ export default function PlayerApp() {
   return (
     <div className="app player-zone">
       <header>
-        <h1 className="brand"><Volleyball size={26} /> Player Zone</h1>
+        <h1>Player Zone</h1>
         <div className="team-bar">
           {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
           {me && <button className="ghost" onClick={signOut}>Sign out</button>}

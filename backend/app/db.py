@@ -88,6 +88,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
     team_cols = {r[1] for r in conn.execute("PRAGMA table_info(teams)")}
     if "owner_user_id" not in team_cols:
         conn.execute("ALTER TABLE teams ADD COLUMN owner_user_id INTEGER REFERENCES users(id)")
+    if "level" not in team_cols:
+        conn.execute("ALTER TABLE teams ADD COLUMN level TEXT")
 
     # add simulation attribute columns to older players tables, backfilling
     # existing rows from their position preset.
@@ -114,13 +116,19 @@ def _row_to_dict(row: sqlite3.Row | None) -> dict | None:
 # ---------------------------------------------------------------- teams
 
 def create_team(conn: sqlite3.Connection, name: str, season: str | None = None,
-                owner_user_id: int | None = None) -> dict:
+                owner_user_id: int | None = None, level: str | None = None) -> dict:
     cur = conn.execute(
-        "INSERT INTO teams (name, season, owner_user_id) VALUES (?, ?, ?)",
-        (name, season, owner_user_id),
+        "INSERT INTO teams (name, season, owner_user_id, level) VALUES (?, ?, ?, ?)",
+        (name, season, owner_user_id, level),
     )
     conn.commit()
     return get_team(conn, cur.lastrowid)
+
+
+def set_team_level(conn: sqlite3.Connection, team_id: int, level: str | None) -> dict | None:
+    conn.execute("UPDATE teams SET level = ? WHERE id = ?", (level, team_id))
+    conn.commit()
+    return get_team(conn, team_id)
 
 
 def get_team(conn: sqlite3.Connection, team_id: int) -> dict | None:

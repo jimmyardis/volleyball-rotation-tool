@@ -43,6 +43,8 @@ export const api = {
   // teams
   listTeams: () => request("/teams"),
   createTeam: (body) => request("/teams", { method: "POST", body: JSON.stringify(body) }),
+  setTeamLevel: (teamId, level) =>
+    request(`/teams/${teamId}/level`, { method: "PUT", body: JSON.stringify({ level }) }),
 
   // players
   listPlayers: (teamId) => request(`/teams/${teamId}/players`),
@@ -134,6 +136,15 @@ export const COVERAGE = [
   { code: "all", label: "All-around (all 6)" },
   { code: "front", label: "Front-row only" },
   { code: "back", label: "Back-row only" },
+];
+
+// Level of play — scales unforced errors in the simulator (both sides).
+export const LEVELS = [
+  { code: "rec", label: "Recreational", sub: "Fun first — rallies end on mistakes" },
+  { code: "middle_school", label: "Middle school", sub: "Learning the game" },
+  { code: "high_school", label: "High school", sub: "The baseline" },
+  { code: "club", label: "Club", sub: "Cleaner ball, tougher serves" },
+  { code: "college", label: "College", sub: "Long rallies, points are earned" },
 ];
 
 export const ROLES = [

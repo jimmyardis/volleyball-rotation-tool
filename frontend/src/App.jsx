@@ -9,7 +9,7 @@ import SimulationScreen from "./components/SimulationScreen.jsx";
 import NotesScreen, { QuickNotes } from "./components/Notes.jsx";
 import Landing from "./components/Landing.jsx";
 import TeamSetup from "./components/TeamSetup.jsx";
-import Volleyball from "./components/Volleyball.jsx";
+import Loader from "./components/Loader.jsx";
 
 const TABS = ["Roster", "Lineups", "Rotations", "Simulate", "Notes"];
 
@@ -120,7 +120,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1 className="brand"><Volleyball size={26} /> Rotation &amp; Lineup Tool</h1>
+        <h1>Rotation &amp; Lineup Tool</h1>
         <div className="team-bar">
           {me && <span className="pz-whoami">{me.display_name}</span>}
           <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
@@ -157,7 +157,7 @@ export default function App() {
           }}
         />
       ) : !loaded ? (
-        <p className="hint big-hint">Loading your teams…</p>
+        <Loader label="Loading your teams…" />
       ) : teamId == null ? (
         <p className="hint big-hint">Set up a team to get started.</p>
       ) : (
@@ -203,7 +203,9 @@ export default function App() {
           {tab === "Simulate" && (
             lineups.length === 0
               ? <p className="hint big-hint">Build a lineup first, then come back to simulate it.</p>
-              : <SimulationScreen lineups={lineups} />
+              : <SimulationScreen lineups={lineups}
+                                  team={teams.find((t) => t.id === teamId)}
+                                  onTeamChanged={loadTeams} />
           )}
           {tab === "Notes" && <NotesScreen teamId={teamId} players={players} lineups={lineups} />}
         </>

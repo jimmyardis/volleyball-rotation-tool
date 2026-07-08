@@ -113,6 +113,18 @@ def test_notes_three_attachment_points(client, coach):
     assert len(client.get(f"/teams/{tid}/notes", headers=hdrs).json()) == 2
 
 
+def test_team_level_endpoints(client, coach):
+    hdrs, _ = coach
+    team = client.post("/teams", json={"name": "Rec Squad", "level": "rec"}, headers=hdrs).json()
+    assert team["level"] == "rec"
+    bad = client.post("/teams", json={"name": "X", "level": "pro"}, headers=hdrs)
+    assert bad.status_code == 422
+    upd = client.put(f"/teams/{team['id']}/level", json={"level": "college"}, headers=hdrs)
+    assert upd.json()["level"] == "college"
+    lv = client.get("/levels").json()
+    assert {l["code"] for l in lv["levels"]} == {"rec", "middle_school", "high_school", "club", "college"}
+
+
 def test_simulate_batch_endpoint(client, coach):
     hdrs, _ = coach
     _, _, lu = seed_team(client, hdrs)

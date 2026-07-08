@@ -145,6 +145,21 @@ def test_pressure_amplifies_mistakes():
     assert no_stakes == pytest.approx(1.0)
 
 
+def test_level_of_play_scales_unforced_errors():
+    def our_errors(level, seed=9, n=40):
+        rng = random.Random(seed)
+        total = 0
+        for _ in range(n):
+            r = rally.simulate_set(START, make_players(), {}, 60, rng, level=level)
+            for stats in r["player_stats"].values():
+                total += stats.get("serve_errors", 0) + stats.get("attack_errors", 0)
+        return total
+    rec, college = our_errors("rec"), our_errors("college")
+    assert rec > college * 1.3
+    # unknown levels fall back to the high-school baseline
+    assert rally.level_profile("varsity???") == rally.LEVEL_PROFILES["high_school"]
+
+
 def test_phantom_team_is_complete():
     opp = rally.phantom_team(65, random.Random(1))
     assert len(opp) == 6

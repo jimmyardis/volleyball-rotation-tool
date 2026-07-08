@@ -4,9 +4,10 @@
 //   plain-English insights (computed from the event logs, never invented).
 
 import { useMemo, useState } from "react";
-import { api } from "../api.js";
+import { api, LEVELS } from "../api.js";
 import MiniCourt from "./MiniCourt.jsx";
 import WatchGame from "./WatchGame.jsx";
+import Loader from "./Loader.jsx";
 
 const INSIGHT_META = {
   best:    { icon: "🏆", label: "Best rotation" },
@@ -17,13 +18,25 @@ const INSIGHT_META = {
   lineup:  { icon: "🧠", label: "Lineup note" },
 };
 
-export default function SimulationScreen({ lineups }) {
+export default function SimulationScreen({ lineups, team, onTeamChanged }) {
   const [lineupId, setLineupId] = useState(lineups[0]?.id ?? null);
   const [opponent, setOpponent] = useState(60);
   const [mode, setMode] = useState("watch"); // watch | analyze
   const [batch, setBatch] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+
+  const level = team?.level ?? "high_school";
+
+  async function changeLevel(next) {
+    setBatch(null);
+    try {
+      await api.setTeamLevel(team.id, next);
+      onTeamChanged?.();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
 
   async function runBatch() {
     setBusy(true);
@@ -65,6 +78,14 @@ export default function SimulationScreen({ lineups }) {
           <input type="range" min="20" max="95" value={opponent}
                  onChange={(e) => { setOpponent(Number(e.target.value)); setBatch(null); }} />
         </div>
+        {team && (
+          <label title="Scales unforced errors for both sides — rec ball is decided by mistakes, college ball is earned.">
+            Level:{" "}
+            <select value={level} onChange={(e) => changeLevel(e.target.value)}>
+              {LEVELS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+            </select>
+          </label>
+        )}
         <div className="phase-tabs">
           <button className={mode === "watch" ? "active" : ""} onClick={() => setMode("watch")}>Watch a game</button>
           <button className={mode === "analyze" ? "active" : ""} onClick={() => setMode("analyze")}>Analyze rotations</button>
@@ -73,7 +94,7 @@ export default function SimulationScreen({ lineups }) {
 
       {mode === "watch" && (
         <div className="card">
-          <WatchGame key={`${lineupId}-${opponent}`} lineupId={lineupId} opponent={opponent} />
+          <WatchGame key={`${lineupId}-${opponent}-${level}`} lineupId={lineupId} opponent={opponent} />
         </div>
       )}
 
@@ -81,12 +102,18 @@ export default function SimulationScreen({ lineups }) {
         <>
           {!batch && (
             <div className="card watch-empty">
-              <p className="hint">Runs 200 full simulated sets with this lineup — every serve, pass,
-              and tagged mistake — then reports what actually worked and what didn't.</p>
-              {error && <p className="error">{error}</p>}
-              <button className="primary" disabled={busy || lineupId == null} onClick={runBatch}>
-                {busy ? "Playing 200 sets…" : "Run the analysis"}
-              </button>
+              {busy ? (
+                <Loader label="Playing 200 simulated sets…" />
+              ) : (
+                <>
+                  <p className="hint">Runs 200 full simulated sets with this lineup — every serve, pass,
+                  and tagged mistake — then reports what actually worked and what didn't.</p>
+                  {error && <p className="error">{error}</p>}
+                  <button className="primary" disabled={lineupId == null} onClick={runBatch}>
+                    Run the analysis
+                  </button>
+                </>
+              )}
             </div>
           )}
 
