@@ -20,7 +20,10 @@ a three-point notes system (team notebook / player pins / lineup notes).
 Deployed to Railway + pushed to GitHub. 60 backend tests green.
 
 ## Next Action
-USER MUST REGISTER THE FIRST COACH ACCOUNT on the live site ASAP — the
+DEPLOY DECISION PENDING: session 12e's Player Zone copy/drill changes are
+committed LOCALLY only (16d9ae2) — not on Railway yet. User to say
+deploy/commit/hold. Separately, still open: USER MUST REGISTER THE FIRST
+COACH ACCOUNT on the live site ASAP — the
 existing teams sit unclaimed until the first coach registration claims them,
 and the URL is open. Then keep the daughter's week-long Player Zone trial
 going. PINNED (user's call): camera serve-assessment v1 (MediaPipe).
@@ -34,6 +37,32 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-08 (session 12e) — Player Zone de-jargon + solo drills (LOCAL only)
+- Live player-side feedback (daughter): "watch for one thing" meant nothing;
+  coach bot showed "how do I know if I passed my block?" (nonsense); wanted
+  more drills with no net/partner. Train area otherwise liked.
+- Root cause of "passed my block": terminology collision — a plan unit was a
+  "block" and its items "checkpoints", but block/pass are volleyball SKILLS.
+  Fix: player-facing wording is now GOAL + CHECKLIST everywhere (HomeScreen,
+  PlanScreen, styles pz-checklist-label), incl. the AI coach system prompt +
+  context builder, which is now explicitly told never to call a unit a
+  "block". DB table/column names (plan_blocks, plan_checkpoints) unchanged —
+  internal only. User picked "Goals + checklist" wording via a preview Q.
+- Renamed drill film-one-thing "Watch For One Thing" → "Watch a Match, Track
+  One Thing" + plain-language how-to.
+- Added 6 no-net/no-partner solo drills (toss-pass-self, straight-set-ladder,
+  shadow-approach-arms, shadow-block-press, sprawl-recover, line-hops-base).
+  Solo library 16 → 22; blocking gained its first no-NET solo drill. Verified
+  via full API flow on the local db: fresh OH player, mixed assessment →
+  plan's active goal (Passing) auto-pulled "Toss & Pass to Yourself".
+- 63 backend tests pass (updated one context-assembly assertion). Committed
+  LOCALLY 16d9ae2 — NOT deployed to Railway, NOT pushed to GitHub yet (waiting
+  on user's deploy call). Old plans keep old checklist text until "Rebuild
+  plan"; the Home/Plan labels update immediately regardless.
+- NOTE on the "prompt" she saw: current code has NO player-side suggestion
+  chips (removed in 12d) — if her installed PWA still shows them she's on a
+  cached old build; remove + re-add the home-screen icon after deploy.
+
 ### 2026-07-08 (session 12d) — player coach chat + My Plan simplification (deployed)
 - Live feedback: coach bot referenced a nonexistent "quiz", pushed prompts
   every message; My Plan "confusing"; drills under-explained. (User likes
