@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-08 |
+| Last Active | 2026-07-08 (session 12) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -10,20 +10,20 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
-Whole app rethemed 2026-07-08 per user feedback ("looks AI / like a
-database"): light professional gray/pink/white/black design, Inter type,
-wood-gym-floor court with painted lines, monochrome player tokens (pink =
-server/setter highlights), landscape-phone layout rules. DEPLOYED to Railway
-and pushed to GitHub. Both surfaces (coach tool + Player Zone) share the one
-pink brand accent now — per-position accent recoloring removed.
+Phase 3 SHIPPED (2026-07-08, session 12): touch-by-touch rally engine
+(app/rally.py) replaces the coin-flip sim — watchable single set with live
+court + narrated play-by-play, per-player mistake tags that causally affect
+outcomes, and deterministic best/worst insights from 200-set batches. App
+now opens with a coach-or-player landing page; COACH ACCOUNTS gate the whole
+coach API (the old launch blocker is closed), with a 3-step team wizard and
+a three-point notes system (team notebook / player pins / lineup notes).
+Deployed to Railway + pushed to GitHub. 60 backend tests green.
 
 ## Next Action
-Have the daughter install it (Safari → Share → Add to Home Screen) and use it
-for a week — iOS caches the manifest at install time, so if the icon was
-already on her home screen, remove + re-add it to pick up the light theme.
-PINNED (user's call, revisit later): camera serve-assessment v1 (client-side
-MediaPipe, serve-only, metrics-only upload). Pre-launch list still has:
-coach-tool auth.
+USER MUST REGISTER THE FIRST COACH ACCOUNT on the live site ASAP — the
+existing teams sit unclaimed until the first coach registration claims them,
+and the URL is open. Then keep the daughter's week-long Player Zone trial
+going. PINNED (user's call): camera serve-assessment v1 (MediaPipe).
 
 ## Blockers
 None.
@@ -34,6 +34,51 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-08 (session 12) — Phase 3 rally sim + coach accounts (deployed)
+- Grilled the user's ask (deeper sims, watch-one-game, addable player
+  mistakes, best/worst insights) via Q&A: full rally engine over cosmetic
+  coin-flip; phantom-team opponent from slider; mistake catalog + severity +
+  pressure amplification; auto-play watch mode; one set to 25; deterministic
+  stat-based insights. Mid-session the user added: coach notes, coach
+  sign-in, coach/player landing, team-setup questions — folded into design.
+- ENGINE (app/rally.py, pure; 13 new tests + 7 API tests, 60 total green):
+  serve→pass→set→attack→block/dig→transition chains; every touch a named
+  player vs their ratings; rally scoring, sideouts rotate the effective
+  (subs-applied) six; compact event stream for playback. New 7th attribute
+  `serving` (ATTRS-driven column migration + presets). MISTAKE_CATALOG (8
+  keys, each wired to its rally moment), severities sometimes/often,
+  mistake_multiplier(stakes, pressure) makes low-pressure players choke
+  late. simulate_batch aggregates rotations/players; generate_insights
+  emits best/worst/go-to/serve-weapon/practice-focus/lineup sentences.
+- BACKEND: coach.py auth (role='coach', same PBKDF2/session tables);
+  middleware gates /teams /lineups /players /overlap-check /coach-chat
+  /notes; teams.owner_user_id — FIRST coach registration claims ownerless
+  teams (by design; single-coach history); /teams scoped per coach.
+  player_mistakes + notes tables; mistakes + notes CRUD; POST
+  /lineups/{id}/simulate-game (event stream) + rebuilt /simulate.
+- FRONTEND: Landing (coach/player cards) → CoachAuth → TeamSetup wizard
+  (name/season → grow-as-you-type roster rows → 5-1/6-2/not-sure, creates
+  team+players+starter lineup). WatchGame.jsx: court rotates live on
+  sideouts, scoreboard w/ serving highlight, narrate.js tone-colored
+  play-by-play, ▶/⏸/1x/2x/4x/next-point/skip. SimulationScreen: watch |
+  analyze modes; insights callout cards + ranked rotation cards
+  (sideout%/serve% split). RosterScreen: mistake tag rows + severity chips,
+  📌 Notes pin per card; serving slider (7-axis radar). Notes.jsx: notebook
+  tab with source tags + QuickNotes pins (also on lineup in Rotations).
+  api.js carries the coach bearer token; any 401 drops to the landing page.
+- Verified: full Playwright journey on a DB copy (signup claimed 2 legacy
+  teams → mistakes tagged → notes on player/lineup/team → watch mode at
+  1x/4x → 200-set analysis with correct insights → wizard team). Deployed
+  (asset hash flipped, /health + 401 gate + player zone confirmed live) +
+  GitHub subtree pushed. Monorepo commit cd4e7b2.
+- IMPORTANT handoff: live teams are UNCLAIMED until the user registers the
+  first coach account. Emoji glyphs (💥🏐📋) show as tofu only in headless
+  chromium (no emoji font) — fine on real devices.
+- Deliberate scope cuts: cross-coach sub-resource ID probing not blocked
+  (any authed coach could poke a known lineup id — fine at family scale,
+  revisit if it goes multi-tenant); coach-chat lineup tool doesn't set
+  owner… it inherits team ownership, fine.
+
 ### 2026-07-08 (session 11) — clean light retheme + wood court (deployed)
 - User feedback: app "looks AI, almost like a database" — asked for a clean
   professional gray/pink/white/black look, better font, a court that looks
