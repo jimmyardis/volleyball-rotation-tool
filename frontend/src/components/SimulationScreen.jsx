@@ -1,32 +1,35 @@
-import { useState } from "react";
+// Simulate: two modes on one screen.
+//   WATCH — one set, touch by touch, on the court with narration (WatchGame).
+//   ANALYZE — hundreds of simulated sets aggregated per rotation, with
+//   plain-English insights (computed from the event logs, never invented).
+
+import { useMemo, useState } from "react";
 import { api } from "../api.js";
 import MiniCourt from "./MiniCourt.jsx";
+import WatchGame from "./WatchGame.jsx";
 
-const STAKES = [
-  { label: "Low (scrimmage)", value: 0.2 },
-  { label: "Medium (regular match)", value: 0.5 },
-  { label: "High (playoffs)", value: 0.85 },
-];
+const INSIGHT_META = {
+  best:    { icon: "🏆", label: "Best rotation" },
+  worst:   { icon: "🧱", label: "Needs work" },
+  player:  { icon: "💥", label: "Go-to attacker" },
+  serve:   { icon: "🎯", label: "Serving weapon" },
+  mistake: { icon: "📌", label: "Practice focus" },
+  lineup:  { icon: "🧠", label: "Lineup note" },
+};
 
 export default function SimulationScreen({ lineups }) {
   const [lineupId, setLineupId] = useState(lineups[0]?.id ?? null);
-  const [stakes, setStakes] = useState(0.5);
   const [opponent, setOpponent] = useState(60);
-  const [result, setResult] = useState(null);
-  const [rotations, setRotations] = useState(null); // for the mini-court per rank card
+  const [mode, setMode] = useState("watch"); // watch | analyze
+  const [batch, setBatch] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  async function run() {
-    if (!lineupId) return;
-    setBusy(true); setError(null); setResult(null);
+  async function runBatch() {
+    setBusy(true);
+    setError(null);
     try {
-      const [res, rots] = await Promise.all([
-        api.simulate(lineupId, { stakes, opponent_skill: opponent, games: 10000 }),
-        api.getRotations(lineupId),
-      ]);
-      setResult(res);
-      setRotations(rots);
+      setBatch(await api.simulate(lineupId, { opponent_skill: opponent, sets: 200 }));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -34,92 +37,114 @@ export default function SimulationScreen({ lineups }) {
     }
   }
 
-  const playersById = result ? Object.fromEntries(result.players.map((p) => [p.id, p])) : {};
-  const ranked = result ? [...result.per_rotation].sort((a, b) => b.win_pct - a.win_pct) : [];
-  const maxWin = ranked.length ? ranked[0].win_pct : 100;
-  const rotByIndex = rotations
-    ? Object.fromEntries(rotations.rotations.map((r) => [r.rotation_index, r]))
-    : {};
+  const playersById = useMemo(
+    () => Object.fromEntries((batch?.players ?? []).map((p) => [p.id, p])),
+    [batch]
+  );
+
+  const ranked = useMemo(
+    () => (batch ? [...batch.rotations].sort((a, b) => b.point_win_pct - a.point_win_pct) : []),
+    [batch]
+  );
+
+  const pct = (x) => `${Math.round(x * 100)}%`;
 
   return (
     <div className="screen">
-      <h2>Game Simulation</h2>
-      <p className="hint">
-        Runs ~10,000 simulated games and ranks which rotation performs best,
-        using each on-court player's skill ratings (edit those on the Roster
-        tab). Stakes amplify the cost of low “pressure”; opponent skill is the
-        other team's overall strength.
-      </p>
+      <h2>Simulate</h2>
 
       <div className="card sim-controls">
-        <label>Lineup:{" "}
-          <select value={lineupId ?? ""} onChange={(e) => setLineupId(Number(e.target.value))}>
-            <option value="" disabled>pick a lineup</option>
+        <label>
+          Lineup:{" "}
+          <select value={lineupId ?? ""} onChange={(e) => { setLineupId(Number(e.target.value)); setBatch(null); }}>
             {lineups.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.system})</option>)}
           </select>
         </label>
-        <label>Stakes:{" "}
-          <select value={stakes} onChange={(e) => setStakes(Number(e.target.value))}>
-            {STAKES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        </label>
-        <label className="slider-field">
-          Opponent skill: <strong>{opponent}</strong>
-          <input type="range" min="1" max="100" value={opponent} onChange={(e) => setOpponent(Number(e.target.value))} />
-        </label>
-        <button onClick={run} disabled={busy || !lineupId}>{busy ? "Simulating…" : "Run 10,000 games"}</button>
+        <div className="slider-field">
+          <span>Opponent strength: <strong>{opponent}</strong></span>
+          <input type="range" min="20" max="95" value={opponent}
+                 onChange={(e) => { setOpponent(Number(e.target.value)); setBatch(null); }} />
+        </div>
+        <div className="phase-tabs">
+          <button className={mode === "watch" ? "active" : ""} onClick={() => setMode("watch")}>Watch a game</button>
+          <button className={mode === "analyze" ? "active" : ""} onClick={() => setMode("analyze")}>Analyze rotations</button>
+        </div>
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {mode === "watch" && (
+        <div className="card">
+          <WatchGame key={`${lineupId}-${opponent}`} lineupId={lineupId} opponent={opponent} />
+        </div>
+      )}
 
-      {result && (
+      {mode === "analyze" && (
         <>
-          <div className="sim-best card">
-            Best rotation: <strong>Rotation {result.best_rotation + 1}</strong>
-            {" "}— weakest is Rotation {result.worst_rotation + 1}.
-            <span className="dim"> ({result.games_per_rotation.toLocaleString()} games each)</span>
-          </div>
+          {!batch && (
+            <div className="card watch-empty">
+              <p className="hint">Runs 200 full simulated sets with this lineup — every serve, pass,
+              and tagged mistake — then reports what actually worked and what didn't.</p>
+              {error && <p className="error">{error}</p>}
+              <button className="primary" disabled={busy || lineupId == null} onClick={runBatch}>
+                {busy ? "Playing 200 sets…" : "Run the analysis"}
+              </button>
+            </div>
+          )}
 
-          <div className="sim-cards">
-            {ranked.map((r, i) => {
-              const rot = rotByIndex[r.rotation_index];
-              const isBest = r.rotation_index === result.best_rotation;
-              const isWorst = r.rotation_index === result.worst_rotation;
-              return (
-                <div key={r.rotation_index} className={`sim-card ${isBest ? "best" : ""} ${isWorst ? "worst" : ""}`}>
-                  <div className="sim-card-head">
-                    <span className="sim-rank">#{i + 1}</span>
-                    <strong>Rotation {r.rotation_index + 1}</strong>
-                    {isBest && <span className="sim-flag good-flag">BEST</span>}
-                    {isWorst && <span className="sim-flag bad-flag">WORK ON THIS</span>}
-                  </div>
-                  {rot && (
-                    <MiniCourt
-                      positions={rot.positions}
-                      playersById={playersById}
-                      serverId={rot.metadata.server_id}
-                      setterId={rot.metadata.setter_id}
-                    />
-                  )}
-                  <div className="winbar-wrap">
-                    <div className="winbar-track">
-                      <div className="winbar" style={{ width: `${(r.win_pct / maxWin) * 100}%` }} />
-                    </div>
-                    <span className="win-pct">{r.win_pct}%</span>
-                  </div>
-                  <div className="sim-card-meta">
-                    <span>{playersById[r.server_id]?.name ?? "—"} serving</span>
-                    <span>{r.setter_location}-row setter · {r.attacker_count} attackers</span>
-                  </div>
+          {batch && (
+            <>
+              <div className="card sim-summary">
+                <span className="pz-card-title">After {batch.sets} simulated sets</span>
+                <p className="sim-winrate">
+                  You win <strong>{pct(batch.win_rate)}</strong> of sets against a level-{opponent} opponent.
+                </p>
+                <div className="insight-list">
+                  {batch.insights.map((ins, i) => {
+                    const meta = INSIGHT_META[ins.kind] ?? { icon: "•", label: ins.kind };
+                    return (
+                      <div key={i} className={`insight insight-${ins.kind}`}>
+                        <span className="insight-icon" aria-hidden="true">{meta.icon}</span>
+                        <span>
+                          <span className="insight-label">{meta.label}</span>
+                          <span className="insight-text">{ins.text}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
-          <p className="hint">
-            Tip: a back-row setter (3 attackers) usually rates higher than a
-            front-row setter (2 attackers). Ask the Coach Assistant why a
-            rotation is weak and how to drill it.
-          </p>
+                <button className="ghost" disabled={busy} onClick={runBatch}>Run again</button>
+              </div>
+
+              <div className="sim-cards">
+                {ranked.map((r, i) => {
+                  const setterId = Object.values(r.positions ?? {})
+                    .find((pid) => playersById[pid]?.primary_role === "S");
+                  return (
+                    <div key={r.rot}
+                         className={`sim-card ${i === 0 ? "best" : ""} ${i === ranked.length - 1 ? "worst" : ""}`}>
+                      <div className="sim-card-head">
+                        <span className="sim-rank">#{i + 1}</span>
+                        <strong>R{r.rot + 1}</strong>
+                        {i === 0 && <span className="sim-flag good-flag">BEST</span>}
+                        {i === ranked.length - 1 && <span className="sim-flag bad-flag">WORK ON THIS</span>}
+                      </div>
+                      {r.positions && (
+                        <MiniCourt positions={r.positions} playersById={playersById}
+                                   serverId={r.server_id} setterId={setterId} />
+                      )}
+                      <div className="winbar-wrap">
+                        <div className="winbar-track"><div className="winbar" style={{ width: `${r.point_win_pct * 100}%` }} /></div>
+                        <span className="win-pct">{pct(r.point_win_pct)}</span>
+                      </div>
+                      <div className="sim-card-meta">
+                        <span>Sideout: {pct(r.sideout_pct)} · Serving: {pct(r.serve_win_pct)}</span>
+                        <span>Server: {playersById[r.server_id]?.name ?? "—"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

@@ -11,6 +11,7 @@ class TeamCreate(BaseModel):
 
 
 class PlayerAttrs(BaseModel):
+    serving: int | None = None
     setting: int | None = None
     defense: int | None = None
     attacking: int | None = None
@@ -85,6 +86,24 @@ class ChatRequest(BaseModel):
 
 
 class SimRequest(BaseModel):
-    stakes: float = 0.5            # 0..1 (low / medium / high game)
-    opponent_skill: int = 60       # 1..100
-    games: int = 10000
+    opponent_skill: int = 60       # 1..100 (the phantom team's level)
+    sets: int = 200                # batch size for the rotation analysis
+
+
+class SimGameRequest(BaseModel):
+    opponent_skill: int = 60
+    seed: int | None = None        # replayable games when set
+
+
+class MistakesSave(BaseModel):
+    mistakes: dict[str, str] = Field(default_factory=dict)  # key -> severity
+
+
+class NoteCreate(BaseModel):
+    body: str = Field(min_length=1, max_length=4000)
+    player_id: int | None = None
+    lineup_id: int | None = None
+
+
+class NoteUpdate(BaseModel):
+    body: str = Field(min_length=1, max_length=4000)

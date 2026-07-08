@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { api, ROLES, ATTRS } from "../api.js";
 import { roleMeta, overallRating } from "../roles.js";
 import RadarChart from "./RadarChart.jsx";
+import { QuickNotes } from "./Notes.jsx";
 
-const EMPTY_ATTRS = { setting: 50, attacking: 50, blocking: 50, defense: 50, confidence: 50, pressure: 50 };
+const EMPTY_ATTRS = Object.fromEntries(ATTRS.map((a) => [a.key, 50]));
 const EMPTY = {
   name: "",
   jersey_number: "",
@@ -11,6 +12,7 @@ const EMPTY = {
   secondary_role: "",
   is_libero: false,
   attrs: { ...EMPTY_ATTRS },
+  mistakes: {},
 };
 
 export default function RosterScreen({ teamId, players, reload }) {
@@ -18,13 +20,32 @@ export default function RosterScreen({ teamId, players, reload }) {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState(null);
   const [presets, setPresets] = useState({});
+  const [catalog, setCatalog] = useState([]);
+  const [notesFor, setNotesFor] = useState(null); // player id with the notes pin open
 
   useEffect(() => {
     setForm(EMPTY);
     setEditingId(null);
+    setNotesFor(null);
   }, [teamId]);
 
   useEffect(() => { api.rolePresets().then(setPresets).catch(() => {}); }, []);
+  useEffect(() => {
+    api.mistakeCatalog().then((c) => setCatalog(c.catalog)).catch(() => {});
+  }, []);
+
+  // tag on/off + severity cycle for the mistakes editor
+  function toggleMistake(key) {
+    setForm((f) => {
+      const m = { ...f.mistakes };
+      if (m[key]) delete m[key];
+      else m[key] = "sometimes";
+      return { ...f, mistakes: m };
+    });
+  }
+  function setMistakeSeverity(key, sev) {
+    setForm((f) => ({ ...f, mistakes: { ...f.mistakes, [key]: sev } }));
+  }
 
   function set(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
@@ -51,8 +72,10 @@ export default function RosterScreen({ teamId, players, reload }) {
     };
     if (!payload.name) return setError("Name is required.");
     try {
-      if (editingId) await api.updatePlayer(editingId, payload);
-      else await api.createPlayer(teamId, payload);
+      const saved = editingId
+        ? await api.updatePlayer(editingId, payload)
+        : await api.createPlayer(teamId, payload);
+      await api.saveMistakes(saved?.id ?? editingId, form.mistakes);
       setForm(EMPTY);
       setEditingId(null);
       reload();
@@ -79,7 +102,11 @@ export default function RosterScreen({ teamId, players, reload }) {
       secondary_role: p.secondary_role ?? "",
       is_libero: !!p.is_libero,
       attrs: Object.fromEntries(ATTRS.map((a) => [a.key, p[a.key] ?? 50])),
+      mistakes: {},
     });
+    api.getMistakes(p.id)
+      .then((r) => setForm((f) => ({ ...f, mistakes: r.mistakes })))
+      .catch(() => {});
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -133,6 +160,37 @@ export default function RosterScreen({ teamId, players, reload }) {
           </div>
         </div>
 
+        <div className="attrs-editor">
+          <span className="label-inline">
+            Common mistakes (tag what this player actually does — the simulator makes them happen,
+            more often in big moments if their Pressure is low):
+          </span>
+          <div className="mistake-list">
+            {catalog.map((m) => {
+              const on = !!form.mistakes[m.key];
+              return (
+                <div key={m.key} className={`mistake-row ${on ? "on" : ""}`}>
+                  <label className="checkbox">
+                    <input type="checkbox" checked={on} onChange={() => toggleMistake(m.key)} />
+                    <span>{m.label} <span className="dim">({m.moment})</span></span>
+                  </label>
+                  {on && (
+                    <span className="mistake-sev">
+                      {["sometimes", "often"].map((sev) => (
+                        <button key={sev} type="button"
+                                className={`ghost sev-btn ${form.mistakes[m.key] === sev ? "active-ghost" : ""}`}
+                                onClick={() => setMistakeSeverity(m.key, sev)}>
+                          {sev}
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="form-row">
           <button type="submit">{editingId ? "Save player" : "Add player"}</button>
           {editingId && (
@@ -165,8 +223,14 @@ export default function RosterScreen({ teamId, players, reload }) {
               <RadarChart attrs={p} color={meta.color} />
               <div className="pc-actions">
                 <button className="ghost" onClick={() => startEdit(p)}>Edit</button>
+                <button className="ghost" onClick={() => setNotesFor(notesFor === p.id ? null : p.id)}>📌 Notes</button>
                 <button className="ghost danger" onClick={() => remove(p.id)}>Delete</button>
               </div>
+              {notesFor === p.id && (
+                <div className="pc-notes">
+                  <QuickNotes teamId={teamId} playerId={p.id} title={`Notes on ${p.name}`} />
+                </div>
+              )}
             </div>
           );
         })}

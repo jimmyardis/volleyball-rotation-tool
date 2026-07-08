@@ -4,7 +4,7 @@
 
 import { ATTRS } from "../api.js";
 
-const SHORT = { setting: "SET", attacking: "ATK", blocking: "BLK", defense: "DEF", confidence: "CON", pressure: "PRS" };
+const SHORT = { serving: "SRV", setting: "SET", attacking: "ATK", blocking: "BLK", defense: "DEF", confidence: "CON", pressure: "PRS" };
 
 const shortLabel = (axis) =>
   axis.short ?? SHORT[axis.key] ?? (axis.label || axis.key).slice(0, 3).toUpperCase();

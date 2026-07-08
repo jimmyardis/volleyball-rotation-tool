@@ -83,6 +83,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
         )
         conn.execute("DROP TABLE receive_formations")
 
+    # teams gained an owning coach account (NULL = pre-auth row, claimed by
+    # the first coach to register — see coach.register).
+    team_cols = {r[1] for r in conn.execute("PRAGMA table_info(teams)")}
+    if "owner_user_id" not in team_cols:
+        conn.execute("ALTER TABLE teams ADD COLUMN owner_user_id INTEGER REFERENCES users(id)")
+
     # add simulation attribute columns to older players tables, backfilling
     # existing rows from their position preset.
     cols = {r[1] for r in conn.execute("PRAGMA table_info(players)")}
@@ -107,9 +113,11 @@ def _row_to_dict(row: sqlite3.Row | None) -> dict | None:
 
 # ---------------------------------------------------------------- teams
 
-def create_team(conn: sqlite3.Connection, name: str, season: str | None = None) -> dict:
+def create_team(conn: sqlite3.Connection, name: str, season: str | None = None,
+                owner_user_id: int | None = None) -> dict:
     cur = conn.execute(
-        "INSERT INTO teams (name, season) VALUES (?, ?)", (name, season)
+        "INSERT INTO teams (name, season, owner_user_id) VALUES (?, ?, ?)",
+        (name, season, owner_user_id),
     )
     conn.commit()
     return get_team(conn, cur.lastrowid)
@@ -119,8 +127,14 @@ def get_team(conn: sqlite3.Connection, team_id: int) -> dict | None:
     return _row_to_dict(conn.execute("SELECT * FROM teams WHERE id = ?", (team_id,)).fetchone())
 
 
-def list_teams(conn: sqlite3.Connection) -> list[dict]:
-    rows = conn.execute("SELECT * FROM teams ORDER BY created_at DESC, id DESC").fetchall()
+def list_teams(conn: sqlite3.Connection, owner_user_id: int | None = None) -> list[dict]:
+    if owner_user_id is not None:
+        rows = conn.execute(
+            "SELECT * FROM teams WHERE owner_user_id = ? ORDER BY created_at DESC, id DESC",
+            (owner_user_id,),
+        ).fetchall()
+    else:
+        rows = conn.execute("SELECT * FROM teams ORDER BY created_at DESC, id DESC").fetchall()
     return [dict(r) for r in rows]
 
 
@@ -417,4 +431,79 @@ def list_libero_replacements(conn: sqlite3.Connection, lineup_id: int) -> list[d
 
 def clear_libero_replacements(conn: sqlite3.Connection, lineup_id: int) -> None:
     conn.execute("DELETE FROM libero_replacements WHERE lineup_id = ?", (lineup_id,))
+    conn.commit()
+
+
+# ---------------------------------------------------------------- mistakes
+
+def get_player_mistakes(conn: sqlite3.Connection, player_id: int) -> dict[str, str]:
+    rows = conn.execute(
+        "SELECT mistake_key, severity FROM player_mistakes WHERE player_id = ?",
+        (player_id,),
+    ).fetchall()
+    return {r["mistake_key"]: r["severity"] for r in rows}
+
+
+def set_player_mistakes(conn: sqlite3.Connection, player_id: int,
+                        mistakes: dict[str, str]) -> None:
+    """Replace the player's full mistake set (empty dict clears it)."""
+    conn.execute("DELETE FROM player_mistakes WHERE player_id = ?", (player_id,))
+    for key, severity in mistakes.items():
+        conn.execute(
+            "INSERT INTO player_mistakes (player_id, mistake_key, severity) VALUES (?, ?, ?)",
+            (player_id, key, severity),
+        )
+    conn.commit()
+
+
+def team_mistakes(conn: sqlite3.Connection, team_id: int) -> dict[int, dict[str, str]]:
+    """{player_id: {mistake_key: severity}} for a whole roster — sim input."""
+    rows = conn.execute(
+        "SELECT pm.player_id, pm.mistake_key, pm.severity FROM player_mistakes pm "
+        "JOIN players p ON p.id = pm.player_id WHERE p.team_id = ?",
+        (team_id,),
+    ).fetchall()
+    out: dict[int, dict[str, str]] = {}
+    for r in rows:
+        out.setdefault(r["player_id"], {})[r["mistake_key"]] = r["severity"]
+    return out
+
+
+# ---------------------------------------------------------------- notes
+
+def list_notes(conn: sqlite3.Connection, team_id: int,
+               player_id: int | None = None, lineup_id: int | None = None,
+               notebook_only: bool = False) -> list[dict]:
+    q = "SELECT * FROM notes WHERE team_id = ?"
+    args: list = [team_id]
+    if player_id is not None:
+        q += " AND player_id = ?"
+        args.append(player_id)
+    if lineup_id is not None:
+        q += " AND lineup_id = ?"
+        args.append(lineup_id)
+    if notebook_only:
+        q += " AND player_id IS NULL AND lineup_id IS NULL"
+    q += " ORDER BY created_at DESC, id DESC"
+    return [dict(r) for r in conn.execute(q, args).fetchall()]
+
+
+def create_note(conn: sqlite3.Connection, team_id: int, body: str,
+                player_id: int | None = None, lineup_id: int | None = None) -> dict:
+    cur = conn.execute(
+        "INSERT INTO notes (team_id, player_id, lineup_id, body) VALUES (?, ?, ?, ?)",
+        (team_id, player_id, lineup_id, body),
+    )
+    conn.commit()
+    return dict(conn.execute("SELECT * FROM notes WHERE id = ?", (cur.lastrowid,)).fetchone())
+
+
+def update_note(conn: sqlite3.Connection, note_id: int, body: str) -> dict | None:
+    conn.execute("UPDATE notes SET body = ? WHERE id = ?", (body, note_id))
+    conn.commit()
+    return _row_to_dict(conn.execute("SELECT * FROM notes WHERE id = ?", (note_id,)).fetchone())
+
+
+def delete_note(conn: sqlite3.Connection, note_id: int) -> None:
+    conn.execute("DELETE FROM notes WHERE id = ?", (note_id,))
     conn.commit()

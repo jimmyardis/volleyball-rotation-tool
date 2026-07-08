@@ -6,10 +6,36 @@ PRAGMA foreign_keys = ON;
 
 -- A team for a given season.
 CREATE TABLE IF NOT EXISTS teams (
+    id            INTEGER PRIMARY KEY,
+    name          TEXT NOT NULL,
+    season        TEXT,
+    -- The coach account that owns this team. NULL only for rows that predate
+    -- coach accounts; the first coach to register claims them (db._migrate
+    -- adds the column on old databases, coach.register does the claim).
+    owner_user_id INTEGER REFERENCES users(id),
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Coach-tagged mistake tendencies, one row per (player, mistake). Keys come
+-- from rally.MISTAKE_CATALOG; severity scales how often it bites in sims.
+CREATE TABLE IF NOT EXISTS player_mistakes (
     id          INTEGER PRIMARY KEY,
-    name        TEXT NOT NULL,
-    season      TEXT,
-    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    player_id   INTEGER NOT NULL REFERENCES players(id) ON DELETE CASCADE,
+    mistake_key TEXT NOT NULL,
+    severity    TEXT NOT NULL CHECK (severity IN ('sometimes', 'often')),
+    UNIQUE (player_id, mistake_key)
+);
+
+-- Coach notes: one system, three attachment points. team_id is always set;
+-- player_id pins the note to a player card, lineup_id to a lineup. Both NULL
+-- means it's a team-notebook entry.
+CREATE TABLE IF NOT EXISTS notes (
+    id         INTEGER PRIMARY KEY,
+    team_id    INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    player_id  INTEGER REFERENCES players(id) ON DELETE CASCADE,
+    lineup_id  INTEGER REFERENCES lineups(id) ON DELETE CASCADE,
+    body       TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- The roster. Every player gets a permanent id — this is the anchor that ALL
@@ -25,6 +51,7 @@ CREATE TABLE IF NOT EXISTS players (
     dominant_hand  TEXT,              -- 'L' / 'R' / NULL. Unused in P1, but the
                                       -- simulator will want it.
     -- Simulation attributes (0-100). Seeded from position presets, editable.
+    serving        INTEGER,
     setting        INTEGER,
     defense        INTEGER,
     attacking      INTEGER,

@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "./api.js";
+import { api, getCoachToken, setCoachToken } from "./api.js";
 import RosterScreen from "./components/RosterScreen.jsx";
 import LineupBuilder from "./components/LineupBuilder.jsx";
 import RotationViewer from "./components/RotationViewer.jsx";
 import HelpPanel from "./components/HelpPanel.jsx";
 import CoachChat from "./components/CoachChat.jsx";
 import SimulationScreen from "./components/SimulationScreen.jsx";
+import NotesScreen, { QuickNotes } from "./components/Notes.jsx";
+import Landing from "./components/Landing.jsx";
+import TeamSetup from "./components/TeamSetup.jsx";
 import Volleyball from "./components/Volleyball.jsx";
 
-const TABS = ["Roster", "Lineups", "Rotations", "Simulate"];
+const TABS = ["Roster", "Lineups", "Rotations", "Simulate", "Notes"];
 
 // The guided path. Each step knows when it's complete and which tab it lives on.
 function steps({ teamId, players, lineups }) {
@@ -36,39 +39,70 @@ function Stepper({ items, onJump }) {
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState(() => !!getCoachToken());
+  const [me, setMe] = useState(null);
   const [teams, setTeams] = useState([]);
   const [teamId, setTeamId] = useState(null);
   const [players, setPlayers] = useState([]);
   const [lineups, setLineups] = useState([]);
   const [tab, setTab] = useState("Roster");
   const [viewLineupId, setViewLineupId] = useState(null);
-  const [newTeamName, setNewTeamName] = useState("");
+  const [showWizard, setShowWizard] = useState(false);
   const [error, setError] = useState(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // a 401 anywhere means the coach session died — back to the landing page
+  const handleError = useCallback((e) => {
+    if (e.status === 401) {
+      setCoachToken(null);
+      setAuthed(false);
+      setMe(null);
+    } else {
+      setError(e.message);
+    }
+  }, []);
+
+  const loadTeams = useCallback(async () => {
+    try {
+      const [meRes, t] = await Promise.all([api.coachMe(), api.listTeams()]);
+      setMe(meRes.user);
+      setTeams(t);
+      setTeamId((cur) => (cur != null && t.some((x) => x.id === cur) ? cur : t[0]?.id ?? null));
+      setShowWizard(t.length === 0);
+      setLoaded(true);
+    } catch (e) {
+      handleError(e);
+    }
+  }, [handleError]);
 
   useEffect(() => {
-    api.listTeams()
-      .then((t) => { setTeams(t); if (t.length && teamId == null) setTeamId(t[0].id); })
-      .catch((e) => setError(e.message));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (authed) loadTeams();
+  }, [authed, loadTeams]);
 
   const reloadTeam = useCallback(async () => {
     if (teamId == null) return;
-    const [ps, ls] = await Promise.all([api.listPlayers(teamId), api.listLineups(teamId)]);
-    setPlayers(ps); setLineups(ls);
-  }, [teamId]);
+    try {
+      const [ps, ls] = await Promise.all([api.listPlayers(teamId), api.listLineups(teamId)]);
+      setPlayers(ps); setLineups(ls);
+    } catch (e) {
+      handleError(e);
+    }
+  }, [teamId, handleError]);
 
   useEffect(() => { reloadTeam(); }, [reloadTeam]);
 
-  async function createTeam(e) {
-    e.preventDefault();
-    if (!newTeamName.trim()) return;
-    const team = await api.createTeam({ name: newTeamName.trim() });
-    setNewTeamName("");
-    setTeams(await api.listTeams());
-    setTeamId(team.id);
-    setTab("Roster");
+  async function signOut() {
+    try { await api.coachLogout(); } catch { /* token already dead */ }
+    setCoachToken(null);
+    setAuthed(false);
+    setMe(null);
+    setTeams([]); setTeamId(null); setPlayers([]); setLineups([]);
+    setLoaded(false);
+  }
+
+  if (!authed) {
+    return <Landing onCoachAuthed={() => { setAuthed(true); setTab("Roster"); }} />;
   }
 
   function goToRotations(lineupId) { setViewLineupId(lineupId); setTab("Rotations"); }
@@ -78,7 +112,7 @@ export default function App() {
 
   // a friendly nudge toward the next thing to do
   const nudge =
-    teamId == null ? "Start by creating a team below."
+    teamId == null ? "Start by setting up a team."
     : players.length < 6 ? `Add ${6 - players.length} more player${6 - players.length === 1 ? "" : "s"} on the Roster tab (you need 6 to fill a lineup).`
     : lineups.length === 0 ? "Now build a lineup: name it, pick a system, and assign your six to the zones."
     : "You're set — open Rotations to step through all six and try the Serving / Receiving / Base views.";
@@ -88,16 +122,16 @@ export default function App() {
       <header>
         <h1 className="brand"><Volleyball size={26} /> Rotation &amp; Lineup Tool</h1>
         <div className="team-bar">
-          <a className="pz-switch" href="#player">Player Zone</a>
+          {me && <span className="pz-whoami">{me.display_name}</span>}
           <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
-          <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>
-            <option value="" disabled>Select a team</option>
-            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}{t.season ? ` (${t.season})` : ""}</option>)}
-          </select>
-          <form className="inline" onSubmit={createTeam}>
-            <input placeholder="New team name" value={newTeamName} onChange={(e) => setNewTeamName(e.target.value)} />
-            <button type="submit">Add team</button>
-          </form>
+          {teams.length > 0 && (
+            <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>
+              <option value="" disabled>Select a team</option>
+              {teams.map((t) => <option key={t.id} value={t.id}>{t.name}{t.season ? ` (${t.season})` : ""}</option>)}
+            </select>
+          )}
+          <button className="ghost" onClick={() => setShowWizard(true)}>+ New team</button>
+          <button className="ghost" onClick={signOut}>Sign out</button>
         </div>
       </header>
 
@@ -109,17 +143,30 @@ export default function App() {
         onViewLineup={(id) => { setViewLineupId(id); setTab("Rotations"); }}
       />
 
-      <Stepper items={stepItems} onJump={setTab} />
-      {nextStep && (
-        <p className="nudge">{nudge} <button className="link inline-link" onClick={() => setShowHelp(true)}>New here? Open the guide.</button></p>
-      )}
-
       {error && <p className="error global">{error}</p>}
 
-      {teamId == null ? (
-        <p className="hint big-hint">Create a team above to get started.</p>
+      {showWizard ? (
+        <TeamSetup
+          onCancel={teams.length ? () => setShowWizard(false) : null}
+          onDone={async (newTeamId) => {
+            setShowWizard(false);
+            const t = await api.listTeams();
+            setTeams(t);
+            setTeamId(newTeamId);
+            setTab("Roster");
+          }}
+        />
+      ) : !loaded ? (
+        <p className="hint big-hint">Loading your teams…</p>
+      ) : teamId == null ? (
+        <p className="hint big-hint">Set up a team to get started.</p>
       ) : (
         <>
+          <Stepper items={stepItems} onJump={setTab} />
+          {nextStep && (
+            <p className="nudge">{nudge} <button className="link inline-link" onClick={() => setShowHelp(true)}>New here? Open the guide.</button></p>
+          )}
+
           <nav className="tabs">
             {TABS.map((t) => (
               <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}</button>
@@ -145,6 +192,12 @@ export default function App() {
                 )}
               </div>
               <RotationViewer lineupId={viewLineupId} />
+              {viewLineupId != null && (
+                <div className="card">
+                  <QuickNotes teamId={teamId} lineupId={viewLineupId}
+                              title={`Notes on ${lineups.find((l) => l.id === viewLineupId)?.name ?? "this lineup"}`} />
+                </div>
+              )}
             </>
           )}
           {tab === "Simulate" && (
@@ -152,6 +205,7 @@ export default function App() {
               ? <p className="hint big-hint">Build a lineup first, then come back to simulate it.</p>
               : <SimulationScreen lineups={lineups} />
           )}
+          {tab === "Notes" && <NotesScreen teamId={teamId} players={players} lineups={lineups} />}
         </>
       )}
     </div>

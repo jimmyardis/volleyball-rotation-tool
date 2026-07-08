@@ -250,16 +250,16 @@ def base_positions(
 # The model is intentionally simple and transparent so it's easy to tune.
 # ---------------------------------------------------------------------------
 
-ATTRS = ["setting", "defense", "attacking", "blocking", "confidence", "pressure"]
+ATTRS = ["serving", "setting", "defense", "attacking", "blocking", "confidence", "pressure"]
 
 # Position presets (0-100). Seed values when a player is created; fully editable.
 ROLE_PRESETS: dict[str, dict[str, int]] = {
-    "S":   {"setting": 80, "defense": 65, "attacking": 45, "blocking": 45, "confidence": 78, "pressure": 68},
-    "OH":  {"setting": 35, "defense": 65, "attacking": 75, "blocking": 60, "confidence": 66, "pressure": 62},
-    "MB":  {"setting": 30, "defense": 50, "attacking": 72, "blocking": 82, "confidence": 62, "pressure": 60},
-    "OPP": {"setting": 42, "defense": 55, "attacking": 78, "blocking": 70, "confidence": 66, "pressure": 62},
-    "L":   {"setting": 45, "defense": 90, "attacking": 18, "blocking": 18, "confidence": 82, "pressure": 72},
-    "DS":  {"setting": 35, "defense": 82, "attacking": 35, "blocking": 30, "confidence": 72, "pressure": 66},
+    "S":   {"serving": 62, "setting": 80, "defense": 65, "attacking": 45, "blocking": 45, "confidence": 78, "pressure": 68},
+    "OH":  {"serving": 66, "setting": 35, "defense": 65, "attacking": 75, "blocking": 60, "confidence": 66, "pressure": 62},
+    "MB":  {"serving": 55, "setting": 30, "defense": 50, "attacking": 72, "blocking": 82, "confidence": 62, "pressure": 60},
+    "OPP": {"serving": 64, "setting": 42, "defense": 55, "attacking": 78, "blocking": 70, "confidence": 66, "pressure": 62},
+    "L":   {"serving": 60, "setting": 45, "defense": 90, "attacking": 18, "blocking": 18, "confidence": 82, "pressure": 72},
+    "DS":  {"serving": 62, "setting": 35, "defense": 82, "attacking": 35, "blocking": 30, "confidence": 72, "pressure": 66},
 }
 
 

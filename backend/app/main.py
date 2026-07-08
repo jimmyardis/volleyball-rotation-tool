@@ -12,21 +12,26 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import db, engine
+from . import coach, db, engine, rally
 from .models import (
     ChatRequest,
     CoverageSave,
     FormationSave,
     LineupCreate,
     LineupPositions,
+    MistakesSave,
+    NoteCreate,
+    NoteUpdate,
     OverlapCheck,
     PairsSave,
     PlayerCreate,
     PlayerUpdate,
+    SimGameRequest,
     SimRequest,
     SubsSave,
     TeamCreate,
@@ -84,6 +89,32 @@ def get_conn():
         conn.close()
 
 
+# The coach-facing API is gated: every request to these prefixes needs a
+# signed-in COACH's bearer token (player endpoints have their own auth under
+# /player, and /coach handles sign-in itself). This closed the "anyone with
+# the URL can edit the roster / burn chat credits" launch blocker.
+_COACH_API_PREFIXES = ("/teams", "/lineups", "/players", "/overlap-check",
+                       "/coach-chat", "/notes")
+
+
+@app.middleware("http")
+async def _coach_gate(request: Request, call_next):
+    path = request.url.path
+    if request.method != "OPTIONS" and path.startswith(_COACH_API_PREFIXES):
+        auth = request.headers.get("authorization") or ""
+        user = None
+        if auth.startswith("Bearer "):
+            conn = db.connect(DB_PATH)
+            try:
+                user = coach.verify_coach_token(conn, auth.removeprefix("Bearer ").strip())
+            finally:
+                conn.close()
+        if not user:
+            return JSONResponse({"detail": "coach sign-in required"}, status_code=401)
+        request.state.coach = user
+    return await call_next(request)
+
+
 @app.on_event("startup")
 def _startup() -> None:
     conn = db.connect(DB_PATH)
@@ -99,13 +130,15 @@ def health():
 # ---------------------------------------------------------------- teams
 
 @app.get("/teams")
-def list_teams(conn=Depends(get_conn)):
-    return db.list_teams(conn)
+def list_teams(request: Request, conn=Depends(get_conn)):
+    # request.state.coach is set by the auth gate middleware
+    return db.list_teams(conn, owner_user_id=request.state.coach["id"])
 
 
 @app.post("/teams", status_code=201)
-def create_team(body: TeamCreate, conn=Depends(get_conn)):
-    return db.create_team(conn, body.name, body.season)
+def create_team(body: TeamCreate, request: Request, conn=Depends(get_conn)):
+    return db.create_team(conn, body.name, body.season,
+                          owner_user_id=request.state.coach["id"])
 
 
 # ---------------------------------------------------------------- players
@@ -379,34 +412,126 @@ def role_presets():
     return engine.ROLE_PRESETS
 
 
-@app.post("/lineups/{lineup_id}/simulate")
-def simulate(lineup_id: int, body: SimRequest, conn=Depends(get_conn)):
-    """Monte Carlo all 6 rotations (subs applied) and rank which works best."""
+def _sim_inputs(conn, lineup_id: int):
+    """Shared loader for both sim endpoints: lineup, players, effective
+    rotations (subs applied), and the roster's tagged mistakes."""
     lineup = db.get_lineup(conn, lineup_id)
     if not lineup:
         raise HTTPException(404, "lineup not found")
     start = db.get_lineup_positions(conn, lineup_id)
     if set(start.keys()) != set(range(1, 7)):
         raise HTTPException(409, "lineup has no complete starting positions yet")
-
     players = {p["id"]: p for p in db.list_players(conn, lineup["team_id"])}
-    states = engine.all_rotations(start)
     effective = [
         engine.apply_substitutions(state, db.get_substitutions(conn, lineup_id, idx))
-        for idx, state in enumerate(states)
+        for idx, state in enumerate(engine.all_rotations(start))
     ]
-    stakes = max(0.0, min(1.0, body.stakes))
+    mistakes = db.team_mistakes(conn, lineup["team_id"])
+    return lineup, start, players, effective, mistakes
+
+
+@app.post("/lineups/{lineup_id}/simulate")
+def simulate(lineup_id: int, body: SimRequest, conn=Depends(get_conn)):
+    """Rally-engine batch: many simulated sets, aggregated per rotation and
+    per player, with plain-English best/worst insights."""
+    lineup, start, players, effective, mistakes = _sim_inputs(conn, lineup_id)
     opponent = max(1, min(100, body.opponent_skill))
-    games = max(60, min(60000, body.games))
-    result = engine.simulate_rotations(effective, players, stakes, opponent, games=games)
-    # label each rotation with its server + setter situation for the UI
-    for r in result["per_rotation"]:
-        meta = engine.rotation_metadata(effective[r["rotation_index"]], players, lineup["system"])
-        r["server_id"] = meta["server_id"]
+    sets = max(20, min(500, body.sets))
+    batch = rally.simulate_batch(start, players, mistakes, opponent,
+                                 sets=sets, rotations=effective)
+    batch["insights"] = rally.generate_insights(batch, players)
+    for r in batch["rotations"]:
+        meta = engine.rotation_metadata(effective[r["rot"]], players, lineup["system"])
         r["setter_location"] = meta["setter_location"]
-    result["lineup"] = lineup
-    result["players"] = list(players.values())
-    return result
+        r["positions"] = effective[r["rot"]]
+    batch["lineup"] = lineup
+    batch["players"] = list(players.values())
+    return batch
+
+
+@app.post("/lineups/{lineup_id}/simulate-game")
+def simulate_game(lineup_id: int, body: SimGameRequest, conn=Depends(get_conn)):
+    """Play ONE full set touch-by-touch and return the whole event stream —
+    the frontend plays it back like a broadcast (court + narration box)."""
+    import random as _random
+    lineup, start, players, effective, mistakes = _sim_inputs(conn, lineup_id)
+    opponent = max(1, min(100, body.opponent_skill))
+    rng = _random.Random(body.seed)
+    result = rally.simulate_set(start, players, mistakes, opponent, rng,
+                                rotations=effective)
+    return {
+        "lineup": lineup,
+        "players": list(players.values()),
+        "opp_players": list(result["opp_players"].values()),
+        "rotations": effective,
+        "score": result["score"],
+        "won": result["won"],
+        "events": result["events"],
+        "player_stats": result["player_stats"],
+        "rotation_stats": result["rotation_stats"],
+    }
+
+
+# ---------------------------------------------------------------- mistakes
+
+@app.get("/mistake-catalog")
+def mistake_catalog():
+    """The tag list for the roster editor, grouped by moment."""
+    return {"catalog": [{"key": k, **v} for k, v in rally.MISTAKE_CATALOG.items()],
+            "severities": list(rally.SEVERITIES)}
+
+
+@app.get("/players/{player_id}/mistakes")
+def get_mistakes(player_id: int, conn=Depends(get_conn)):
+    if not db.get_player(conn, player_id):
+        raise HTTPException(404, "player not found")
+    return {"mistakes": db.get_player_mistakes(conn, player_id)}
+
+
+@app.put("/players/{player_id}/mistakes")
+def put_mistakes(player_id: int, body: MistakesSave, conn=Depends(get_conn)):
+    if not db.get_player(conn, player_id):
+        raise HTTPException(404, "player not found")
+    for key, sev in body.mistakes.items():
+        if key not in rally.MISTAKE_CATALOG:
+            raise HTTPException(422, f"unknown mistake '{key}'")
+        if sev not in rally.SEVERITIES:
+            raise HTTPException(422, f"severity must be one of {list(rally.SEVERITIES)}")
+    db.set_player_mistakes(conn, player_id, body.mistakes)
+    return {"mistakes": db.get_player_mistakes(conn, player_id)}
+
+
+# ---------------------------------------------------------------- notes
+
+@app.get("/teams/{team_id}/notes")
+def list_notes(team_id: int, player_id: int | None = None,
+               lineup_id: int | None = None, notebook: bool = False,
+               conn=Depends(get_conn)):
+    if not db.get_team(conn, team_id):
+        raise HTTPException(404, "team not found")
+    return db.list_notes(conn, team_id, player_id=player_id,
+                         lineup_id=lineup_id, notebook_only=notebook)
+
+
+@app.post("/teams/{team_id}/notes", status_code=201)
+def create_note(team_id: int, body: NoteCreate, conn=Depends(get_conn)):
+    if not db.get_team(conn, team_id):
+        raise HTTPException(404, "team not found")
+    return db.create_note(conn, team_id, body.body.strip(),
+                          player_id=body.player_id, lineup_id=body.lineup_id)
+
+
+@app.put("/notes/{note_id}")
+def update_note(note_id: int, body: NoteUpdate, conn=Depends(get_conn)):
+    note = db.update_note(conn, note_id, body.body.strip())
+    if not note:
+        raise HTTPException(404, "note not found")
+    return note
+
+
+@app.delete("/notes/{note_id}", status_code=204)
+def delete_note(note_id: int, conn=Depends(get_conn)):
+    db.delete_note(conn, note_id)
 
 
 # ---------------------------------------------------------------- coach assistant
@@ -576,6 +701,7 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
 from . import player as player_side  # noqa: E402
 
 app.include_router(player_side.router)
+app.include_router(coach.router)
 
 
 # ---------------------------------------------------------------- static frontend

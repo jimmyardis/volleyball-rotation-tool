@@ -35,7 +35,7 @@ export const zoneCenter = (zone) => {
 };
 
 export const overallRating = (p) => {
-  const keys = ["setting", "attacking", "blocking", "defense", "confidence", "pressure"];
+  const keys = ["serving", "setting", "attacking", "blocking", "defense", "confidence", "pressure"];
   const vals = keys.map((k) => p?.[k]).filter((v) => v != null);
   if (!vals.length) return null;
   return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);

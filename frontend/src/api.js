@@ -1,11 +1,22 @@
 // Tiny fetch wrapper. All calls go through Vite's /api proxy -> FastAPI.
+// The whole coach API is gated: every request carries the coach's bearer
+// token (localStorage), and a 401 anywhere means "sign in again".
 
 // Dev: Vite proxies /api -> backend. Prod: same-origin (FastAPI serves both).
 const BASE = import.meta.env.PROD ? "" : "/api";
 
+const TOKEN_KEY = "vb_coach_token";
+export const getCoachToken = () => localStorage.getItem(TOKEN_KEY);
+export const setCoachToken = (t) =>
+  t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY);
+
 async function request(path, options = {}) {
+  const token = getCoachToken();
   const res = await fetch(BASE + path, {
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     ...options,
   });
   if (!res.ok) {
@@ -15,12 +26,20 @@ async function request(path, options = {}) {
     } catch {
       /* no body */
     }
-    throw new Error(`${res.status}: ${detail}`);
+    const err = new Error(`${res.status}: ${detail}`);
+    err.status = res.status;
+    throw err;
   }
   return res.status === 204 ? null : res.json();
 }
 
 export const api = {
+  // coach auth
+  coachRegister: (body) => request("/coach/register", { method: "POST", body: JSON.stringify(body) }),
+  coachLogin: (body) => request("/coach/login", { method: "POST", body: JSON.stringify(body) }),
+  coachLogout: () => request("/coach/logout", { method: "POST" }),
+  coachMe: () => request("/coach/me"),
+
   // teams
   listTeams: () => request("/teams"),
   createTeam: (body) => request("/teams", { method: "POST", body: JSON.stringify(body) }),
@@ -32,6 +51,25 @@ export const api = {
   updatePlayer: (playerId, body) =>
     request(`/players/${playerId}`, { method: "PATCH", body: JSON.stringify(body) }),
   deletePlayer: (playerId) => request(`/players/${playerId}`, { method: "DELETE" }),
+
+  // mistakes (per player, keys from /mistake-catalog)
+  mistakeCatalog: () => request("/mistake-catalog"),
+  getMistakes: (playerId) => request(`/players/${playerId}/mistakes`),
+  saveMistakes: (playerId, mistakes) =>
+    request(`/players/${playerId}/mistakes`, { method: "PUT", body: JSON.stringify({ mistakes }) }),
+
+  // notes (team notebook + pins on players/lineups)
+  listNotes: (teamId, params = {}) => {
+    const qs = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v != null && v !== false)
+    ).toString();
+    return request(`/teams/${teamId}/notes${qs ? `?${qs}` : ""}`);
+  },
+  createNote: (teamId, body) =>
+    request(`/teams/${teamId}/notes`, { method: "POST", body: JSON.stringify(body) }),
+  updateNote: (noteId, body) =>
+    request(`/notes/${noteId}`, { method: "PUT", body: JSON.stringify({ body }) }),
+  deleteNote: (noteId) => request(`/notes/${noteId}`, { method: "DELETE" }),
 
   // lineups
   listLineups: (teamId) => request(`/teams/${teamId}/lineups`),
@@ -66,10 +104,12 @@ export const api = {
   generateSubs: (lineupId) =>
     request(`/lineups/${lineupId}/generate-subs`, { method: "POST" }),
 
-  // simulation
+  // simulation — batch analysis + single watchable set
   rolePresets: () => request("/role-presets"),
   simulate: (lineupId, body) =>
     request(`/lineups/${lineupId}/simulate`, { method: "POST", body: JSON.stringify(body) }),
+  simulateGame: (lineupId, body) =>
+    request(`/lineups/${lineupId}/simulate-game`, { method: "POST", body: JSON.stringify(body) }),
 
   // coach assistant
   coachStatus: () => request("/coach-chat/status"),
@@ -81,6 +121,7 @@ export const api = {
 };
 
 export const ATTRS = [
+  { key: "serving", label: "Serving" },
   { key: "setting", label: "Setting" },
   { key: "attacking", label: "Attacking" },
   { key: "blocking", label: "Blocking" },
