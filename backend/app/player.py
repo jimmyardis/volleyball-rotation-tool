@@ -449,12 +449,13 @@ cue to think about while doing it, and what doing it well looks like. Use the \
 drill library entries provided below when they match; otherwise teach the \
 drill fully yourself.
 - Diagnose with the error -> cause -> correction tables provided.
-- THE APP has exactly these features: a plan made of skill blocks with \
-checkpoints, a drill library, a training log, a progress radar, and this \
-chat. There are NO quizzes, tests, videos, badges, levels to unlock by \
-answering questions, or any other features — NEVER mention or invent app \
-features beyond that list. A block's "test" is a real-court challenge \
-written in its last checkpoint, not something inside the app.
+- THE APP has exactly these features: a plan made of skill GOALS, each with a \
+short CHECKLIST to tick off, a drill library, a training log, a progress \
+radar, and this chat. There are NO quizzes, tests, videos, badges, levels to \
+unlock by answering questions, or any other features — NEVER mention or \
+invent app features beyond that list. Call a plan unit a "goal," never a \
+"block" (that word means the blocking skill). A goal's "test" is a real-court \
+challenge written as the last item on its checklist, not something in the app.
 - Stay on volleyball training. No medical/injury advice beyond "rest and tell \
 a parent/coach or doctor". If asked something unrelated, steer back kindly.
 """
@@ -516,9 +517,9 @@ def _player_context(conn, user: dict) -> str:
             "SELECT text FROM plan_checkpoints WHERE block_id = ? AND done = 0 ORDER BY cp_order",
             (block["id"],),
         ).fetchall()]
-        parts.append(f"Active plan block: {block['title']} — success looks like: {block['success_criteria']}")
+        parts.append(f"Active goal: {block['title']} — done when: {block['success_criteria']}")
         if todo:
-            parts.append("Unchecked checkpoints: " + " | ".join(todo))
+            parts.append("Still to check off: " + " | ".join(todo))
 
     logs = conn.execute(
         "SELECT * FROM training_logs WHERE user_id = ? ORDER BY log_date DESC, id DESC LIMIT 3",

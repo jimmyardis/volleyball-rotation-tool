@@ -24,14 +24,14 @@ export default function HomeScreen({ me, goTo }) {
           {active ? (
             <>
               <h3>{active.title}</h3>
-              <p className="hint">{doneCount}/{active.checkpoints.length} checkpoints done</p>
+              <p className="hint">{doneCount} of {active.checkpoints.length} checked off</p>
               {nextCp && <p className="pz-next-cp">Next up: {nextCp.text}</p>}
               <button onClick={() => goTo("Plan")}>Open my plan</button>
             </>
           ) : plan ? (
             <>
               <h3>Plan complete!</h3>
-              <p className="hint">Every block is done. Re-assess and build the next one.</p>
+              <p className="hint">Every goal is done. Re-assess and build the next one.</p>
               <button onClick={() => goTo("Progress")}>Re-assess my skills</button>
             </>
           ) : (
@@ -47,7 +47,7 @@ export default function HomeScreen({ me, goTo }) {
           <div className="pz-stats-row">
             <div className="pz-stat"><span className="pz-stat-num">{prog?.week_streak ?? "–"}</span><span className="pz-stat-label">week streak</span></div>
             <div className="pz-stat"><span className="pz-stat-num">{prog?.sessions_28d ?? "–"}</span><span className="pz-stat-label">sessions, last 4 wks</span></div>
-            <div className="pz-stat"><span className="pz-stat-num">{prog?.blocks_done ?? "–"}</span><span className="pz-stat-label">blocks mastered</span></div>
+            <div className="pz-stat"><span className="pz-stat-num">{prog?.blocks_done ?? "–"}</span><span className="pz-stat-label">goals mastered</span></div>
           </div>
           <button className="ghost" onClick={() => goTo("Train")}>Log a session</button>
         </div>

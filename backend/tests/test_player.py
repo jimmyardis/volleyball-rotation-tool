@@ -154,7 +154,7 @@ def test_coach_context_assembly(client, auth, monkeypatch):
 
     assert "Position: OH" in ctx
     assert "Attacking / Spiking" in ctx and "2/5" in ctx
-    assert "Active plan block" in ctx
+    assert "Active goal" in ctx
     assert "kept hitting the net" in ctx
 
     keys = player._mentioned_skills("why do my serves keep going into the net when I spike?")

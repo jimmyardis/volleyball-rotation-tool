@@ -249,10 +249,23 @@ DRILLS = [
     # game IQ
     {"key": "rotation-quiz", "name": "Rotation Walkthrough Quiz", "skill_key": "game_iq", "positions": "all", "level": 1, "equipment": "none (use the coach app court)", "solo": 1,
      "how_to": "Using the rotation viewer, step through all 6 rotations of your lineup. For each: say your zone, your base spot, your serve-receive job, and who you'd set/hit with. Repeat until instant."},
-    {"key": "film-one-thing", "name": "Watch For One Thing", "skill_key": "game_iq", "positions": "all", "level": 2, "equipment": "any match video", "solo": 1,
-     "how_to": "Watch 10 minutes of any volleyball match tracking exactly ONE thing (e.g., where the setter puts every second ball, or how the libero calls serves). Write 3 observations in your training log."},
+    {"key": "film-one-thing", "name": "Watch a Match, Track One Thing", "skill_key": "game_iq", "positions": "all", "level": 2, "equipment": "any volleyball video on a phone/TV", "solo": 1,
+     "how_to": "Pull up 10 minutes of ANY volleyball match (YouTube is fine). Pick ONE thing to follow the whole time — e.g. where the setter puts every second ball, or how the libero calls each serve in/out — and ignore everything else. Jot 3 things you noticed in your training log. That's it: one match, one thing, three notes."},
     {"key": "talk-freebies", "name": "The Two Freebies", "skill_key": "game_iq", "positions": "all", "level": 1, "equipment": "scrimmage", "solo": 0,
      "how_to": "In your next scrimmage, commit to the two freebie calls: 'mine' on every ball you play and 'in/out' on every serve near a line. Log how it changed your team's chaos level."},
+    # --- no net, no partner: solo drills you can do at home with just a ball (or nothing) ---
+    {"key": "toss-pass-self", "name": "Toss & Pass to Yourself", "skill_key": "passing", "positions": "all", "level": 1, "equipment": "ball", "solo": 1,
+     "how_to": "Toss the ball 6-8 ft straight up, slide behind it, and pass it back up to yourself with a quiet platform (arms still, legs lift). Keep the streak alive — aim for 20 in a row without moving your feet more than a step. No wall, no partner."},
+    {"key": "straight-set-ladder", "name": "Straight-Up Set Ladder", "skill_key": "setting", "positions": "all", "level": 1, "equipment": "ball", "solo": 1,
+     "how_to": "Set the ball straight up above your forehead, 3-4 ft high, 30 times without letting it drift off your spot. Then do 5 with your eyes closed and feel where it lands — good hands catch it soft and centered. Ball only."},
+    {"key": "shadow-approach-arms", "name": "Approach + Arm Swing Shadow", "skill_key": "attacking", "positions": "OH,MB,OPP,S", "level": 1, "equipment": "none", "solo": 1,
+     "how_to": "No ball, no net. 15 full approaches with a real arm swing on top — arms drive back as you plant, then whip up and snap over an imaginary ball. Freeze at the top each rep and check your hitting elbow is high and in front. Slow, then game speed."},
+    {"key": "shadow-block-press", "name": "Shadow Block Presses", "skill_key": "blocking", "positions": "MB,OH,OPP,S", "level": 1, "equipment": "none", "solo": 1,
+     "how_to": "Face a wall or open space — no net needed. Jump straight up and press both hands high and FORWARD, like reaching over the net into the other side, then land balanced. Hands stay wide, thumbs up. 3 sets of 10; think 'press over,' never 'swat down.'"},
+    {"key": "sprawl-recover", "name": "Sprawl & Recover", "skill_key": "digging", "positions": "all", "level": 2, "equipment": "ball", "solo": 1,
+     "how_to": "From a low base, toss the ball out to one side just past your reach, sprawl to pop it up with one hand, then scramble back to your feet in base. 6 each side. You set your own chase — no partner needed."},
+    {"key": "line-hops-base", "name": "Line Hops to Base", "skill_key": "movement", "positions": "all", "level": 1, "equipment": "none", "solo": 1,
+     "how_to": "Use any floor line or a strip of tape. Quick two-foot hops side-to-side over the line for 20 seconds, then on your own 'go' freeze into a low defensive base and hold 2 seconds. 5 rounds. Builds fast feet that can stop under control."},
 ]
 
 

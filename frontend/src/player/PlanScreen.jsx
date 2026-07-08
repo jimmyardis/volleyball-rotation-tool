@@ -60,7 +60,7 @@ export default function PlanScreen({ me, goTo }) {
       {celebrate && <p className="pz-celebrate">You finished it — the next skill just unlocked! 🎉</p>}
       {!plan && <p className="hint">No plan yet — tap “Build my plan”.</p>}
       {plan && !allDone && (
-        <p className="hint">One skill at a time. Check things off as you do them — finish the list and the next skill unlocks.</p>
+        <p className="hint">One goal at a time. Check off the list as you do it — finish the checklist and your next goal unlocks.</p>
       )}
       {allDone && <p className="pz-celebrate">Whole plan finished! Re-assess your skills on Progress, then rebuild for new goals.</p>}
 
@@ -69,8 +69,9 @@ export default function PlanScreen({ me, goTo }) {
           <span className="pz-card-title">Working on now</span>
           <div className="pz-now-head">
             <h3 className="pz-now-skill">{skillOf(active.title)}</h3>
-            {goalOf(active.title) && <span className="pz-goal">goal: {goalOf(active.title)}</span>}
+            {goalOf(active.title) && <span className="pz-goal">({goalOf(active.title)})</span>}
           </div>
+          <span className="pz-checklist-label">Checklist</span>
           <ul className="pz-checkpoints">
             {active.checkpoints.map((c) => (
               <li key={c.id}>
@@ -93,7 +94,7 @@ export default function PlanScreen({ me, goTo }) {
 
       {upNext.length > 0 && (
         <div className="card pz-upnext">
-          <span className="pz-card-title">Up next</span>
+          <span className="pz-card-title">Next goals</span>
           <ol className="pz-next-list">
             {upNext.map((b) => <li key={b.id}>{skillOf(b.title)}</li>)}
           </ol>

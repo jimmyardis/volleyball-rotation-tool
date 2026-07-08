@@ -505,6 +505,7 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 /* home */
 .pz-home-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.9rem; }
 .pz-card-title { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: var(--dim); text-transform: uppercase; margin-bottom: 0.4rem; }
+.pz-checklist-label { display: block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.06em; color: var(--dim); text-transform: uppercase; margin: 0.6rem 0 0.3rem; }
 .pz-today h3, .pz-streak h3 { margin: 0.2rem 0 0.4rem; }
 .pz-next-cp { background: var(--panel-2); border-left: 3px solid var(--accent); border-radius: 8px; padding: 0.5rem 0.7rem; font-size: 0.9rem; }
 .pz-stats-row { display: flex; gap: 1.25rem; flex-wrap: wrap; margin: 0.5rem 0 0.75rem; }
