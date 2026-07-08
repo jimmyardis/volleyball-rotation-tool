@@ -256,6 +256,21 @@ DRILLS = [
 ]
 
 
+def drill_snippets(skill_keys: list[str], position: str | None, max_drills: int = 6) -> str:
+    """Full drill-library entries for the AI coach, so it can explain drills
+    accurately (name, level, equipment, and the complete how-to)."""
+    def fits(d):
+        return d["positions"] == "all" or (position and position in d["positions"].split(","))
+    picked = [d for d in DRILLS if d["skill_key"] in skill_keys and fits(d)]
+    picked.sort(key=lambda d: (d["level"], -d["solo"]))
+    lines = []
+    for d in picked[:max_drills]:
+        solo = "solo" if d["solo"] else "needs a partner/coach"
+        lines.append(f"- “{d['name']}” ({LEVEL_NAMES[d['level']]} level, {solo}; "
+                     f"equipment: {d['equipment']}): {d['how_to']}")
+    return "\n".join(lines)
+
+
 def knowledge_snippets(skill_keys: list[str], position: str | None) -> str:
     """Assemble grounding text for the AI coach: cues + error tables for the
     requested skills, plus position guidance."""

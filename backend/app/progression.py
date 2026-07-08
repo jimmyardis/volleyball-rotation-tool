@@ -46,12 +46,12 @@ def _block_for(skill_key: str, position: str, current: int) -> dict:
 
     checkpoints = []
     if drills:
-        checkpoints.append(f"Do “{drills[0]['name']}” in 3 different sessions (log each one).")
+        checkpoints.append(f"Do “{drills[0]['name']}” in 3 different practices (log each one).")
     if len(drills) > 1:
-        checkpoints.append(f"Do “{drills[1]['name']}” twice, beating your first session's result.")
+        checkpoints.append(f"Do “{drills[1]['name']}” twice — try to beat your first score.")
     cue = knowledge.KNOWLEDGE[skill_key]["cues"][0]
-    checkpoints.append(f"In one focused rep set, demonstrate the key cue: {cue.rstrip('.')}.")
-    checkpoints.append(f"Pass the block test: {criteria}")
+    checkpoints.append(f"Spend one practice thinking about just this: {cue.rstrip('.')}.")
+    checkpoints.append(f"Beat the challenge: {criteria}")
 
     return {
         "skill_key": skill_key,

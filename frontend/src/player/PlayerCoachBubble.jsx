@@ -2,7 +2,7 @@
 // Coach tab (shared thread), reachable from any screen.
 
 import { useEffect, useRef, useState } from "react";
-import { COACH_STARTERS, useCoachChat } from "./useCoachChat.js";
+import { useCoachChat } from "./useCoachChat.js";
 
 export default function PlayerCoachBubble({ messages, setMessages, onExpand }) {
   const [open, setOpen] = useState(false);
@@ -41,12 +41,7 @@ export default function PlayerCoachBubble({ messages, setMessages, onExpand }) {
 
       <div className="chat-body" ref={bodyRef}>
         {messages.length === 0 && (
-          <div className="chat-intro">
-            <p className="hint">Coach knows your plan and your last few sessions. Try:</p>
-            {COACH_STARTERS.map((s) => (
-              <button key={s} className="chip" onClick={() => submit(s)}>{s}</button>
-            ))}
-          </div>
+          <p className="hint">Ask coach anything about your training.</p>
         )}
         {messages.map((m, i) => (
           <div key={i} className={`bubble ${m.role}`}>{m.content}</div>

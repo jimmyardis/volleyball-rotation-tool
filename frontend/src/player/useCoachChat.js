@@ -5,13 +5,6 @@
 import { useState } from "react";
 import { playerApi } from "./api.js";
 
-export const COACH_STARTERS = [
-  "What should I work on this week?",
-  "Why do my serves keep going into the net?",
-  "Give me a 20-minute solo practice for today.",
-  "How do I know if I passed my current block?",
-];
-
 export function useCoachChat(messages, setMessages) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);

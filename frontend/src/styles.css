@@ -532,6 +532,14 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 .pz-cp-done { text-decoration: line-through; color: var(--dim); }
 .pz-block-drills { font-size: 0.88rem; color: var(--dim); display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
 
+/* simplified plan: one big now-card, plain up-next + finished lists */
+.pz-now-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin: 0.1rem 0 0.3rem; }
+.pz-now-skill { margin: 0; font-size: 1.35rem; }
+.pz-goal { background: var(--accent-soft); color: var(--accent); font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 0.15rem 0.6rem; }
+.pz-next-list { margin: 0.2rem 0 0; padding-left: 1.3rem; }
+.pz-next-list li { margin: 0.25rem 0; font-size: 0.95rem; }
+.pz-done-row { margin: 0.25rem 0; color: var(--good); font-weight: 600; }
+
 /* train */
 .pz-log-form { display: flex; flex-direction: column; gap: 0.5rem; }
 .pz-chip-row { display: flex; flex-wrap: wrap; gap: 0.35rem; }

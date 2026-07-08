@@ -1,7 +1,12 @@
+// My Plan, kept SIMPLE: one big "working on now" card with a checklist,
+// a plain "up next" list, and finished skills as one-line ✓ rows. All the
+// engine (mastery gating, unlock-next, reopen) is unchanged underneath.
+
 import { useEffect, useState } from "react";
 import { playerApi } from "./api.js";
 
-const STATUS_LABEL = { locked: "LOCKED", active: "IN PROGRESS", done: "MASTERED" };
+const skillOf = (title) => title.split("→")[0].trim();
+const goalOf = (title) => (title.split("→")[1] || "").trim();
 
 export default function PlanScreen({ me, goTo }) {
   const [plan, setPlan] = useState(null);
@@ -14,7 +19,7 @@ export default function PlanScreen({ me, goTo }) {
   }, []);
 
   async function regenerate() {
-    if (plan && !confirm("Rebuild your plan from your latest self-assessment? Your current block progress resets.")) return;
+    if (plan && !confirm("Rebuild your plan from your latest self-assessment? Your current progress resets.")) return;
     setError(null);
     try {
       setPlan(await playerApi.generatePlan());
@@ -39,6 +44,12 @@ export default function PlanScreen({ me, goTo }) {
 
   if (!loaded) return <div className="screen"><p>Loading…</p></div>;
 
+  const blocks = plan?.blocks ?? [];
+  const active = blocks.find((b) => b.status === "active");
+  const done = blocks.filter((b) => b.status === "done");
+  const upNext = blocks.filter((b) => b.status === "locked");
+  const allDone = plan && !active && upNext.length === 0;
+
   return (
     <div className="screen">
       <div className="pz-plan-head">
@@ -46,50 +57,57 @@ export default function PlanScreen({ me, goTo }) {
         <button className="ghost" onClick={regenerate}>{plan ? "Rebuild plan" : "Build my plan"}</button>
       </div>
       {error && <p className="error">{error}</p>}
-      {celebrate && <p className="pz-celebrate">Block mastered — the next one just unlocked. Keep rolling!</p>}
-      {!plan && <p className="hint">No plan yet — build one from your position + self-assessment.</p>}
-
-      {plan && (
-        <p className="hint">
-          One block at a time: finish every checkpoint to unlock the next block.
-          Each block's test tells you when you've truly got it.
-        </p>
+      {celebrate && <p className="pz-celebrate">You finished it — the next skill just unlocked! 🎉</p>}
+      {!plan && <p className="hint">No plan yet — tap “Build my plan”.</p>}
+      {plan && !allDone && (
+        <p className="hint">One skill at a time. Check things off as you do them — finish the list and the next skill unlocks.</p>
       )}
+      {allDone && <p className="pz-celebrate">Whole plan finished! Re-assess your skills on Progress, then rebuild for new goals.</p>}
 
-      {plan?.blocks.map((b, i) => (
-        <div key={b.id} className={`card pz-block ${b.status}`}>
-          <div className="pz-block-head">
-            <span className="pz-block-num">{i + 1}</span>
-            <h3>{b.title}</h3>
-            <span className={`pz-block-status ${b.status}`}>{STATUS_LABEL[b.status]}</span>
+      {active && (
+        <div className="card pz-block active pz-now">
+          <span className="pz-card-title">Working on now</span>
+          <div className="pz-now-head">
+            <h3 className="pz-now-skill">{skillOf(active.title)}</h3>
+            {goalOf(active.title) && <span className="pz-goal">goal: {goalOf(active.title)}</span>}
           </div>
-
-          {b.status !== "locked" && (
-            <>
-              <ul className="pz-checkpoints">
-                {b.checkpoints.map((c) => (
-                  <li key={c.id}>
-                    <label className="checkbox">
-                      <input type="checkbox" checked={!!c.done} onChange={(e) => toggle(c, e.target.checked)} />
-                      <span className={c.done ? "pz-cp-done" : ""}>{c.text}</span>
-                    </label>
-                  </li>
-                ))}
-              </ul>
-              {b.drills.length > 0 && (
-                <p className="pz-block-drills">
-                  Drills for this block:{" "}
-                  {b.drills.map((d) => <span key={d.key} className="tag" title={d.how_to}>{d.name}</span>)}
-                  <button className="link inline-link" onClick={() => goTo("Train")}>open Train</button>
-                </p>
-              )}
-            </>
-          )}
-          {b.status === "locked" && (
-            <p className="hint">Unlocks after block {i} — {b.success_criteria}</p>
+          <ul className="pz-checkpoints">
+            {active.checkpoints.map((c) => (
+              <li key={c.id}>
+                <label className="checkbox">
+                  <input type="checkbox" checked={!!c.done} onChange={(e) => toggle(c, e.target.checked)} />
+                  <span className={c.done ? "pz-cp-done" : ""}>{c.text}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          {active.drills.length > 0 && (
+            <p className="pz-block-drills">
+              Drills:{" "}
+              {active.drills.map((d) => <span key={d.key} className="tag" title={d.how_to}>{d.name}</span>)}
+              <button className="link inline-link" onClick={() => goTo("Train")}>open Train</button>
+            </p>
           )}
         </div>
-      ))}
+      )}
+
+      {upNext.length > 0 && (
+        <div className="card pz-upnext">
+          <span className="pz-card-title">Up next</span>
+          <ol className="pz-next-list">
+            {upNext.map((b) => <li key={b.id}>{skillOf(b.title)}</li>)}
+          </ol>
+        </div>
+      )}
+
+      {done.length > 0 && (
+        <div className="card pz-doneblocks">
+          <span className="pz-card-title">Finished</span>
+          {done.map((b) => (
+            <p key={b.id} className="pz-done-row">✓ {skillOf(b.title)}</p>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

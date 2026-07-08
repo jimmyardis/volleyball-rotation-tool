@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { playerApi } from "./api.js";
-import { COACH_STARTERS, useCoachChat } from "./useCoachChat.js";
+import { useCoachChat } from "./useCoachChat.js";
 
 export default function CoachScreen({ me, messages, setMessages }) {
   const [available, setAvailable] = useState(null);
@@ -40,12 +40,7 @@ export default function CoachScreen({ me, messages, setMessages }) {
       <div className="card pz-chat">
         <div className="chat-body pz-chat-body" ref={bodyRef}>
           {messages.length === 0 && (
-            <div className="chat-intro">
-              <p className="hint">Try one of these:</p>
-              {COACH_STARTERS.map((s) => (
-                <button key={s} className="chip" onClick={() => submit(s)}>{s}</button>
-              ))}
-            </div>
+            <p className="hint">Ask anything — coach will answer like a normal conversation.</p>
           )}
           {messages.map((m, i) => (
             <div key={i} className={`bubble ${m.role}`}>{m.content}</div>
