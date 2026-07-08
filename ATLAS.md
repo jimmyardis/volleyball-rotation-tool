@@ -34,6 +34,27 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-08 (session 12b) — level of play + loader + icon polish (deployed)
+- Level of play per TEAM (rec | middle_school | high_school | club |
+  college): rally.LEVEL_PROFILES — `err` multiplies every unforced-error
+  probability for BOTH sides, `dig` shifts kill/dig balance, so rec ball is
+  mistake-decided and college ball earned. teams.level column + migration;
+  wizard now 4 steps (level cards are step 3); Level select on Simulate
+  controls (PUT /teams/{id}/level; GET /levels is public). Player side:
+  level_band accepts 'college' (backend LEVEL_BANDS + onboarding/profile
+  selects) — level_band already feeds the player coach-chat context.
+- Loader.jsx: "volleyball being set" animation (line-art ball floats off
+  cupped hands, CSS keyframes vb-set/vb-flick) — used on app load, watch
+  setup, batch analysis, wizard finish.
+- Branding: volleyball mark removed from all three headers (Volleyball.jsx
+  survives — it's the loader ball + landing icon); landing card emoji →
+  brand-pink outline SVGs (new inline Clipboard + Volleyball).
+- 62 backend tests green (level scaling test + level endpoints test).
+  Verified via Playwright on a FRESH db: signup flowed straight into the
+  wizard (already automatic for teamless coaches), level step, sim level
+  select showed team's level, loader photographed via a stalled /simulate
+  route. Deployed (asset flip + /levels live) + GitHub pushed. Commit 3d85208.
+
 ### 2026-07-08 (session 12) — Phase 3 rally sim + coach accounts (deployed)
 - Grilled the user's ask (deeper sims, watch-one-game, addable player
   mistakes, best/worst insights) via Q&A: full rally engine over cosmetic
