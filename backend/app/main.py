@@ -722,8 +722,10 @@ def coach_chat(body: ChatRequest, conn=Depends(get_conn)):
 # ---------------------------------------------------------------- player side
 # The player-facing companion surface (accounts, plans, logs, personal coach).
 from . import player as player_side  # noqa: E402
+from . import video_assess  # noqa: E402
 
 app.include_router(player_side.router)
+app.include_router(video_assess.router)
 app.include_router(coach.router)
 
 

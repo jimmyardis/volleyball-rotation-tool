@@ -11,10 +11,11 @@ import CoachScreen from "./CoachScreen.jsx";
 import PlayerCoachBubble from "./PlayerCoachBubble.jsx";
 import PlanScreen from "./PlanScreen.jsx";
 import TrainScreen from "./TrainScreen.jsx";
+import FilmScreen from "./FilmScreen.jsx";
 import ProgressScreen from "./ProgressScreen.jsx";
 import ProfileScreen from "./ProfileScreen.jsx";
 
-const TABS = ["Home", "Coach", "Plan", "Train", "Progress", "Profile"];
+const TABS = ["Home", "Coach", "Plan", "Train", "Film", "Progress", "Profile"];
 
 export default function PlayerApp() {
   const [me, setMe] = useState(null);        // null = loading/anon
@@ -76,6 +77,7 @@ export default function PlayerApp() {
           {tab === "Coach" && <CoachScreen me={me} messages={coachThread} setMessages={setCoachThread} />}
           {tab === "Plan" && <PlanScreen me={me} goTo={setTab} />}
           {tab === "Train" && <TrainScreen me={me} />}
+          {tab === "Film" && <FilmScreen me={me} />}
           {tab === "Progress" && <ProgressScreen me={me} reloadMe={loadMe} />}
           {tab === "Profile" && <ProfileScreen me={me} reloadMe={loadMe} onSignOut={signOut} />}
 

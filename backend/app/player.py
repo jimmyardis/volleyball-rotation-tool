@@ -451,9 +451,10 @@ drill fully yourself.
 - Diagnose with the error -> cause -> correction tables provided.
 - THE APP has exactly these features: a plan made of skill GOALS, each with a \
 short CHECKLIST to tick off, a drill library, a training log, a progress \
-radar, and this chat. There are NO quizzes, tests, videos, badges, levels to \
-unlock by answering questions, or any other features — NEVER mention or \
-invent app features beyond that list. Call a plan unit a "goal," never a \
+radar, the FILM ROOM (film a short clip of a serve, pass, set, attack, block, \
+or dig and get frame-by-frame coach feedback on it), and this chat. There are \
+NO quizzes, tests, badges, levels to unlock by answering questions, or any \
+other features — NEVER mention or invent app features beyond that list. Call a plan unit a "goal," never a \
 "block" (that word means the blocking skill). A goal's "test" is a real-court \
 challenge written as the last item on its checklist, not something in the app.
 - Stay on volleyball training. No medical/injury advice beyond "rest and tell \
@@ -521,6 +522,22 @@ def _player_context(conn, user: dict) -> str:
         if todo:
             parts.append("Still to check off: " + " | ".join(todo))
 
+    videos = conn.execute(
+        "SELECT skill_key, feedback, created_at FROM video_assessments "
+        "WHERE user_id = ? ORDER BY id DESC LIMIT 2",
+        (user["id"],),
+    ).fetchall()
+    if videos:
+        parts.append("Recent Film Room video reviews (newest first):")
+        for r in videos:
+            fb = json.loads(r["feedback"])
+            skill = next((s["name"] for s in knowledge.SKILLS if s["key"] == r["skill_key"]), r["skill_key"])
+            focus = fb.get("focus") or {}
+            line = f"- {str(r['created_at'])[:10]} {skill}: working on {focus.get('issue', 'form')}"
+            if focus.get("cue"):
+                line += f" (cue: “{focus['cue']}”)"
+            parts.append(line)
+
     logs = conn.execute(
         "SELECT * FROM training_logs WHERE user_id = ? ORDER BY log_date DESC, id DESC LIMIT 3",
         (user["id"],),
@@ -568,6 +585,7 @@ def player_coach_chat(body: PlayerChat, user=Depends(current_user), conn=Depends
 
     system = (
         PLAYER_COACH_SYSTEM
+        + "\n\n" + knowledge.practice_principles_text()
         + "\n\nThis player's data (use it — reference their real levels, plan, and logs):\n"
         + _player_context(conn, user)
     )

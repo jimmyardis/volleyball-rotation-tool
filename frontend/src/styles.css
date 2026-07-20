@@ -580,3 +580,26 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
   .pz-assess-row { grid-template-columns: 1fr; gap: 0.15rem; }
   .pz-progress-grid { grid-template-columns: 1fr; }
 }
+
+/* ---- Film Room ---- */
+.pz-film-camera { background: var(--accent-soft); border-radius: 6px; padding: 0.5rem 0.7rem; font-size: 0.88rem; margin: 0.4rem 0 0.8rem; }
+.pz-film-status { font-weight: 600; }
+.pz-film-feedback { margin-top: 0.6rem; }
+.pz-film-summary { font-size: 1rem; margin: 0.3rem 0 0.6rem; }
+.pz-film-strengths { list-style: none; padding: 0; margin: 0 0 0.6rem; }
+.pz-film-strengths li { color: #2e7d32; font-size: 0.9rem; margin: 0.15rem 0; }
+.pz-film-focus { border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; padding: 0.55rem 0.75rem; margin: 0.5rem 0; }
+.pz-film-focus p { margin: 0.3rem 0 0; font-size: 0.9rem; }
+.pz-film-cue { font-weight: 700; }
+.pz-film-checks { list-style: none; padding: 0; margin: 0.6rem 0; }
+.pz-film-check { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.88rem; margin: 0.25rem 0; }
+.pz-film-check-icon { flex: none; width: 1.2rem; text-align: center; font-weight: 700; }
+.pz-film-check.good .pz-film-check-icon { color: #2e7d32; }
+.pz-film-check.needs_work .pz-film-check-icon { color: var(--accent); }
+.pz-film-check.cant_tell { opacity: 0.6; }
+.pz-film-metrics ul { list-style: none; padding: 0; margin: 0.2rem 0 0.6rem; font-size: 0.88rem; }
+.pz-film-metrics li { margin: 0.2rem 0; }
+.pz-film-drill { margin: 0.4rem 0; }
+.pz-film-conf { font-size: 0.8rem; margin-top: 0.5rem; }
+.pz-film-past-head { display: flex; width: 100%; gap: 0.5rem; align-items: baseline; background: none; color: var(--text); border: none; padding: 0; font-size: 0.9rem; text-align: left; }
+.pz-film-past-issue { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

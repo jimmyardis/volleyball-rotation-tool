@@ -249,3 +249,15 @@ CREATE TABLE IF NOT EXISTS training_logs (
     notes       TEXT,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Film Room: one row per submitted video assessment. No video or frames are
+-- ever stored — only the structured feedback (and, for serves, the pose
+-- metrics computed from browser-side MediaPipe landmarks).
+CREATE TABLE IF NOT EXISTS video_assessments (
+    id          INTEGER PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id),
+    skill_key   TEXT NOT NULL,
+    metrics     TEXT,                        -- JSON pose metrics (serve) or NULL
+    feedback    TEXT NOT NULL,               -- JSON structured coach feedback
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
