@@ -161,4 +161,4 @@ def test_coach_context_assembly(client, auth, monkeypatch):
     assert "serve" in keys and "attacking" in keys
 
     snip = knowledge.knowledge_snippets(["serve"], "OH")
-    assert "toss too low" in snip and "Position guide (OH)" in snip
+    assert "serve into the net" in snip and "Position guide (OH)" in snip
