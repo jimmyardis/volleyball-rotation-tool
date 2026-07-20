@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-08 (session 12) |
+| Last Active | 2026-07-20 (session 13) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -10,23 +10,23 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
-Phase 3 SHIPPED (2026-07-08, session 12): touch-by-touch rally engine
-(app/rally.py) replaces the coin-flip sim — watchable single set with live
-court + narrated play-by-play, per-player mistake tags that causally affect
-outcomes, and deterministic best/worst insights from 200-set batches. App
-now opens with a coach-or-player landing page; COACH ACCOUNTS gate the whole
-coach API (the old launch blocker is closed), with a 3-step team wizard and
-a three-point notes system (team notebook / player pins / lineup notes).
-Deployed to Railway + pushed to GitHub. 60 backend tests green.
+Session 13 (2026-07-20): FILM ROOM shipped — video self-assessment for all
+six ball skills (browser samples ~10 frames + runs MediaPipe pose locally,
+raw video never uploaded; backend computes deterministic serve metrics and
+gets rubric-grounded structured feedback from Claude vision; new Film tab +
+coach-chat integration). Coach KNOWLEDGE BASE v2: audited against USAV /
+AVCA / Gold Medal Squared / Art of Coaching, cues 25→67, error rows 24→63,
+drills 29→79 (56 solo-friendly), VIDEO_RUBRICS + PRACTICE_PRINCIPLES wired
+into both AI prompts. 72 backend tests green. Repo's .git was found MISSING
+(WSL-crash fallout; sessions 12b-12e had been shadow-committed to the home
+repo) — restored from a GitHub clone, everything pushed properly.
 
 ## Next Action
-DEPLOY DECISION PENDING: session 12e's Player Zone copy/drill changes are
-committed LOCALLY only (16d9ae2) — not on Railway yet. User to say
-deploy/commit/hold. Separately, still open: USER MUST REGISTER THE FIRST
-COACH ACCOUNT on the live site ASAP — the
-existing teams sit unclaimed until the first coach registration claims them,
-and the URL is open. Then keep the daughter's week-long Player Zone trial
-going. PINNED (user's call): camera serve-assessment v1 (MediaPipe).
+Have the daughter film one real serve in the Film Room on the live site and
+sanity-check feedback quality (the smoke test only verified format + honest
+cant_tell behavior on junk frames — no real clip has been reviewed yet).
+Still open: USER MUST REGISTER THE FIRST COACH ACCOUNT on the live site —
+existing teams sit unclaimed and the URL is open.
 
 ## Blockers
 None.
@@ -37,6 +37,45 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-20 (session 13) — Film Room + knowledge base v2 (deployed)
+- FILM ROOM (both engines, per user's call): Claude-vision review for
+  serve/pass/set/attack/block/dig PLUS MediaPipe serve metrics. Privacy-first
+  pipeline: browser extracts 10 JPEG frames (canvas) and runs the pose
+  landmarker via CDN (@mediapipe/tasks-vision 0.10.14, lite model) locally;
+  only frames + landmarks upload, nothing binary stored (video_assessments
+  table keeps structured feedback + metrics JSON only).
+- Backend: app/video_assess.py (config/create/history endpoints, strict-JSON
+  feedback with checkpoint verdicts good/needs_work/cant_tell, drill recs
+  validated against the library), app/serve_metrics.py (pure-Python landmark
+  math: elbow extension at contact ≥160°=full per Reeser et al. bands,
+  contact height in torso units, knee load, step detection reported only as
+  detected/not). Coach chat context now includes the last 2 Film Room
+  reviews; PLAYER_COACH_SYSTEM feature list updated (it previously said the
+  app has NO videos — would have contradicted the new feature).
+- Real-API smoke test: submitted non-volleyball frames; model correctly
+  returned all-cant_tell + "no footage to review" (no hallucinated feedback).
+  MediaPipe CDN load verified headless. UI screenshot verified (7th tab
+  "Film"; tab bar scrolls on phones).
+- KNOWLEDGE BASE v2 from 4 parallel research agents (USAV, AVCA, GMS, AoC,
+  JVA, motor-learning lit). Corrected existing content: float toss = low
+  straight-arm LIFT (never "raise the toss"); approach = long-low penultimate
+  + SHORT-quick last step; wrist snap de-emphasized (GMS: it's a result, not
+  a cause); passing target 4-5 ft off net (was 2-3); crossover default for
+  long block trips; setters square to left antenna every set. Added: seam
+  serving/rules, topspin + jump-float progressions, overhead floater takes,
+  knee-drop short balls, out-of-system defaults, split step, pancake
+  progression, setter-row scouting. Drills 29→79. PRACTICE_PRINCIPLES
+  (game-like>blocked, one cue at a time, external focus, faded feedback,
+  jump-volume + shoulder safety) now ground both AI prompts.
+- REPO SURGERY: /home/wner/volleyball-app/.git was gone — git commands were
+  falling through to the HOME repo (remote jane-jacobs-bot; 14 volleyball
+  commits stranded there unpushed, incl. an automated "preserved at session
+  end" snapshot from a concurrent carolina-redesign session). GitHub's
+  volleyball-rotation-tool actually HAD 12e already (ATLAS note was stale).
+  Restored .git from a fresh clone; committed today's work as 9b6532f +
+  4c48dc4; pushed. Home-repo strays left alone (local only, harmless).
+- Deployed via railway up (service deploys by CLI, NOT GitHub webhook —
+  the push alone would have shipped nothing). 72 backend tests green.
 ### 2026-07-08 (session 12e) — Player Zone de-jargon + solo drills (LOCAL only)
 - Live player-side feedback (daughter): "watch for one thing" meant nothing;
   coach bot showed "how do I know if I passed my block?" (nonsense); wanted
