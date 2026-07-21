@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-20 (session 13) |
+| Last Active | 2026-07-21 (session 13b) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -37,6 +37,23 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-21 (session 13b) — iOS prep: handoff spec, account deletion (deployed)
+- Decision: iPhone app = CAPACITOR WRAP of the existing frontend (not an RN
+  rewrite), built on the wife's MacBook under the user's Apple Developer
+  account (Apple requires 18+ holders; App Transfer keeps this reversible).
+- HANDOFF-IOS.md committed to repo root: goal, machine split (Mac owns
+  frontend/+ios/+TestFlight; WSL owns backend/+Railway deploys+token),
+  phased plan A-D, technical landmines, Apple compliance list, Mac setup
+  checklist. MacBook flow: clone → Claude Code → "read HANDOFF-IOS.md".
+- CORS for capacitor://localhost: verified ALREADY OPEN on prod (allow-
+  origin *, gate skips OPTIONS) — no change needed, handoff updated.
+- DELETE /player/account shipped (Apple hard requirement): password
+  re-entry confirms; one transaction wipes video_assessments, logs,
+  checkpoints, blocks, plans, assessments, profile, sessions, user row.
+  Profile screen: Delete-account card + fixed stale "video features come
+  later" copy (now describes Film Room on-device privacy). 73 tests green.
+  Deployed to Railway (a878451d) + pushed; live endpoint verified 401
+  unauthenticated. Coach-account deletion still TODO before App Store.
 ### 2026-07-20 (session 13) — Film Room + knowledge base v2 (deployed)
 - FILM ROOM (both engines, per user's call): Claude-vision review for
   serve/pass/set/attack/block/dig PLUS MediaPipe serve metrics. Privacy-first
