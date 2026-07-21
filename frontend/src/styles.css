@@ -89,6 +89,7 @@ button { cursor: pointer; background: var(--accent); color: var(--accent-ink); b
 button.ghost { background: var(--panel); border: 1px solid var(--line); color: var(--text); font-weight: 500; }
 button.ghost:hover { border-color: var(--dim); }
 button.ghost.danger { color: var(--bad); }
+button.danger { background: var(--bad); color: #fff; }
 button.link { background: none; border: none; color: var(--text); padding: 0.3rem 0; text-align: left; font-weight: 500; }
 button.primary { background: var(--accent); color: var(--accent-ink); }
 .checkbox { display: flex; align-items: center; gap: 0.35rem; color: var(--dim); }

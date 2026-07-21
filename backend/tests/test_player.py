@@ -162,3 +162,30 @@ def test_coach_context_assembly(client, auth, monkeypatch):
 
     snip = knowledge.knowledge_snippets(["serve"], "OH")
     assert "serve into the net" in snip and "Position guide (OH)" in snip
+
+
+def test_delete_account_removes_everything(client, auth):
+    client.put("/player/profile", headers=auth, json={"position": "OH"})
+    client.post("/player/assessment", headers=auth, json={"ratings": {"attacking": 2}})
+    client.post("/player/plan/generate", headers=auth)
+    client.post("/player/logs", headers=auth, json={"skills": ["attacking"]})
+
+    # wrong password refused; account still works
+    bad = client.request("DELETE", "/player/account", headers=auth, json={"password": "nope999"})
+    assert bad.status_code == 403
+    assert client.get("/player/me", headers=auth).status_code == 200
+
+    ok = client.request("DELETE", "/player/account", headers=auth, json={"password": "spike123"})
+    assert ok.status_code == 200 and ok.json()["deleted"] is True
+
+    # token dead, login dead, and no orphan rows anywhere
+    assert client.get("/player/me", headers=auth).status_code == 401
+    assert client.post("/player/login", json={"username": "celia", "password": "spike123"}).status_code == 401
+    from app import db
+    conn = db.connect(db.resolve_db_path())
+    for table in ("users", "sessions", "player_profiles", "skill_assessments",
+                  "plans", "plan_blocks", "plan_checkpoints", "training_logs",
+                  "video_assessments"):
+        n = conn.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()["n"]
+        assert n == 0, f"{table} still has {n} rows"
+    conn.close()

@@ -139,6 +139,38 @@ def logout(authorization: str | None = Header(None), conn=Depends(get_conn)):
     return {"ok": True}
 
 
+class DeleteAccount(BaseModel):
+    password: str
+
+
+@router.delete("/account")
+def delete_account(body: DeleteAccount, user=Depends(current_user), conn=Depends(get_conn)):
+    """Permanently delete this player account and every row it owns (an App
+    Store requirement — apps with accounts must offer in-app deletion).
+    Password re-entry is the confirmation."""
+    if user["role"] != "player":
+        raise HTTPException(403, "only player accounts can be deleted here")
+    if not _verify_password(body.password, user["password_hash"]):
+        raise HTTPException(403, "wrong password")
+    uid = user["id"]
+    with conn:  # one transaction, children first (no ON DELETE CASCADE in schema)
+        conn.execute("DELETE FROM video_assessments WHERE user_id = ?", (uid,))
+        conn.execute("DELETE FROM training_logs WHERE user_id = ?", (uid,))
+        conn.execute(
+            "DELETE FROM plan_checkpoints WHERE block_id IN "
+            "(SELECT b.id FROM plan_blocks b JOIN plans p ON p.id = b.plan_id WHERE p.user_id = ?)",
+            (uid,))
+        conn.execute(
+            "DELETE FROM plan_blocks WHERE plan_id IN (SELECT id FROM plans WHERE user_id = ?)",
+            (uid,))
+        conn.execute("DELETE FROM plans WHERE user_id = ?", (uid,))
+        conn.execute("DELETE FROM skill_assessments WHERE user_id = ?", (uid,))
+        conn.execute("DELETE FROM player_profiles WHERE user_id = ?", (uid,))
+        conn.execute("DELETE FROM sessions WHERE user_id = ?", (uid,))
+        conn.execute("DELETE FROM users WHERE id = ?", (uid,))
+    return {"deleted": True}
+
+
 # ---------------------------------------------------------------- profile
 
 class ProfileUpdate(BaseModel):

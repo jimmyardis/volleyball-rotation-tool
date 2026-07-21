@@ -47,6 +47,7 @@ export const playerApi = {
   progress: () => request("/player/progress"),
   coachStatus: () => request("/player/coach-chat/status"),
   coachChat: (messages) => request("/player/coach-chat", { method: "POST", body: JSON.stringify({ messages }) }),
+  deleteAccount: (password) => request("/player/account", { method: "DELETE", body: JSON.stringify({ password }) }),
   videoConfig: () => request("/player/video-assessments/config"),
   submitVideo: (body) => request("/player/video-assessments", { method: "POST", body: JSON.stringify(body) }),
   videoHistory: (limit = 10) => request(`/player/video-assessments?limit=${limit}`),

@@ -73,9 +73,57 @@ export default function ProfileScreen({ me, reloadMe, onSignOut }) {
 
       <div className="card">
         <span className="pz-card-title">Account</span>
-        <p className="hint">Your data is private to you on this server. Video features come later — nothing is recorded today.</p>
+        <p className="hint">Your data is private to you on this server. Film Room clips are
+          analyzed on your phone — only a few still frames are sent, and no video is ever stored.</p>
         <button className="ghost danger" onClick={onSignOut}>Sign out</button>
       </div>
+
+      <DeleteAccount onDeleted={onSignOut} />
+    </div>
+  );
+}
+
+function DeleteAccount({ onDeleted }) {
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+
+  async function doDelete(e) {
+    e.preventDefault();
+    setError(null); setBusy(true);
+    try {
+      await playerApi.deleteAccount(password);
+      onDeleted();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card">
+      <span className="pz-card-title">Delete account</span>
+      {!open && (
+        <>
+          <p className="hint">Permanently removes your account and everything in it — plan,
+            training log, progress, and Film Room feedback. This can't be undone.</p>
+          <button className="ghost danger" onClick={() => setOpen(true)}>Delete my account…</button>
+        </>
+      )}
+      {open && (
+        <form className="form-row" onSubmit={doDelete}>
+          <input type="password" placeholder="Type your password to confirm" value={password}
+                 onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" />
+          <button type="submit" className="danger" disabled={busy || password.length === 0}>
+            {busy ? "Deleting…" : "Delete forever"}
+          </button>
+          <button type="button" className="ghost" onClick={() => { setOpen(false); setPassword(""); setError(null); }}>
+            Cancel
+          </button>
+          {error && <span className="error">{error}</span>}
+        </form>
+      )}
     </div>
   );
 }

@@ -47,11 +47,10 @@ outreach and wants to see how far she can take it.
    Inside Capacitor the origin is `capacitor://localhost`, so relative calls
    will fail. Detect the native shell (`window.Capacitor?.isNativePlatform?.()`)
    and use `https://volleyball-api-production.up.railway.app` as the base.
-2. **CORS**: the backend currently serves same-origin only. The WSL machine
-   must add `capacitor://localhost` (and `http://localhost` for iOS WKWebView
-   variants) to allowed origins before native API calls will work. This is
-   flagged as a WSL-side task — coordinate via a note in ATLAS.md if it
-   hasn't happened yet (test early with a curl from the simulator).
+2. **CORS**: ~~needs allowlisting~~ DONE — verified 2026-07-21: production
+   already serves `access-control-allow-origin: *` with all methods/headers
+   and the auth gate skips OPTIONS preflights. Native API calls will work
+   with no backend change.
 3. **Camera permissions**: Film Room uses `<input type="file" accept="video/*">`.
    In the native shell this needs `NSCameraUsageDescription`,
    `NSMicrophoneUsageDescription`, and `NSPhotoLibraryUsageDescription` in
@@ -95,8 +94,12 @@ outreach and wants to see how far she can take it.
 - **Privacy policy URL** (required): must exist and truthfully describe the
   video-stays-on-device design, what IS stored (accounts, training logs,
   structured feedback), and the AI coach.
-- **Account deletion** (required by Apple): the backend has no
-  delete-account endpoint yet — WSL-side task; the app needs a button.
+- **Account deletion** (required by Apple): DONE 2026-07-21 — `DELETE
+  /player/account` (password re-entry as confirmation, cascades all player
+  data in one transaction) + a "Delete account" card on the Profile screen.
+  Nothing left to build for this requirement; just point at it in review
+  notes. (Coach accounts have no deletion yet — fine for TestFlight; add
+  before App Store if the coach tools stay in the shipped app.)
 - **App Privacy questionnaire**: data linked to user = account info,
   training data. No tracking, no ads — say so.
 - **Youth audience**: do NOT opt into the Kids Category (stricter rules);
