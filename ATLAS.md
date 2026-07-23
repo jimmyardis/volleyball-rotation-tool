@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 14c, Mac) |
+| Last Active | 2026-07-23 (session 14d, Mac) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,19 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 14d, Mac) — her logo, everywhere (307c4f1)
+- She delivered a logo (B&W athletic: swoosh ball w/ "pepper" panel, net,
+  italic wordmark, tagline "Practice · Progress · Thrive") — integrated as
+  the whole brand: accent token pink→ink #17171a (all buttons/tabs/ticks
+  follow), icon = ball crop on white (black inverse = alternate), splash =
+  full lockup, welcome hero = transparent-ink ball + tagline headline,
+  wordmarks italic 800. PWA icons/favicon updated too. Source logo lives at
+  frontend/brand/pepper-logo.png.
+- Gotcha logged: WebKit ignores mix-blend-mode when the element has a
+  filter AND across composited scroll layers — transparent-alpha asset
+  (canvas ink-extraction via headless Chrome) is the reliable pattern.
+- Verified on sim; review artifact updated in place (same URL). Pending
+  her call: white vs black icon; whether pink returns as a small accent.
 ### 2026-07-23 (session 14c, Mac) — the app is PEPPER (61d009a)
 - The daughter named it: **Pepper** (the warmup drill). Renamed everywhere
   user-visible: bundle id com.jimmyardis.Pepper (changed BEFORE the ASC
