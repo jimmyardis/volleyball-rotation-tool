@@ -10,12 +10,23 @@ import NotesScreen, { QuickNotes } from "./components/Notes.jsx";
 import Landing from "./components/Landing.jsx";
 import TeamSetup from "./components/TeamSetup.jsx";
 import Loader from "./components/Loader.jsx";
+import { Monarch, MonarchFlock } from "./components/Monarchs.jsx";
 
 const TABS = ["Roster", "Lineups", "Rotations", "Simulate", "Notes"];
 
 export default function App() {
   const [authed, setAuthed] = useState(() => !!getCoachToken());
   const [me, setMe] = useState(null);
+  // per-account look, mirroring the Player Zone (server wins once /coach/me loads)
+  const [theme, setThemeState] = useState(() => localStorage.getItem("vb_coach_theme") || "classic");
+  useEffect(() => { localStorage.setItem("vb_coach_theme", theme); }, [theme]);
+  useEffect(() => {
+    if (me?.theme && me.theme !== theme) setThemeState(me.theme);
+  }, [me]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const setTheme = useCallback((t) => {
+    setThemeState(t);
+    if (getCoachToken()) api.coachTheme(t).catch(() => {});
+  }, []);
   const [teams, setTeams] = useState([]);
   const [teamId, setTeamId] = useState(null);
   const [players, setPlayers] = useState([]);
@@ -92,11 +103,17 @@ export default function App() {
     : "You're set — open Rotations to step through all six and try the Serving / Receiving / Base views.";
 
   return (
-    <div className="app">
+    <div className="app" data-theme={theme}>
+      {theme === "intense" && <MonarchFlock />}
       <header>
         <h1>Pepper Volleyball</h1>
         <div className="team-bar">
           {me && <span className="pz-whoami">{me.display_name}</span>}
+          <button className="ghost" title="Switch your look"
+                  onClick={() => setTheme(theme === "classic" ? "intense" : "classic")}>
+            {theme === "classic" ? "Look: Classic"
+              : <>Look: Intense <Monarch size={15} style={{ verticalAlign: "-2px" }} /></>}
+          </button>
           <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
           {teams.length > 0 && (
             <select value={teamId ?? ""} onChange={(e) => setTeamId(Number(e.target.value))}>

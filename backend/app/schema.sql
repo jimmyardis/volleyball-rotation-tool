@@ -157,6 +157,7 @@ CREATE TABLE IF NOT EXISTS users (
     display_name  TEXT NOT NULL,
     role          TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player', 'coach')),
     password_hash TEXT NOT NULL,     -- pbkdf2-sha256, format: salt$hexdigest
+    theme         TEXT NOT NULL DEFAULT 'classic',  -- coach-side look (players use player_profiles.theme)
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

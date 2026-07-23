@@ -6,6 +6,7 @@ import { ROLES } from "../api.js";
 import { roleMeta } from "../roles.js";
 import { playerApi } from "./api.js";
 import { tap, success } from "../haptics.js";
+import { Monarch } from "../components/Monarchs.jsx";
 
 function StepDots({ step }) {
   return (
@@ -22,8 +23,8 @@ function StepDots({ step }) {
 export const THEMES = [
   { key: "classic", name: "Classic", desc: "Black, white & grey with a little pink",
     swatches: ["#17171a", "#ffffff", "#6f6f7a", "#d6336c"] },
-  { key: "intense", name: "Intense 🦋", desc: "Black & orange, pink accents",
-    swatches: ["#0e0e10", "#ff7a1a", "#d6336c", "#f4f4f6"] },
+  { key: "intense", name: "Intense", desc: "Black & orange, monarchs at the top",
+    swatches: ["#0e0e10", "#ff7a1a", "#ff9b4d", "#f4f4f6"] },
 ];
 
 export function ThemeCards({ theme, setTheme }) {
@@ -36,7 +37,10 @@ export function ThemeCards({ theme, setTheme }) {
           <span className="pz-theme-swatches">
             {t.swatches.map((c, i) => <span key={i} style={{ background: c }} />)}
           </span>
-          <span className="pz-theme-name">{t.name}</span>
+          <span className="pz-theme-name">
+            {t.name}
+            {t.key === "intense" && <Monarch size={17} style={{ marginLeft: "0.35rem", verticalAlign: "-3px" }} />}
+          </span>
           <span className="pz-theme-desc">{t.desc}</span>
         </button>
       ))}

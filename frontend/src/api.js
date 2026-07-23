@@ -40,6 +40,7 @@ export const api = {
   coachLogin: (body) => request("/coach/login", { method: "POST", body: JSON.stringify(body) }),
   coachLogout: () => request("/coach/logout", { method: "POST" }),
   coachMe: () => request("/coach/me"),
+  coachTheme: (theme) => request("/coach/theme", { method: "PUT", body: JSON.stringify({ theme }) }),
 
   // teams
   listTeams: () => request("/teams"),

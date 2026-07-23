@@ -7,6 +7,7 @@ import { playerApi, getToken, setToken } from "./api.js";
 import AuthScreen from "./AuthScreen.jsx";
 import Welcome from "./Welcome.jsx";
 import WhoAreYou from "../components/WhoAreYou.jsx";
+import { Monarch, MonarchFlock } from "../components/Monarchs.jsx";
 import Onboarding from "./Onboarding.jsx";
 import HomeScreen from "./HomeScreen.jsx";
 import CoachScreen from "./CoachScreen.jsx";
@@ -85,15 +86,17 @@ export default function PlayerApp() {
 
   return (
     <div className="app player-zone" data-theme={theme}>
+      {theme === "intense" && authed && <MonarchFlock />}
       {authed && (
         <header>
-          <h1>Pepper{theme === "intense" && <span className="pz-butterfly" aria-hidden="true">🦋</span>}</h1>
+          <h1>Pepper</h1>
           <div className="team-bar">
             {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
             {me && me.profile?.position && (
               <button className="ghost pz-look-btn" title="Switch your look"
                       onClick={() => setTheme(theme === "classic" ? "intense" : "classic")}>
-                {theme === "classic" ? "Look: Classic" : "Look: Intense 🦋"}
+                {theme === "classic" ? "Look: Classic"
+                  : <>Look: Intense <Monarch size={15} style={{ verticalAlign: "-2px" }} /></>}
               </button>
             )}
             {me && <button className="ghost" onClick={signOut}>Sign out</button>}

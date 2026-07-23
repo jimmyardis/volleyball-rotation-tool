@@ -90,6 +90,10 @@ def _migrate(conn: sqlite3.Connection) -> None:
         pp_cols = {r[1] for r in conn.execute("PRAGMA table_info(player_profiles)")}
         if "theme" not in pp_cols:
             conn.execute("ALTER TABLE player_profiles ADD COLUMN theme TEXT NOT NULL DEFAULT 'classic'")
+    if "users" in tables:
+        u_cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+        if "theme" not in u_cols:
+            conn.execute("ALTER TABLE users ADD COLUMN theme TEXT NOT NULL DEFAULT 'classic'")
 
     # teams gained an owning coach account (NULL = pre-auth row, claimed by
     # the first coach to register — see coach.register).

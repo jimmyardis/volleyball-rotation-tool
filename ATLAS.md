@@ -52,6 +52,16 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- HER ROUND 3: themes extended to the COACH side (users.theme column +
+  migration, PUT /coach/theme, /coach/me returns it; Look button in the
+  coach header, data-theme generalized to .app scope). Butterfly emoji
+  REPLACED with drawn monarch SVGs (components/Monarchs.jsx): three
+  monarchs drifting top-right on Intense (both surfaces, prefers-reduced-
+  motion respected), small monarch inline on the Look button + picker
+  card. Intense rebalanced MORE ORANGE (--pop orange; the one pink wink
+  left = streak stat numbers). Dark-mode fixes: radar polygons forced
+  orange (inline style needed !important), nudge banner dark-amber,
+  flock dropped below wrapped header on phones.
 - FOLLOW-UP (her ask): the look is now PER ACCOUNT — player_profiles.theme
   column (migration + schema), settable in signup step 3 (profile PUT
   carries theme), alone via PUT /player/profile/theme, and from a new
