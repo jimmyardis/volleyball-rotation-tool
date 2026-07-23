@@ -52,6 +52,13 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- ROUND 5b: absolute-corner decor STILL collided with coach header buttons
+  at desktop widths (h1 + team-bar share one row there). Final fix: decor
+  is a real in-flow strip at the very top (flex, right-aligned, no
+  negative margins) — overlap impossible at any width, verified
+  geometrically (bounding-box intersection checks vs Sign out / + New
+  team) and visually. Lesson logged: corner-floated decor around a
+  flex-wrapping header is a loser; reserve space in flow instead.
 - HER ROUND 5: decor now ANCHORED TO THE PAGE (position: absolute in the
   .app, which gained position: relative) — she reported the fixed-position
   butterflies/clouds "moving with me" on scroll. Intense decor is ONE
