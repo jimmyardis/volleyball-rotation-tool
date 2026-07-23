@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ROLES } from "../api.js";
 import { playerApi } from "./api.js";
+import { ThemeCards } from "./Onboarding.jsx";
 
 const BANDS = [
   { code: "rec", label: "Rec league" },
@@ -10,7 +11,7 @@ const BANDS = [
   { code: "college", label: "College" },
 ];
 
-export default function ProfileScreen({ me, reloadMe, onSignOut }) {
+export default function ProfileScreen({ me, reloadMe, onSignOut, theme, setTheme }) {
   const p = me.profile ?? {};
   const [form, setForm] = useState({
     position: p.position ?? "OH",
@@ -70,6 +71,11 @@ export default function ProfileScreen({ me, reloadMe, onSignOut }) {
           <p className="hint">Changing position? Rebuild your plan from the Plan tab so it trains the right skills.</p>
         )}
       </form>
+
+      <div className="card">
+        <span className="pz-card-title">Look</span>
+        <ThemeCards theme={theme} setTheme={setTheme} />
+      </div>
 
       <div className="card">
         <span className="pz-card-title">Account</span>

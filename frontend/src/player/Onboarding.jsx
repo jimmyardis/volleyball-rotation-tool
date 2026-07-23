@@ -9,9 +9,37 @@ import { tap, success } from "../haptics.js";
 
 function StepDots({ step }) {
   return (
-    <div className="pz-step-dots" aria-label={`Step ${step} of 2`}>
-      <span className={step === 1 ? "active" : "done"} />
-      <span className={step === 2 ? "active" : ""} />
+    <div className="pz-step-dots" aria-label={`Step ${step} of 3`}>
+      {[1, 2, 3].map((n) => (
+        <span key={n} className={step === n ? "active" : step > n ? "done" : ""} />
+      ))}
+    </div>
+  );
+}
+
+// The two looks she designed: Classic (her logo's black/white/grey with
+// little bits of pink) and Intense (black & orange, pink accents, butterfly).
+export const THEMES = [
+  { key: "classic", name: "Classic", desc: "Black, white & grey with a little pink",
+    swatches: ["#17171a", "#ffffff", "#6f6f7a", "#d6336c"] },
+  { key: "intense", name: "Intense 🦋", desc: "Black & orange, pink accents",
+    swatches: ["#0e0e10", "#ff7a1a", "#d6336c", "#f4f4f6"] },
+];
+
+export function ThemeCards({ theme, setTheme }) {
+  return (
+    <div className="pz-theme-cards">
+      {THEMES.map((t) => (
+        <button key={t.key} type="button"
+                className={`pz-theme-card ${theme === t.key ? "active" : ""}`}
+                onClick={() => { tap(); setTheme(t.key); }}>
+          <span className="pz-theme-swatches">
+            {t.swatches.map((c, i) => <span key={i} style={{ background: c }} />)}
+          </span>
+          <span className="pz-theme-name">{t.name}</span>
+          <span className="pz-theme-desc">{t.desc}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -31,7 +59,7 @@ export function AssessmentSliders({ skills, levelNames, ratings, onChange }) {
   );
 }
 
-export default function Onboarding({ me, onDone }) {
+export default function Onboarding({ me, onDone, theme, setTheme }) {
   const [skills, setSkills] = useState([]);
   const [levelNames, setLevelNames] = useState({});
   const [position, setPosition] = useState(me.profile?.position ?? null);
@@ -109,7 +137,22 @@ export default function Onboarding({ me, onDone }) {
           <AssessmentSliders skills={skills} levelNames={levelNames} ratings={ratings} onChange={setRatings} />
           <div className="form-row">
             <button className="ghost" onClick={() => setStep(1)}>Back</button>
-            <button onClick={finish} disabled={busy || !skills.length}>
+            <button disabled={!skills.length} onClick={() => { tap(); setStep(3); }}>
+              Next: pick your look
+            </button>
+          </div>
+          {error && <p className="error">{error}</p>}
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="card">
+          <h2>Pick your look</h2>
+          <p className="hint">The whole app wears it. Change it any time from Profile.</p>
+          <ThemeCards theme={theme} setTheme={setTheme} />
+          <div className="form-row">
+            <button className="ghost" onClick={() => setStep(2)}>Back</button>
+            <button onClick={finish} disabled={busy}>
               {busy ? "Building your plan…" : "Finish — build my plan"}
             </button>
           </div>

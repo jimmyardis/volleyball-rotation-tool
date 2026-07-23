@@ -1,8 +1,71 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api, ROLES, ATTRS } from "../api.js";
 import { roleMeta, overallRating } from "../roles.js";
 import RadarChart from "./RadarChart.jsx";
 import { QuickNotes } from "./Notes.jsx";
+
+// ---- roster file import (SportsEngine CSV export, or any spreadsheet) ----
+
+// minimal quote-aware CSV parser: returns rows of cells, blank lines dropped
+function parseCsv(text) {
+  const rows = [];
+  let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); cell = "";
+      if (row.some((x) => x.trim() !== "")) rows.push(row);
+      row = [];
+    } else cell += c;
+  }
+  row.push(cell);
+  if (row.some((x) => x.trim() !== "")) rows.push(row);
+  return rows;
+}
+
+function findCol(headers, ...names) {
+  return headers.findIndex((h) => names.includes(h));
+}
+
+// "Setter" / "OH" / "Middle Blocker" / "Right Side" / … -> role code
+function guessRole(text) {
+  const t = (text || "").toLowerCase();
+  if (/\bsetter\b|^s$/.test(t)) return "S";
+  if (/libero|^l$|^lib$/.test(t)) return "L";
+  if (/middle|^mb$/.test(t)) return "MB";
+  if (/opposite|right side|^opp$|^rs$/.test(t)) return "OPP";
+  if (/defensive|^ds$/.test(t)) return "DS";
+  if (/outside|^oh$|left side/.test(t)) return "OH";
+  return null;
+}
+
+// rows -> [{name, jersey, role, roleGuessed}]; understands SportsEngine's
+// First/Last Name + Jersey Number + Position headers and common variants
+function rosterFromCsv(text) {
+  const rows = parseCsv(text);
+  if (rows.length < 2) throw new Error("that file has no player rows");
+  const headers = rows[0].map((h) => h.trim().toLowerCase());
+  const first = findCol(headers, "first name", "first", "firstname");
+  const last = findCol(headers, "last name", "last", "lastname", "surname");
+  const full = findCol(headers, "name", "full name", "player name", "player", "athlete name", "athlete");
+  const jersey = findCol(headers, "jersey number", "jersey", "number", "#", "uniform number", "uniform", "no.", "no");
+  const pos = findCol(headers, "position", "positions", "pos", "primary position");
+  if (first === -1 && full === -1) {
+    throw new Error("couldn't find a name column — expected a 'Name' or 'First Name'/'Last Name' header");
+  }
+  return rows.slice(1).map((r) => {
+    const name = (full !== -1 ? r[full] : `${r[first] ?? ""} ${last !== -1 ? r[last] ?? "" : ""}`).trim();
+    const num = jersey !== -1 ? String(r[jersey] ?? "").replace(/[^0-9]/g, "") : "";
+    const guessed = pos !== -1 ? guessRole(r[pos]) : null;
+    return { name, jersey: num, role: guessed ?? "OH", roleGuessed: guessed != null };
+  }).filter((p) => p.name);
+}
 
 const EMPTY_ATTRS = Object.fromEntries(ATTRS.map((a) => [a.key, 50]));
 const EMPTY = {
@@ -23,13 +86,54 @@ export default function RosterScreen({ teamId, players, reload }) {
   const [presets, setPresets] = useState({});
   const [catalog, setCatalog] = useState([]);
   const [notesFor, setNotesFor] = useState(null); // player id with the notes pin open
+  const [importRows, setImportRows] = useState(null); // parsed CSV preview, null = closed
+  const [importBusy, setImportBusy] = useState(false);
+  const fileRef = useRef(null);
 
   useEffect(() => {
     setForm(EMPTY);
     setEditingId(null);
     setFormOpen(false);
     setNotesFor(null);
+    setImportRows(null);
   }, [teamId]);
+
+  async function onImportFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setError(null);
+    try {
+      setImportRows(rosterFromCsv(await file.text()));
+    } catch (err) {
+      setError(`Import: ${err.message}`);
+    }
+  }
+
+  function setImportRow(i, patch) {
+    setImportRows((rows) => rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  }
+
+  async function runImport() {
+    setImportBusy(true);
+    setError(null);
+    try {
+      for (const p of importRows) {
+        await api.createPlayer(teamId, {
+          name: p.name,
+          primary_role: p.role,
+          jersey_number: p.jersey === "" ? null : Number(p.jersey),
+        });
+      }
+      setImportRows(null);
+      reload();
+    } catch (err) {
+      setError(`Import stopped: ${err.message} — players added so far are on the roster below.`);
+      reload();
+    } finally {
+      setImportBusy(false);
+    }
+  }
 
   useEffect(() => { api.rolePresets().then(setPresets).catch(() => {}); }, []);
   useEffect(() => {
@@ -134,9 +238,43 @@ export default function RosterScreen({ teamId, players, reload }) {
           </p>
         </div>
         {!formOpen && !editingId && (
-          <button onClick={() => setFormOpen(true)}>+ New player</button>
+          <span className="inline">
+            <button className="ghost" onClick={() => fileRef.current?.click()}>Import CSV</button>
+            <button onClick={() => setFormOpen(true)}>+ New player</button>
+          </span>
         )}
+        <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onImportFile} />
       </div>
+
+      {importRows && (
+        <div className="card">
+          <h4 className="form-title">Import roster — {importRows.length} player{importRows.length === 1 ? "" : "s"} found</h4>
+          <p className="hint">Works with the SportsEngine roster export (Roster → Export → CSV) or any
+            spreadsheet saved as CSV with name / number / position columns. Check positions before adding —
+            rows marked ⚠ had no recognizable position and defaulted to OH.</p>
+          <div className="import-rows">
+            {importRows.map((p, i) => (
+              <div key={i} className="form-row import-row">
+                <input value={p.name} onChange={(e) => setImportRow(i, { name: e.target.value })} />
+                <input type="number" className="narrow" placeholder="#" value={p.jersey}
+                       onChange={(e) => setImportRow(i, { jersey: e.target.value })} />
+                <select value={p.role} onChange={(e) => setImportRow(i, { role: e.target.value, roleGuessed: true })}>
+                  {ROLES.map((r) => <option key={r.code} value={r.code}>{r.code} — {r.label}</option>)}
+                </select>
+                {!p.roleGuessed && <span title="No position found in the file — defaulted to OH">⚠</span>}
+                <button type="button" className="ghost danger"
+                        onClick={() => setImportRows((rows) => rows.filter((_, j) => j !== i))}>Remove</button>
+              </div>
+            ))}
+          </div>
+          <div className="form-row">
+            <button disabled={importBusy || importRows.length === 0} onClick={runImport}>
+              {importBusy ? "Adding…" : `Add ${importRows.length} player${importRows.length === 1 ? "" : "s"}`}
+            </button>
+            <button className="ghost" disabled={importBusy} onClick={() => setImportRows(null)}>Cancel</button>
+          </div>
+        </div>
+      )}
 
       {(formOpen || editingId) && (
       <form className="card" onSubmit={submit}>

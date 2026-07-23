@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 14d Mac / 15 WSL) |
+| Last Active | 2026-07-23 (session 15b, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,31 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 15b, WSL) — her UI batch 2 + roster import (deployed)
+- LANDING reworked to her spec: name "Pepper Volleyball", flow is now
+  Log in / Sign up FIRST -> "coach or player?" page -> the right auth form
+  in the right mode (player intent rides sessionStorage pz_auth_intent;
+  CoachAuth gained initialMode). Net accent (SVG mesh band) fixed across
+  the bottom of the landing. Coach in-app header renamed Pepper Volleyball.
+- Green guided-stepper chips REMOVED from the coach side per her call
+  ("looks weird"); the one-sentence nudge + Guide button remain.
+- PLAYER LOOKS: two schemes, picked at onboarding step 3 (new) and
+  switchable in Profile. "Classic" = black/white/grey + little bits of
+  pink (--pop: active tab underline, stat numbers, dots). "Intense" =
+  black & orange w/ pink pops + butterfly next to the header wordmark.
+  Stored per-device (localStorage pz_theme), applied via
+  .player-zone[data-theme]. This resolves the Mac session's open
+  "does pink return" question: yes, as pop accents in both schemes.
+- SPORTSENGINE ROSTER IMPORT (coach ask, via user): no public SE API, so
+  v1 = "Import CSV" on Roster — quote-aware parser, SportsEngine export
+  headers (First/Last Name, Jersey Number, Position) + variants, position
+  words -> role codes (Right Side->OPP etc.), editable preview with ⚠ on
+  defaulted rows, then bulk-create. Verified end-to-end with a synthetic
+  SE export (6 players). AWAITING a real SportsEngine export from the
+  requesting coach to confirm exact headers.
+- Verified by screenshot: landing intent+role pages, theme step, Intense
+  home, import preview. Butterfly = emoji (renders on devices; tofu in
+  headless shots). Deployed to Railway + pushed.
 ### 2026-07-23 (session 15, WSL) — daughter's UI feedback round 1 (deployed)
 - "Building your plan… forever" report: NOT reproducible on current build —
   full UI onboarding on prod resolves in ~1s (playwright). Diagnosis: her

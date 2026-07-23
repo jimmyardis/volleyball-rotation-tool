@@ -732,3 +732,55 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 /* screen header with an action button on the right */
 .screen-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
 .screen-head button { flex: none; margin-top: 0.6rem; }
+
+/* ---- Landing: log in / sign up first, net accent across the bottom ---- */
+.landing { padding-bottom: 7rem; }
+.landing-hero { text-align: center; margin: 2.5rem 0 1.5rem; }
+.landing-hero-mark { color: var(--accent); display: inline-block; }
+.landing-hero h2 { font-style: italic; letter-spacing: -0.02em; margin: 0.75rem 0 0.35rem; }
+.landing-intent { display: flex; flex-direction: column; gap: 0.5rem; max-width: 22rem; margin: 0 auto; }
+.landing-intent .pz-cta.ghost { background: var(--panel); color: var(--text); border: 1px solid var(--line); }
+.landing .link { display: block; margin: 0.75rem auto 0; }
+.landing-net {
+  position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 84px;
+  color: var(--accent); opacity: 0.35; pointer-events: none; z-index: 0;
+}
+
+/* ---- player look themes ---- */
+/* Classic = her default: black/white/grey + little bits of pink (--pop) */
+.player-zone { --pop: #d6336c; }
+.player-zone nav.tabs button.active { border-bottom-color: var(--pop); }
+.player-zone .pz-stat-num { color: var(--pop); }
+.player-zone .pz-dot.active, .player-zone .pz-step-dots span.active { background: var(--pop); }
+.pz-butterfly { margin-left: 0.4rem; font-style: normal; }
+
+/* Intense = black & orange, pink stays as the pop, butterfly in the header */
+.player-zone[data-theme="intense"] {
+  --bg: #0e0e10; --panel: #19191d; --panel-2: #222227; --line: #2c2c33;
+  --text: #f4f4f6; --dim: #a0a0ac;
+  --accent: #ff7a1a; --accent-ink: #141416; --accent-soft: rgba(255, 122, 26, 0.14);
+  --accent-2: #c9c9d2;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: var(--bg); color: var(--text);
+}
+.player-zone[data-theme="intense"] .error.global { background: #33191b; border-color: #542a2c; }
+/* the app div is inside a light body — paint the page edges too */
+html:has(.player-zone[data-theme="intense"]) body { background: #0e0e10; }
+
+/* theme picker cards (onboarding step 3 + Profile) */
+.pz-theme-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin: 0.75rem 0; }
+@media (max-width: 480px) { .pz-theme-cards { grid-template-columns: 1fr; } }
+.pz-theme-card {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.35rem;
+  background: var(--panel); border: 2px solid var(--line); border-radius: 14px;
+  padding: 0.9rem 1rem; text-align: left; color: var(--text); font-weight: 500;
+}
+.pz-theme-card.active { border-color: var(--pop); }
+.pz-theme-swatches { display: flex; gap: 0.3rem; }
+.pz-theme-swatches span { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); }
+.pz-theme-name { font-weight: 700; }
+.pz-theme-desc { color: var(--dim); font-size: 0.85rem; }
+
+/* roster CSV import preview */
+.import-rows { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.5rem 0; }
+.import-row input:first-child { flex: 1; min-width: 10rem; }

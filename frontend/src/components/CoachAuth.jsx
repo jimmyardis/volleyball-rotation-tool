@@ -5,8 +5,8 @@
 import { useState } from "react";
 import { api, setCoachToken } from "../api.js";
 
-export default function CoachAuth({ onAuthed, onBack }) {
-  const [creating, setCreating] = useState(false);
+export default function CoachAuth({ onAuthed, onBack, initialMode = "login" }) {
+  const [creating, setCreating] = useState(initialMode === "register");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");

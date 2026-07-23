@@ -13,31 +13,6 @@ import Loader from "./components/Loader.jsx";
 
 const TABS = ["Roster", "Lineups", "Rotations", "Simulate", "Notes"];
 
-// The guided path. Each step knows when it's complete and which tab it lives on.
-function steps({ teamId, players, lineups }) {
-  return [
-    { n: 1, label: "Create a team", tab: null, done: teamId != null },
-    { n: 2, label: "Add 6+ players", tab: "Roster", done: players.length >= 6 },
-    { n: 3, label: "Build a lineup", tab: "Lineups", done: lineups.length >= 1 },
-    { n: 4, label: "View rotations", tab: "Rotations", done: false },
-  ];
-}
-
-function Stepper({ items, onJump }) {
-  return (
-    <ol className="stepper">
-      {items.map((s) => (
-        <li key={s.n} className={s.done ? "done" : ""}>
-          <button className="step" disabled={!s.tab} onClick={() => s.tab && onJump(s.tab)}>
-            <span className="step-dot">{s.n}</span>
-            <span className="step-label">{s.label}</span>
-          </button>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 export default function App() {
   const [authed, setAuthed] = useState(() => !!getCoachToken());
   const [me, setMe] = useState(null);
@@ -107,10 +82,9 @@ export default function App() {
 
   function goToRotations(lineupId) { setViewLineupId(lineupId); setTab("Rotations"); }
 
-  const stepItems = steps({ teamId, players, lineups });
-  const nextStep = stepItems.find((s) => !s.done);
-
-  // a friendly nudge toward the next thing to do
+  // a friendly nudge toward the next thing to do (the numbered stepper is
+  // gone — the product owner found it visually noisy; one sentence suffices)
+  const setupDone = teamId != null && players.length >= 6 && lineups.length >= 1;
   const nudge =
     teamId == null ? "Start by setting up a team."
     : players.length < 6 ? `Add ${6 - players.length} more player${6 - players.length === 1 ? "" : "s"} on the Roster tab (you need 6 to fill a lineup).`
@@ -120,7 +94,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Rotation &amp; Lineup Tool</h1>
+        <h1>Pepper Volleyball</h1>
         <div className="team-bar">
           {me && <span className="pz-whoami">{me.display_name}</span>}
           <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
@@ -162,8 +136,7 @@ export default function App() {
         <p className="hint big-hint">Set up a team to get started.</p>
       ) : (
         <>
-          <Stepper items={stepItems} onJump={setTab} />
-          {nextStep && (
+          {!setupDone && (
             <p className="nudge">{nudge} <button className="link inline-link" onClick={() => setShowHelp(true)}>New here? Open the guide.</button></p>
           )}
 

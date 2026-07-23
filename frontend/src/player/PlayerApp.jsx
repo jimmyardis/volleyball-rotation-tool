@@ -21,12 +21,24 @@ const TABS = ["Home", "Coach", "Plan", "Train", "Film", "Progress", "Profile"];
 // The swipeable welcome tour shows once per device; after that, signed-out
 // users go straight to sign-in (with a link back to the tour).
 const WELCOME_SEEN = "pz_welcome_seen";
+const THEME_KEY = "pz_theme";               // "classic" | "intense", per device
 
 export default function PlayerApp() {
   const [me, setMe] = useState(null);        // null = loading/anon
   const [authed, setAuthed] = useState(!!getToken());
-  const [authView, setAuthView] = useState(() =>
-    getToken() || localStorage.getItem(WELCOME_SEEN) ? "login" : "welcome");
+  const [authView, setAuthView] = useState(() => {
+    // the web landing ("Log in" / "Sign up" → coach or player) hands its
+    // intent over so we open the right form directly, skipping the tour
+    const intent = sessionStorage.getItem("pz_auth_intent");
+    if (!getToken() && (intent === "login" || intent === "register")) {
+      sessionStorage.removeItem("pz_auth_intent");
+      localStorage.setItem(WELCOME_SEEN, "1");
+      return intent;
+    }
+    return getToken() || localStorage.getItem(WELCOME_SEEN) ? "login" : "welcome";
+  });
+  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || "classic");
+  useEffect(() => { localStorage.setItem(THEME_KEY, theme); }, [theme]);
   const [tab, setTab] = useState("Home");
   const [error, setError] = useState(null);
   // ONE coach conversation, shared by the floating bubble and the Coach tab
@@ -55,10 +67,10 @@ export default function PlayerApp() {
   }
 
   return (
-    <div className="app player-zone">
+    <div className="app player-zone" data-theme={theme}>
       {authed && (
         <header>
-          <h1>Pepper</h1>
+          <h1>Pepper{theme === "intense" && <span className="pz-butterfly" aria-hidden="true">🦋</span>}</h1>
           <div className="team-bar">
             {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
             {me && <button className="ghost" onClick={signOut}>Sign out</button>}
@@ -78,7 +90,7 @@ export default function PlayerApp() {
       )}
 
       {authed && me && (!me.profile?.position || !me.has_assessment) && (
-        <Onboarding me={me} onDone={loadMe} />
+        <Onboarding me={me} onDone={loadMe} theme={theme} setTheme={setTheme} />
       )}
 
       {authed && me && me.profile?.position && me.has_assessment && (
@@ -94,7 +106,7 @@ export default function PlayerApp() {
           {tab === "Train" && <TrainScreen me={me} />}
           {tab === "Film" && <FilmScreen me={me} />}
           {tab === "Progress" && <ProgressScreen me={me} reloadMe={loadMe} />}
-          {tab === "Profile" && <ProfileScreen me={me} reloadMe={loadMe} onSignOut={signOut} />}
+          {tab === "Profile" && <ProfileScreen me={me} reloadMe={loadMe} onSignOut={signOut} theme={theme} setTheme={setTheme} />}
 
           {/* the coach travels with you — hidden on the Coach tab itself */}
           {tab !== "Coach" && (
