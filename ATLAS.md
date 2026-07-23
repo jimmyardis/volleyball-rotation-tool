@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-22 (session 14, Mac) |
+| Last Active | 2026-07-23 (session 14c, Mac) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,15 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 14c, Mac) — the app is PEPPER (61d009a)
+- The daughter named it: **Pepper** (the warmup drill). Renamed everywhere
+  user-visible: bundle id com.jimmyardis.Pepper (changed BEFORE the ASC
+  record exists — it is permanent after), display name, splash wordmark,
+  welcome tour title, auth wordmark, in-app header, PWA manifest. Verified
+  on sim (home screen says Pepper). Review artifact updated in place.
+- ASC note for Phase C: app record must use bundle id com.jimmyardis.Pepper
+  and the store name "Pepper" (may be taken — have a fallback like "Pepper
+  Volleyball" ready).
 ### 2026-07-22 (session 14b, Mac) — Phase B: icon, splash, app-like onboarding (90dd6c0)
 - Product owner (the daughter) asked for: our stab at icon + splash + a more
   intuitive, "app"-like onboarding (disliked the Who-are-you chooser).
