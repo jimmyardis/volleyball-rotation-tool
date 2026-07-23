@@ -2,8 +2,9 @@
 // The whole coach API is gated: every request carries the coach's bearer
 // token (localStorage), and a 401 anywhere means "sign in again".
 
-// Dev: Vite proxies /api -> backend. Prod: same-origin (FastAPI serves both).
-const BASE = import.meta.env.PROD ? "" : "/api";
+// Dev: Vite proxies /api -> backend. Web prod: same-origin (FastAPI serves
+// both). iOS app: Railway directly — see apiBase.js.
+import { API_BASE as BASE } from "./apiBase.js";
 
 const TOKEN_KEY = "vb_coach_token";
 export const getCoachToken = () => localStorage.getItem(TOKEN_KEY);

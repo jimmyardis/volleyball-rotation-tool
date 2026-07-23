@@ -1,0 +1,20 @@
+{
+  "appId": "com.jimmyardis.PlayerZone",
+  "appName": "Player Zone",
+  "webDir": "dist",
+  "backgroundColor": "#f7f7f8",
+  "ios": {
+    "contentInset": "never"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchFadeOutDuration": 250,
+      "backgroundColor": "#f7f7f8"
+    },
+    "Keyboard": {
+      "resize": "native",
+      "resizeOnFullScreen": true
+    }
+  }
+}

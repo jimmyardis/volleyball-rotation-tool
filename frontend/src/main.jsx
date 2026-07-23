@@ -4,6 +4,13 @@ import App from "./App.jsx";
 import PlayerApp from "./player/PlayerApp.jsx";
 import "./styles.css";
 
+// Inside the Capacitor iOS shell the webview reports display-mode "browser",
+// so the standalone-PWA media query never fires. Tag the root instead and let
+// the CSS treat .is-native like installed mode (safe areas, no URL bar).
+if (window.Capacitor?.isNativePlatform?.()) {
+  document.documentElement.classList.add("is-native");
+}
+
 // Two surfaces, one app: the coach tool (default) and the Player Zone
 // (#player). Hash routing keeps it dead simple — no router dependency.
 function Root() {

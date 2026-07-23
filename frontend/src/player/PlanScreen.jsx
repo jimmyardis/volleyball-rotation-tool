@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { playerApi } from "./api.js";
+import { tap, success } from "../haptics.js";
 
 const skillOf = (title) => title.split("→")[0].trim();
 const goalOf = (title) => (title.split("→")[1] || "").trim();
@@ -30,10 +31,12 @@ export default function PlanScreen({ me, goTo }) {
 
   async function toggle(cp, done) {
     setError(null);
+    if (done) tap();
     try {
       const res = await playerApi.toggleCheckpoint(cp.id, done);
       setPlan(res.plan);
       if (res.unlocked_next) {
+        success();
         setCelebrate(true);
         setTimeout(() => setCelebrate(false), 4000);
       }

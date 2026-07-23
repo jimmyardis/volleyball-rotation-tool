@@ -1,7 +1,8 @@
-// Player Zone API client: same-origin in prod, /api proxy in dev, with the
-// bearer token from localStorage on every call.
+// Player Zone API client: base URL from apiBase.js (same-origin in web prod,
+// /api proxy in dev, Railway directly inside the iOS app), with the bearer
+// token from localStorage on every call.
 
-const BASE = import.meta.env.PROD ? "" : "/api";
+import { API_BASE as BASE } from "../apiBase.js";
 const TOKEN_KEY = "vb_player_token";
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);

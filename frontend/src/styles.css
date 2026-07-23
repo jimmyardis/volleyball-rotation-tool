@@ -34,7 +34,9 @@ body {
 .app { max-width: 1000px; margin: 0 auto; padding: 1rem 1.25rem 4rem; }
 
 /* installed (home-screen) mode: keep content and the chat bubble clear of
-   the iPhone status bar / home indicator / notch (side insets in landscape) */
+   the iPhone status bar / home indicator / notch (side insets in landscape).
+   html.is-native = the Capacitor iOS shell, which reports display-mode
+   "browser" (tagged in main.jsx) but needs the same treatment. */
 @media (display-mode: standalone) {
   .app {
     padding-top: calc(1rem + env(safe-area-inset-top));
@@ -45,6 +47,16 @@ body {
     bottom: calc(1.25rem + env(safe-area-inset-bottom));
     right: calc(1.25rem + env(safe-area-inset-right));
   }
+}
+html.is-native .app {
+  padding-top: calc(1rem + env(safe-area-inset-top));
+  padding-left: calc(1.25rem + env(safe-area-inset-left));
+  padding-right: calc(1.25rem + env(safe-area-inset-right));
+}
+html.is-native .chat-fab,
+html.is-native .chat-panel {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  right: calc(1.25rem + env(safe-area-inset-right));
 }
 
 header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
