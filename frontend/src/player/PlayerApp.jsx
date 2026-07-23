@@ -38,8 +38,15 @@ export default function PlayerApp() {
     }
     return getToken() || localStorage.getItem(WELCOME_SEEN) ? "login" : "welcome";
   });
-  const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || "classic");
+  // The look is PER ACCOUNT (profile.theme, her call): the server is the
+  // source of truth once signed in; localStorage is just the fast first
+  // paint and the signed-out default.
+  const [theme, setThemeState] = useState(() => localStorage.getItem(THEME_KEY) || "classic");
   useEffect(() => { localStorage.setItem(THEME_KEY, theme); }, [theme]);
+  const setTheme = useCallback((t) => {
+    setThemeState(t);
+    if (getToken()) playerApi.saveTheme(t).catch(() => {}); // offline? next change syncs
+  }, []);
   // the mode (login/register) chosen on the tour, carried through the
   // coach-or-player question that follows it
   const [pendingMode, setPendingMode] = useState("register");
@@ -62,6 +69,12 @@ export default function PlayerApp() {
 
   useEffect(() => { loadMe(); }, [loadMe]);
 
+  // account theme arrives with /me — adopt it (their look on any device)
+  useEffect(() => {
+    const t = me?.profile?.theme;
+    if (t && t !== theme) setThemeState(t);
+  }, [me]);  // eslint-disable-line react-hooks/exhaustive-deps
+
   async function signOut() {
     try { await playerApi.logout(); } catch { /* token already dead */ }
     setToken(null);
@@ -77,6 +90,12 @@ export default function PlayerApp() {
           <h1>Pepper{theme === "intense" && <span className="pz-butterfly" aria-hidden="true">🦋</span>}</h1>
           <div className="team-bar">
             {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
+            {me && me.profile?.position && (
+              <button className="ghost pz-look-btn" title="Switch your look"
+                      onClick={() => setTheme(theme === "classic" ? "intense" : "classic")}>
+                {theme === "classic" ? "Look: Classic" : "Look: Intense 🦋"}
+              </button>
+            )}
             {me && <button className="ghost" onClick={signOut}>Sign out</button>}
             <a className="pz-switch" href="#" onClick={(e) => { e.preventDefault(); location.hash = ""; }}>Coach tools</a>
           </div>

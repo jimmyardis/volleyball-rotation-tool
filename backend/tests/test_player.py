@@ -189,3 +189,21 @@ def test_delete_account_removes_everything(client, auth):
         n = conn.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()["n"]
         assert n == 0, f"{table} still has {n} rows"
     conn.close()
+
+
+def test_theme_is_per_account(client, auth):
+    # set at onboarding (profile PUT), read back from /me
+    client.put("/player/profile", headers=auth,
+               json={"position": "OH", "theme": "intense"})
+    assert client.get("/player/me", headers=auth).json()["profile"]["theme"] == "intense"
+
+    # settable alone via the header button endpoint; invalid rejected
+    r = client.put("/player/profile/theme", headers=auth, json={"theme": "classic"})
+    assert r.status_code == 200 and r.json()["theme"] == "classic"
+    assert client.put("/player/profile/theme", headers=auth,
+                      json={"theme": "neon"}).status_code == 422
+
+    # a second sign-in (new "device") sees the account's theme
+    tok2 = client.post("/player/login", json={"username": "celia", "password": "spike123"}).json()["token"]
+    me2 = client.get("/player/me", headers={"Authorization": f"Bearer {tok2}"}).json()
+    assert me2["profile"]["theme"] == "classic"

@@ -83,6 +83,14 @@ def _migrate(conn: sqlite3.Connection) -> None:
         )
         conn.execute("DROP TABLE receive_formations")
 
+    # player accounts gained a per-account look (theme follows the login,
+    # not the device).
+    tables = {r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+    if "player_profiles" in tables:
+        pp_cols = {r[1] for r in conn.execute("PRAGMA table_info(player_profiles)")}
+        if "theme" not in pp_cols:
+            conn.execute("ALTER TABLE player_profiles ADD COLUMN theme TEXT NOT NULL DEFAULT 'classic'")
+
     # teams gained an owning coach account (NULL = pre-auth row, claimed by
     # the first coach to register — see coach.register).
     team_cols = {r[1] for r in conn.execute("PRAGMA table_info(teams)")}

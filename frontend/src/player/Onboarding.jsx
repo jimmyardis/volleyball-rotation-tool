@@ -80,7 +80,7 @@ export default function Onboarding({ me, onDone, theme, setTheme }) {
   async function finish() {
     setError(null); setBusy(true);
     try {
-      await playerApi.updateProfile({ position, level_band: levelBand });
+      await playerApi.updateProfile({ position, level_band: levelBand, theme });
       await playerApi.saveAssessment(ratings);
       try { await playerApi.generatePlan(); } catch { /* plan can be generated later */ }
       success();

@@ -173,10 +173,14 @@ def delete_account(body: DeleteAccount, user=Depends(current_user), conn=Depends
 
 # ---------------------------------------------------------------- profile
 
+THEMES = {"classic", "intense"}
+
+
 class ProfileUpdate(BaseModel):
     position: str
     secondary_position: str | None = None
     level_band: str = "high_school"
+    theme: str | None = None            # optional here; also settable alone below
 
 
 @router.get("/me")
@@ -202,10 +206,28 @@ def update_profile(body: ProfileUpdate, user=Depends(current_user), conn=Depends
         raise HTTPException(422, "bad secondary position")
     if body.level_band not in LEVEL_BANDS:
         raise HTTPException(422, f"level_band must be one of {sorted(LEVEL_BANDS)}")
+    if body.theme is not None and body.theme not in THEMES:
+        raise HTTPException(422, f"theme must be one of {sorted(THEMES)}")
     conn.execute(
-        "UPDATE player_profiles SET position = ?, secondary_position = ?, level_band = ? WHERE user_id = ?",
-        (body.position, body.secondary_position, body.level_band, user["id"]),
+        "UPDATE player_profiles SET position = ?, secondary_position = ?, level_band = ?, "
+        "theme = COALESCE(?, theme) WHERE user_id = ?",
+        (body.position, body.secondary_position, body.level_band, body.theme, user["id"]),
     )
+    conn.commit()
+    return _profile(conn, user["id"])
+
+
+class ThemeUpdate(BaseModel):
+    theme: str
+
+
+@router.put("/profile/theme")
+def update_theme(body: ThemeUpdate, user=Depends(current_user), conn=Depends(get_conn)):
+    """The look follows the account: settable on its own from the header
+    button / Profile without touching position or level."""
+    if body.theme not in THEMES:
+        raise HTTPException(422, f"theme must be one of {sorted(THEMES)}")
+    conn.execute("UPDATE player_profiles SET theme = ? WHERE user_id = ?", (body.theme, user["id"]))
     conn.commit()
     return _profile(conn, user["id"])
 

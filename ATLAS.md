@@ -52,6 +52,13 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- FOLLOW-UP (her ask): the look is now PER ACCOUNT — player_profiles.theme
+  column (migration + schema), settable in signup step 3 (profile PUT
+  carries theme), alone via PUT /player/profile/theme, and from a new
+  always-visible header button ("Look: Classic" / "Look: Intense 🦋") that
+  toggles + saves. /me returns it; the client adopts the account theme
+  over any stale device preference (verified across two fresh browser
+  contexts). 74 backend tests.
 - Her report (as product owner, directly): web "/" showed a static hero ->
   Log in/Sign up while Get Started in the tour jumped straight to player
   sign-in; coach path was hidden behind a corner link. Her spec: the
