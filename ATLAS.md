@@ -52,6 +52,14 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- ROUND 6: her own icon art is in — she dropped a side-view orange/black
+  butterfly + a proper volleyball line-icon in Downloads (white-bg PNGs).
+  Ink extracted onto transparent alpha (PIL white-unmix: a=255-min(rgb),
+  un-premultiply), trimmed, 160px, saved to frontend/src/assets/
+  {monarch,volleyball}.png. Volleyball.jsx and Monarch now render her art
+  (SVG drawings retired); .pz-mark-img gets a white drop-shadow on Intense
+  so black linework reads on dark panels. All existing usages (ThemeMark,
+  Look buttons, perch, picker cards, WhoAreYou, Welcome lens) inherit.
 - ROUND 5b: absolute-corner decor STILL collided with coach header buttons
   at desktop widths (h1 + team-bar share one row there). Final fix: decor
   is a real in-flow strip at the very top (flex, right-aligned, no

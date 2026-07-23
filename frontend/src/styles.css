@@ -793,7 +793,8 @@ html:has(.app[data-theme="intense"]) body { background: #0e0e10; }
   display: flex; justify-content: flex-end; padding: 2px 10px 0 0;
   pointer-events: none;
 }
-.monarch-perch svg { rotate: -14deg; }
+.monarch-perch img { rotate: -10deg; }
+.app[data-theme="intense"] .pz-mark-img { filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.5)); }
 
 /* Intense dark-mode fixes: readable radars, banner, and phone flock position */
 .app[data-theme="intense"] .radar-value { fill: #ff8c33 !important; stroke: #ffb679 !important; fill-opacity: 0.4; }
