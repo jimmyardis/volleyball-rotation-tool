@@ -8,6 +8,14 @@ import AuthScreen from "./AuthScreen.jsx";
 import Welcome from "./Welcome.jsx";
 import WhoAreYou from "../components/WhoAreYou.jsx";
 import { Monarch, MonarchFlock } from "../components/Monarchs.jsx";
+import { Cloud, CloudDrift } from "../components/Clouds.jsx";
+
+const LOOKS = ["classic", "intense", "sky"];
+export function LookButtonLabel({ theme }) {
+  if (theme === "intense") return <>Look: Intense <Monarch size={15} style={{ verticalAlign: "-2px" }} /></>;
+  if (theme === "sky") return <>Look: Sky <Cloud size={20} style={{ verticalAlign: "-3px" }} /></>;
+  return <>Look: Classic</>;
+}
 import Onboarding from "./Onboarding.jsx";
 import HomeScreen from "./HomeScreen.jsx";
 import CoachScreen from "./CoachScreen.jsx";
@@ -87,6 +95,7 @@ export default function PlayerApp() {
   return (
     <div className="app player-zone" data-theme={theme}>
       {theme === "intense" && authed && <MonarchFlock />}
+      {theme === "sky" && authed && <CloudDrift />}
       {authed && (
         <header>
           <h1>Pepper</h1>
@@ -94,9 +103,8 @@ export default function PlayerApp() {
             {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
             {me && me.profile?.position && (
               <button className="ghost pz-look-btn" title="Switch your look"
-                      onClick={() => setTheme(theme === "classic" ? "intense" : "classic")}>
-                {theme === "classic" ? "Look: Classic"
-                  : <>Look: Intense <Monarch size={15} style={{ verticalAlign: "-2px" }} /></>}
+                      onClick={() => setTheme(LOOKS[(LOOKS.indexOf(theme) + 1) % LOOKS.length])}>
+                <LookButtonLabel theme={theme} />
               </button>
             )}
             {me && <button className="ghost" onClick={signOut}>Sign out</button>}

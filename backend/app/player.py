@@ -173,7 +173,7 @@ def delete_account(body: DeleteAccount, user=Depends(current_user), conn=Depends
 
 # ---------------------------------------------------------------- profile
 
-THEMES = {"classic", "intense"}
+THEMES = {"classic", "intense", "sky"}
 
 
 class ProfileUpdate(BaseModel):

@@ -10,7 +10,11 @@ import NotesScreen, { QuickNotes } from "./components/Notes.jsx";
 import Landing from "./components/Landing.jsx";
 import TeamSetup from "./components/TeamSetup.jsx";
 import Loader from "./components/Loader.jsx";
-import { Monarch, MonarchFlock } from "./components/Monarchs.jsx";
+import { MonarchFlock } from "./components/Monarchs.jsx";
+import { CloudDrift } from "./components/Clouds.jsx";
+import { LookButtonLabel } from "./player/PlayerApp.jsx";
+
+const LOOKS = ["classic", "intense", "sky"];
 
 const TABS = ["Roster", "Lineups", "Rotations", "Simulate", "Notes"];
 
@@ -105,14 +109,14 @@ export default function App() {
   return (
     <div className="app" data-theme={theme}>
       {theme === "intense" && <MonarchFlock />}
+      {theme === "sky" && <CloudDrift />}
       <header>
         <h1>Pepper Volleyball</h1>
         <div className="team-bar">
           {me && <span className="pz-whoami">{me.display_name}</span>}
           <button className="ghost" title="Switch your look"
-                  onClick={() => setTheme(theme === "classic" ? "intense" : "classic")}>
-            {theme === "classic" ? "Look: Classic"
-              : <>Look: Intense <Monarch size={15} style={{ verticalAlign: "-2px" }} /></>}
+                  onClick={() => setTheme(LOOKS[(LOOKS.indexOf(theme) + 1) % LOOKS.length])}>
+            <LookButtonLabel theme={theme} />
           </button>
           <button className="ghost help-btn" onClick={() => setShowHelp(true)} title="How this app works">Guide</button>
           {teams.length > 0 && (

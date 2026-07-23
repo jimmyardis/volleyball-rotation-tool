@@ -806,6 +806,38 @@ html:has(.app[data-theme="intense"]) body { background: #0e0e10; }
 .app[data-theme="intense"] .radar-label { fill: #a0a0ac; }
 .app[data-theme="intense"] .nudge { background: #2a2310; border-color: #4a3d1e; color: #e8cf7a; }
 .app[data-theme="intense"] .nudge .inline-link { color: #ffdf8e; }
+
+
+/* ---- Sky look: sky blue, light blue & white, clouds drifting ---- */
+.app[data-theme="sky"] {
+  --bg: #e8f3fc; --panel: #ffffff; --panel-2: #dcecf9; --line: #c6ddf0;
+  --text: #16324a; --dim: #5c7d99;
+  --accent: #4aa8f0; --accent-ink: #ffffff; --accent-soft: rgba(74, 168, 240, 0.15);
+  --accent-2: #2e6a9e; --pop: #1f8fe8;
+  --shadow: 0 1px 2px rgba(60, 110, 160, 0.08), 0 2px 8px rgba(60, 110, 160, 0.1);
+  background: var(--bg); color: var(--text);
+}
+html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
+
+.cloud-drift {
+  position: fixed; top: 64px; right: 10px; z-index: 40;
+  display: flex; gap: 10px; align-items: flex-start; pointer-events: none;
+}
+.cloud-drift svg { animation: cloud-drift 16s ease-in-out infinite alternate; }
+.cloud-drift .c2 { margin-top: 30px; animation-delay: 3s; animation-duration: 20s; }
+.cloud-drift .c3 { margin-top: 58px; animation-delay: 6s; animation-duration: 13s; }
+@keyframes cloud-drift {
+  from { translate: 0 0; }
+  to   { translate: -26px 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .cloud-drift svg { animation: none; } }
+
+/* phones: decor lives beside the short title row — the one reliably empty
+   spot. LAST in the file on purpose: must out-cascade the base rules. */
 @media (max-width: 640px) {
-  .monarch-flock { top: 122px; }  /* clear of the wrapped header controls */
+  .monarch-flock, .cloud-drift { top: 4px; right: 6px; scale: 0.72; transform-origin: top right; }
+  .monarch-flock .m2 { margin-top: 14px; }
+  .monarch-flock .m3 { margin-top: 28px; }
+  .cloud-drift .c2 { margin-top: 12px; }
+  .cloud-drift .c3 { margin-top: 3px; }
 }

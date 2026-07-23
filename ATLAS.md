@@ -52,6 +52,14 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- HER ROUND 4: monarchs redrawn realistic (layered SVG: black margin
+  bands w/ white spots, black wingtips, veined orange cells, clubbed
+  antennae). Phone overlap fixed — decor now sits beside the short title
+  row on <=640px, scaled 0.72; NOTE the mobile overrides must stay LAST
+  in styles.css (cascade bug: appended sky block was beating a mid-file
+  media query). NEW third scheme "sky": sky/light blue + white, 3 drawn
+  clouds drifting top-right (Clouds.jsx), backend theme sets updated,
+  Look button now cycles classic->intense->sky.
 - HER ROUND 3: themes extended to the COACH side (users.theme column +
   migration, PUT /coach/theme, /coach/me returns it; Look button in the
   coach header, data-theme generalized to .app scope). Butterfly emoji

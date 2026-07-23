@@ -7,6 +7,7 @@ import { roleMeta } from "../roles.js";
 import { playerApi } from "./api.js";
 import { tap, success } from "../haptics.js";
 import { Monarch } from "../components/Monarchs.jsx";
+import { Cloud } from "../components/Clouds.jsx";
 
 function StepDots({ step }) {
   return (
@@ -25,6 +26,8 @@ export const THEMES = [
     swatches: ["#17171a", "#ffffff", "#6f6f7a", "#d6336c"] },
   { key: "intense", name: "Intense", desc: "Black & orange, monarchs at the top",
     swatches: ["#0e0e10", "#ff7a1a", "#ff9b4d", "#f4f4f6"] },
+  { key: "sky", name: "Sky", desc: "Sky blue, light blue & white — with clouds",
+    swatches: ["#4aa8f0", "#a8d4f7", "#e8f3fc", "#ffffff"] },
 ];
 
 export function ThemeCards({ theme, setTheme }) {
@@ -40,6 +43,7 @@ export function ThemeCards({ theme, setTheme }) {
           <span className="pz-theme-name">
             {t.name}
             {t.key === "intense" && <Monarch size={17} style={{ marginLeft: "0.35rem", verticalAlign: "-3px" }} />}
+            {t.key === "sky" && <Cloud size={22} style={{ marginLeft: "0.35rem", verticalAlign: "-3px" }} />}
           </span>
           <span className="pz-theme-desc">{t.desc}</span>
         </button>

@@ -198,6 +198,8 @@ def test_theme_is_per_account(client, auth):
     assert client.get("/player/me", headers=auth).json()["profile"]["theme"] == "intense"
 
     # settable alone via the header button endpoint; invalid rejected
+    assert client.put("/player/profile/theme", headers=auth,
+                      json={"theme": "sky"}).status_code == 200
     r = client.put("/player/profile/theme", headers=auth, json={"theme": "classic"})
     assert r.status_code == 200 and r.json()["theme"] == "classic"
     assert client.put("/player/profile/theme", headers=auth,

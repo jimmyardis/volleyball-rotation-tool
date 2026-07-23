@@ -117,8 +117,8 @@ class CoachTheme(BaseModel):
 def update_theme(body: CoachTheme, user=Depends(current_coach), conn=Depends(get_conn)):
     """The coach-side look follows the coach account (mirrors the player
     side's per-account theme)."""
-    if body.theme not in {"classic", "intense"}:
-        raise HTTPException(422, "theme must be one of ['classic', 'intense']")
+    if body.theme not in {"classic", "intense", "sky"}:
+        raise HTTPException(422, "theme must be one of ['classic', 'intense', 'sky']")
     conn.execute("UPDATE users SET theme = ? WHERE id = ?", (body.theme, user["id"]))
     conn.commit()
     return {"theme": body.theme}
