@@ -18,6 +18,7 @@ const EMPTY = {
 export default function RosterScreen({ teamId, players, reload }) {
   const [form, setForm] = useState(EMPTY);
   const [editingId, setEditingId] = useState(null);
+  const [formOpen, setFormOpen] = useState(false); // collapsed by default — the roster is the screen
   const [error, setError] = useState(null);
   const [presets, setPresets] = useState({});
   const [catalog, setCatalog] = useState([]);
@@ -26,6 +27,7 @@ export default function RosterScreen({ teamId, players, reload }) {
   useEffect(() => {
     setForm(EMPTY);
     setEditingId(null);
+    setFormOpen(false);
     setNotesFor(null);
   }, [teamId]);
 
@@ -78,6 +80,7 @@ export default function RosterScreen({ teamId, players, reload }) {
       await api.saveMistakes(saved?.id ?? editingId, form.mistakes);
       setForm(EMPTY);
       setEditingId(null);
+      setFormOpen(false);
       reload();
     } catch (err) {
       setError(err.message);
@@ -95,6 +98,7 @@ export default function RosterScreen({ teamId, players, reload }) {
 
   function startEdit(p) {
     setEditingId(p.id);
+    setFormOpen(true);
     setForm({
       name: p.name,
       jersey_number: p.jersey_number ?? "",
@@ -122,11 +126,19 @@ export default function RosterScreen({ teamId, players, reload }) {
 
   return (
     <div className="screen">
-      <h2>Roster</h2>
-      <p className="hint">
-        Every player gets a card. The skill radar drives the game simulator.
-      </p>
+      <div className="screen-head">
+        <div>
+          <h2>Roster</h2>
+          <p className="hint">
+            Every player gets a card. The skill radar drives the game simulator.
+          </p>
+        </div>
+        {!formOpen && !editingId && (
+          <button onClick={() => setFormOpen(true)}>+ New player</button>
+        )}
+      </div>
 
+      {(formOpen || editingId) && (
       <form className="card" onSubmit={submit}>
         <h4 className="form-title">{editingId ? "Edit player" : "Add a player"}</h4>
         <div className="form-row">
@@ -193,14 +205,14 @@ export default function RosterScreen({ teamId, players, reload }) {
 
         <div className="form-row">
           <button type="submit">{editingId ? "Save player" : "Add player"}</button>
-          {editingId && (
-            <button type="button" className="ghost" onClick={() => { setEditingId(null); setForm(EMPTY); }}>Cancel</button>
-          )}
+          <button type="button" className="ghost"
+                  onClick={() => { setEditingId(null); setForm(EMPTY); setFormOpen(false); }}>Cancel</button>
         </div>
       </form>
+      )}
       {error && <p className="error">{error}</p>}
 
-      {players.length === 0 && <p className="empty">No players yet — add some above.</p>}
+      {players.length === 0 && !formOpen && <p className="empty">No players yet — tap “+ New player” to add your first.</p>}
 
       <div className="player-cards">
         {players.map((p) => {

@@ -101,7 +101,7 @@ button { cursor: pointer; background: var(--accent); color: var(--accent-ink); b
 button.ghost { background: var(--panel); border: 1px solid var(--line); color: var(--text); font-weight: 500; }
 button.ghost:hover { border-color: var(--dim); }
 button.ghost.danger { color: var(--bad); }
-button.danger { background: var(--bad); color: #fff; }
+button.danger:not(.ghost) { background: var(--bad); color: #fff; }
 button.link { background: none; border: none; color: var(--text); padding: 0.3rem 0; text-align: left; font-weight: 500; }
 button.primary { background: var(--accent); color: var(--accent-ink); }
 .checkbox { display: flex; align-items: center; gap: 0.35rem; color: var(--dim); }
@@ -728,3 +728,7 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
   font-style: italic; font-weight: 800; letter-spacing: -0.03em;
 }
 .pz-slide h2 { font-style: italic; }
+
+/* screen header with an action button on the right */
+.screen-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.screen-head button { flex: none; margin-top: 0.6rem; }

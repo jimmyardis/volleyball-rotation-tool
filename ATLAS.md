@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 14d, Mac) |
+| Last Active | 2026-07-23 (session 14d Mac / 15 WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,20 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 15, WSL) — daughter's UI feedback round 1 (deployed)
+- "Building your plan… forever" report: NOT reproducible on current build —
+  full UI onboarding on prod resolves in ~1s (playwright). Diagnosis: her
+  installed home-screen app is a STALE CACHED BUNDLE from before the 12c
+  fix. One-time fix: delete + re-add the home-screen icon. Permanent fix
+  shipped: _html_no_cache middleware (Cache-Control: no-cache on HTML only;
+  hashed assets still cache) so installed apps always pick up new builds.
+- Coach Roster de-bulked per her request: add-player form now collapsed
+  behind a "+ New player" button (screen-head layout), auto-opens on Edit,
+  closes on save/cancel; empty-state copy points at the button. Fixed a
+  self-inflicted CSS regression (button.danger rule made ghost Delete
+  buttons red-on-red; now :not(.ghost)).
+- More UI feedback from her coming next session (aesthetics + copy for
+  Home/Onboarding — screenshots of current state in Windows Downloads).
 ### 2026-07-23 (session 14d, Mac) — her logo, everywhere (307c4f1)
 - She delivered a logo (B&W athletic: swoosh ball w/ "pepper" panel, net,
   italic wordmark, tagline "Practice · Progress · Thrive") — integrated as

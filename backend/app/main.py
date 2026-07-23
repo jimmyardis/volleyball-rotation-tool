@@ -99,6 +99,18 @@ _COACH_API_PREFIXES = ("/teams", "/lineups", "/players", "/overlap-check",
 
 
 @app.middleware("http")
+async def _html_no_cache(request: Request, call_next):
+    """Never let the SPA shell go stale: installed home-screen apps (iOS
+    especially) cache index.html hard, which strands users on old builds —
+    the 'Building your plan… forever' bug was a phone running a pre-fix
+    bundle. Hashed assets stay cacheable; only HTML must revalidate."""
+    resp = await call_next(request)
+    if resp.headers.get("content-type", "").startswith("text/html"):
+        resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+@app.middleware("http")
 async def _coach_gate(request: Request, call_next):
     path = request.url.path
     if request.method != "OPTIONS" and path.startswith(_COACH_API_PREFIXES):
