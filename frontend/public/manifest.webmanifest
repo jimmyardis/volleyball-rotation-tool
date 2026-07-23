@@ -1,6 +1,6 @@
 {
-  "name": "Volleyball Player Zone",
-  "short_name": "Player Zone",
+  "name": "Pepper \u2014 volleyball training",
+  "short_name": "Pepper",
   "description": "Your personal volleyball coach: plan, drills, training log, and progress.",
   "start_url": "/#player",
   "scope": "/",

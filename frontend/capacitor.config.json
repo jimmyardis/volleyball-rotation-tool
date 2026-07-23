@@ -1,6 +1,6 @@
 {
-  "appId": "com.jimmyardis.PlayerZone",
-  "appName": "Player Zone",
+  "appId": "com.jimmyardis.Pepper",
+  "appName": "Pepper",
   "webDir": "dist",
   "backgroundColor": "#f7f7f8",
   "ios": {

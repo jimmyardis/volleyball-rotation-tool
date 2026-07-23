@@ -33,7 +33,7 @@ export default function AuthScreen({ onAuthed, initialMode = "login", onBack }) 
       <div className="pz-auth-card">
         <div className="pz-auth-brand">
           <Volleyball size={54} />
-          <span className="pz-auth-wordmark">Player Zone</span>
+          <span className="pz-auth-wordmark">Pepper</span>
         </div>
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p className="hint">

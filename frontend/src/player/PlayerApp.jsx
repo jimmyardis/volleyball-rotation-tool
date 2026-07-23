@@ -58,7 +58,7 @@ export default function PlayerApp() {
     <div className="app player-zone">
       {authed && (
         <header>
-          <h1>Player Zone</h1>
+          <h1>Pepper</h1>
           <div className="team-bar">
             {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
             {me && <button className="ghost" onClick={signOut}>Sign out</button>}

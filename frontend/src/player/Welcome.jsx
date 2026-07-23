@@ -14,7 +14,7 @@ const SLIDES = [
         <Volleyball size={132} />
       </div>
     ),
-    title: "Player Zone",
+    title: "Pepper",
     body: "Your own coach, your own plan, your own progress — built around how you play.",
   },
   {
