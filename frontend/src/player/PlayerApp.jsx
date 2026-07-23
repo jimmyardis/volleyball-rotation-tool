@@ -7,14 +7,23 @@ import { playerApi, getToken, setToken } from "./api.js";
 import AuthScreen from "./AuthScreen.jsx";
 import Welcome from "./Welcome.jsx";
 import WhoAreYou from "../components/WhoAreYou.jsx";
-import { Monarch, MonarchFlock } from "../components/Monarchs.jsx";
+import { Monarch, MonarchPerch } from "../components/Monarchs.jsx";
 import { Cloud, CloudDrift } from "../components/Clouds.jsx";
+import Volleyball from "../components/Volleyball.jsx";
 
 const LOOKS = ["classic", "intense", "sky"];
 export function LookButtonLabel({ theme }) {
   if (theme === "intense") return <>Look: Intense <Monarch size={15} style={{ verticalAlign: "-2px" }} /></>;
   if (theme === "sky") return <>Look: Sky <Cloud size={20} style={{ verticalAlign: "-3px" }} /></>;
   return <>Look: Classic</>;
+}
+
+// the little mark that sits beside the wordmark, per look (her spec)
+export function ThemeMark({ theme, size = 20 }) {
+  const style = { verticalAlign: "-3px", marginLeft: "0.45rem" };
+  if (theme === "intense") return <Monarch size={size} style={style} />;
+  if (theme === "sky") return <Cloud size={size + 7} style={style} />;
+  return <Volleyball size={size} style={style} />;
 }
 import Onboarding from "./Onboarding.jsx";
 import HomeScreen from "./HomeScreen.jsx";
@@ -94,11 +103,11 @@ export default function PlayerApp() {
 
   return (
     <div className="app player-zone" data-theme={theme}>
-      {theme === "intense" && authed && <MonarchFlock />}
+      {theme === "intense" && authed && <MonarchPerch />}
       {theme === "sky" && authed && <CloudDrift />}
       {authed && (
         <header>
-          <h1>Pepper</h1>
+          <h1>Pepper<ThemeMark theme={theme} /></h1>
           <div className="team-bar">
             {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
             {me && me.profile?.position && (

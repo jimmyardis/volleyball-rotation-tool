@@ -10,9 +10,9 @@ import NotesScreen, { QuickNotes } from "./components/Notes.jsx";
 import Landing from "./components/Landing.jsx";
 import TeamSetup from "./components/TeamSetup.jsx";
 import Loader from "./components/Loader.jsx";
-import { MonarchFlock } from "./components/Monarchs.jsx";
+import { MonarchPerch } from "./components/Monarchs.jsx";
 import { CloudDrift } from "./components/Clouds.jsx";
-import { LookButtonLabel } from "./player/PlayerApp.jsx";
+import { LookButtonLabel, ThemeMark } from "./player/PlayerApp.jsx";
 
 const LOOKS = ["classic", "intense", "sky"];
 
@@ -108,10 +108,10 @@ export default function App() {
 
   return (
     <div className="app" data-theme={theme}>
-      {theme === "intense" && <MonarchFlock />}
+      {theme === "intense" && <MonarchPerch />}
       {theme === "sky" && <CloudDrift />}
       <header>
-        <h1>Pepper Volleyball</h1>
+        <h1>Pepper<ThemeMark theme={theme} /></h1>
         <div className="team-bar">
           {me && <span className="pz-whoami">{me.display_name}</span>}
           <button className="ghost" title="Switch your look"

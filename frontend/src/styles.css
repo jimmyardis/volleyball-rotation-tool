@@ -748,7 +748,7 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 
 /* ---- player look themes ---- */
 /* Classic = her default: black/white/grey + little bits of pink (--pop) */
-.app { --pop: #d6336c; }
+.app { --pop: #d6336c; position: relative; }
 .app nav.tabs button.active { border-bottom-color: var(--pop); }
 .player-zone .pz-stat-num { color: var(--pop); }
 .player-zone .pz-dot.active, .player-zone .pz-step-dots span.active { background: var(--pop); }
@@ -786,19 +786,12 @@ html:has(.app[data-theme="intense"]) body { background: #0e0e10; }
 .import-rows { display: flex; flex-direction: column; gap: 0.4rem; margin: 0.5rem 0; }
 .import-row input:first-child { flex: 1; min-width: 10rem; }
 
-/* three monarchs drifting along the top (Intense look, both surfaces) */
-.monarch-flock {
-  position: fixed; top: 66px; right: 10px; z-index: 40;
-  display: flex; gap: 8px; align-items: flex-start; pointer-events: none;
+/* one monarch sitting at the top edge of the page (Intense, both surfaces).
+   position: absolute on purpose — anchored to the page, not the screen. */
+.monarch-perch {
+  position: absolute; top: 2px; right: 14px; z-index: 40; pointer-events: none;
 }
-.monarch-flock svg { animation: monarch-drift 7s ease-in-out infinite alternate; rotate: -12deg; }
-.monarch-flock .m2 { margin-top: 26px; rotate: 9deg; animation-delay: 1.3s; animation-duration: 8.5s; }
-.monarch-flock .m3 { margin-top: 52px; rotate: -5deg; animation-delay: 2.4s; animation-duration: 6s; }
-@keyframes monarch-drift {
-  from { translate: 0 0; }
-  to   { translate: -10px 14px; }
-}
-@media (prefers-reduced-motion: reduce) { .monarch-flock svg { animation: none; } }
+.monarch-perch svg { rotate: -14deg; }
 
 /* Intense dark-mode fixes: readable radars, banner, and phone flock position */
 .app[data-theme="intense"] .radar-value { fill: #ff8c33 !important; stroke: #ffb679 !important; fill-opacity: 0.4; }
@@ -820,12 +813,12 @@ html:has(.app[data-theme="intense"]) body { background: #0e0e10; }
 html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 
 .cloud-drift {
-  position: fixed; top: 64px; right: 10px; z-index: 40;
+  position: absolute; top: 2px; right: 12px; z-index: 40;
   display: flex; gap: 10px; align-items: flex-start; pointer-events: none;
 }
 .cloud-drift svg { animation: cloud-drift 16s ease-in-out infinite alternate; }
-.cloud-drift .c2 { margin-top: 30px; animation-delay: 3s; animation-duration: 20s; }
-.cloud-drift .c3 { margin-top: 58px; animation-delay: 6s; animation-duration: 13s; }
+.cloud-drift .c2 { margin-top: 16px; animation-delay: 3s; animation-duration: 20s; }
+.cloud-drift .c3 { margin-top: 5px; animation-delay: 6s; animation-duration: 13s; }
 @keyframes cloud-drift {
   from { translate: 0 0; }
   to   { translate: -26px 4px; }
@@ -835,9 +828,7 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 /* phones: decor lives beside the short title row — the one reliably empty
    spot. LAST in the file on purpose: must out-cascade the base rules. */
 @media (max-width: 640px) {
-  .monarch-flock, .cloud-drift { top: 4px; right: 6px; scale: 0.72; transform-origin: top right; }
-  .monarch-flock .m2 { margin-top: 14px; }
-  .monarch-flock .m3 { margin-top: 28px; }
+  .monarch-perch, .cloud-drift { top: 2px; right: 6px; scale: 0.75; transform-origin: top right; }
   .cloud-drift .c2 { margin-top: 12px; }
   .cloud-drift .c3 { margin-top: 3px; }
 }

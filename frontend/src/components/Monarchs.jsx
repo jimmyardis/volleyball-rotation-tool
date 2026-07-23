@@ -45,13 +45,12 @@ export function Monarch({ size = 24, className = "", style }) {
   );
 }
 
-// three monarchs "flying" along the top — pure decoration, never blocks taps
-export function MonarchFlock() {
+// ONE monarch perched at the top edge of the page (her call: sitting, not
+// flying — and anchored to the page, so it scrolls away with the content).
+export function MonarchPerch() {
   return (
-    <div className="monarch-flock" aria-hidden="true">
-      <Monarch size={36} className="m1" />
-      <Monarch size={27} className="m2" />
-      <Monarch size={20} className="m3" />
+    <div className="monarch-perch" aria-hidden="true">
+      <Monarch size={44} />
     </div>
   );
 }

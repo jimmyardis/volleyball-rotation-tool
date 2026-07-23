@@ -52,6 +52,15 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- HER ROUND 5: decor now ANCHORED TO THE PAGE (position: absolute in the
+  .app, which gained position: relative) — she reported the fixed-position
+  butterflies/clouds "moving with me" on scroll. Intense decor is ONE
+  monarch perched still at the top-right edge (MonarchPerch replaces the
+  flock). Wordmark is just "Pepper" everywhere (coach header + landing
+  dropped "Volleyball") with a per-look mark beside it (ThemeMark):
+  volleyball on Classic, monarch on Intense, cloud on Sky. Volleyball.jsx
+  REDRAWN as a real ball (three seams swirling from center + rim panel
+  lines) — the old mark read as a network/globe icon, her catch.
 - HER ROUND 4: monarchs redrawn realistic (layered SVG: black margin
   bands w/ white spots, black wingtips, veined orange cells, clubbed
   antennae). Phone overlap fixed — decor now sits beside the short title

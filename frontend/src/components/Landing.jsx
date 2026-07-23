@@ -6,6 +6,7 @@ import { useState } from "react";
 import Welcome from "../player/Welcome.jsx";
 import WhoAreYou from "./WhoAreYou.jsx";
 import CoachAuth from "./CoachAuth.jsx";
+import Volleyball from "./Volleyball.jsx";
 
 // a volleyball net running across the bottom of the page — her accent idea
 function NetBand() {
@@ -49,7 +50,7 @@ export default function Landing({ onCoachAuthed }) {
   return (
     <div className="app landing">
       <header>
-        <h1>Pepper Volleyball</h1>
+        <h1>Pepper<Volleyball size={20} style={{ verticalAlign: "-3px", marginLeft: "0.45rem" }} /></h1>
       </header>
 
       {step === "welcome" && (
