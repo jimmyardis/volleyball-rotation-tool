@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { playerApi, getToken, setToken } from "./api.js";
 import AuthScreen from "./AuthScreen.jsx";
 import Welcome from "./Welcome.jsx";
+import WhoAreYou from "../components/WhoAreYou.jsx";
 import Onboarding from "./Onboarding.jsx";
 import HomeScreen from "./HomeScreen.jsx";
 import CoachScreen from "./CoachScreen.jsx";
@@ -39,6 +40,9 @@ export default function PlayerApp() {
   });
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || "classic");
   useEffect(() => { localStorage.setItem(THEME_KEY, theme); }, [theme]);
+  // the mode (login/register) chosen on the tour, carried through the
+  // coach-or-player question that follows it
+  const [pendingMode, setPendingMode] = useState("register");
   const [tab, setTab] = useState("Home");
   const [error, setError] = useState(null);
   // ONE coach conversation, shared by the floating bubble and the Coach tab
@@ -82,9 +86,26 @@ export default function PlayerApp() {
       {error && <p className="error global">{error}</p>}
 
       {!authed && authView === "welcome" && (
-        <Welcome onStart={(mode) => { localStorage.setItem(WELCOME_SEEN, "1"); setAuthView(mode); }} />
+        <Welcome onStart={(mode) => {
+          localStorage.setItem(WELCOME_SEEN, "1");
+          setPendingMode(mode);
+          setAuthView("role");           // her flow: tour → coach or player? → sign-in
+        }} />
       )}
-      {!authed && authView !== "welcome" && (
+      {!authed && authView === "role" && (
+        <WhoAreYou
+          onPick={(role) => {
+            if (role === "player") setAuthView(pendingMode);
+            else {
+              // coach tools live on the web side of the SPA — carry the mode over
+              sessionStorage.setItem("coach_auth_intent", pendingMode);
+              location.hash = "";
+            }
+          }}
+          onBack={() => setAuthView("welcome")}
+        />
+      )}
+      {!authed && authView !== "welcome" && authView !== "role" && (
         <AuthScreen key={authView} initialMode={authView} onAuthed={loadMe}
                     onBack={() => setAuthView("welcome")} />
       )}

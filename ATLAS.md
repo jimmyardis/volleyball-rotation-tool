@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 15b, WSL) |
+| Last Active | 2026-07-23 (session 15c, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,24 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
+- Her report (as product owner, directly): web "/" showed a static hero ->
+  Log in/Sign up while Get Started in the tour jumped straight to player
+  sign-in; coach path was hidden behind a corner link. Her spec: the
+  DYNAMIC tour page is the homepage, and Get started leads to the
+  coach-or-player question.
+- Implemented everywhere: web "/" now opens the Welcome tour itself; tour
+  actions (Get started=register / I-already-have-an-account=login) -> NEW
+  shared WhoAreYou step (components/WhoAreYou.jsx) -> right auth form in
+  the right mode. Same flow at #player and in the native shell (PlayerApp
+  welcome -> role step; picking coach carries mode via sessionStorage
+  coach_auth_intent to the coach side). Old static landing hero deleted.
+- Also: coach-signup "broken" report = silently disabled button on short
+  passwords (fixed earlier today); verified coach signup live twice.
+- NOTE for Mac session: native bundle predates themes + this flow — run
+  git pull, npm run build, npx cap sync before her next sim/device test.
+  Her "no color schemes" report is that stale native bundle (Look card
+  verified live on prod web Profile).
 ### 2026-07-23 (session 15b, WSL) — her UI batch 2 + roster import (deployed)
 - POST-SHIP: "can't sign up as coach" report — flow verified working on
   prod (browser-automated, twice). Root-cause suspect fixed: the Create-
