@@ -52,6 +52,10 @@ None.
 
 ## Session Log
 ### 2026-07-23 (session 15b, WSL) — her UI batch 2 + roster import (deployed)
+- POST-SHIP: "can't sign up as coach" report — flow verified working on
+  prod (browser-automated, twice). Root-cause suspect fixed: the Create-
+  account button silently disabled on <6-char passwords (reads as broken).
+  Now always clickable w/ plain-language messages. Deployed + re-verified.
 - LANDING reworked to her spec: name "Pepper Volleyball", flow is now
   Log in / Sign up FIRST -> "coach or player?" page -> the right auth form
   in the right mode (player intent rides sessionStorage pz_auth_intent;
