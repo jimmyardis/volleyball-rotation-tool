@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { playerApi, setToken } from "./api.js";
-import Volleyball from "../components/Volleyball.jsx";
 import { success } from "../haptics.js";
+import ball from "../assets/pepper-ball.png";
 
 export default function AuthScreen({ onAuthed, initialMode = "login", onBack }) {
   const [mode, setMode] = useState(initialMode);
@@ -32,7 +32,7 @@ export default function AuthScreen({ onAuthed, initialMode = "login", onBack }) 
     <div className="screen pz-auth">
       <div className="pz-auth-card">
         <div className="pz-auth-brand">
-          <Volleyball size={54} />
+          <img className="pz-brand-ball" src={ball} alt="" />
           <span className="pz-auth-wordmark">Pepper</span>
         </div>
         <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>

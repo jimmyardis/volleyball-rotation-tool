@@ -5,16 +5,14 @@
 import { useRef, useState } from "react";
 import Volleyball from "../components/Volleyball.jsx";
 import { tap } from "../haptics.js";
+import ball from "../assets/pepper-ball.png";
 
 const SLIDES = [
   {
     key: "hello",
-    art: (
-      <div className="pz-hero-mark">
-        <Volleyball size={132} />
-      </div>
-    ),
-    title: "Pepper",
+    // her logo's ball IS the hello — the slide title carries the tagline
+    art: <img className="pz-hero-img" src={ball} alt="Pepper" />,
+    title: "Practice. Progress. Thrive.",
     body: "Your own coach, your own plan, your own progress — built around how you play.",
   },
   {

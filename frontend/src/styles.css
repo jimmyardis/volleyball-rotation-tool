@@ -1,6 +1,6 @@
 :root {
-  /* Clean light theme: white surfaces on a soft gray page, near-black text,
-     ONE pink brand accent. Grays carry the structure; pink marks what's
+  /* Pepper brand (her B&W athletic logo): white surfaces on a soft gray
+     page, ONE ink-black accent. Grays carry the structure; ink marks what's
      active or highlighted (server, setter, selected). Green/red are reserved
      strictly for status (success / error) and court faults. */
   --bg:        #f7f7f8;   /* page background */
@@ -9,9 +9,9 @@
   --line:      #e4e4e9;   /* borders, dividers */
   --text:      #1c1c21;   /* primary text — near black */
   --dim:       #6f6f7a;   /* secondary text — gray */
-  --accent:    #d6336c;   /* the brand color — pink */
-  --accent-ink:#ffffff;   /* text that sits on pink */
-  --accent-soft: rgba(214, 51, 108, 0.08);
+  --accent:    #17171a;   /* the brand color — Pepper ink (B&W athletic logo) */
+  --accent-ink:#ffffff;   /* text that sits on the ink */
+  --accent-soft: rgba(23, 23, 26, 0.07);
   --accent-2:  #45454f;   /* charcoal — secondary emphasis */
   --good:      #2e8f63;   /* status: success */
   --bad:       #d24444;   /* status: error / faults */
@@ -718,3 +718,13 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
   .pz-assess-level { grid-area: level; text-align: right; }
   .pz-assess-row input[type="range"] { grid-area: slider; width: 100%; }
 }
+
+/* ---- Pepper brand (her logo: B&W athletic, italic wordmark) ---- */
+/* the ball art is a transparent-ink PNG (extracted from her logo) so it
+   sits on any background with no blend tricks */
+.pz-hero-img { width: min(280px, 72vw); display: block; }
+.pz-brand-ball { width: 84px; display: block; }
+.pz-auth-wordmark, .player-zone header h1 {
+  font-style: italic; font-weight: 800; letter-spacing: -0.03em;
+}
+.pz-slide h2 { font-style: italic; }
