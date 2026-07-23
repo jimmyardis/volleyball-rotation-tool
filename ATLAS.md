@@ -28,12 +28,13 @@ into both AI prompts. 72 backend tests green. Repo's .git was found MISSING
 repo) — restored from a GitHub clone, everything pushed properly.
 
 ## Next Action
-iOS: run the app on the daughter's real iPhone from Xcode (needs the family
-Apple Developer account signed into Xcode → Signing & Capabilities → pick
-the team; then plug in her phone and Run). Phase A sign-off = she signs in,
-chats with the coach, films a serve in-app. Then Phase B (app icon +
-splash are her calls — present options). Mac↔WSL note: nothing here needs a
-Railway deploy; webdist untouched.
+iOS: install on the DAUGHTER'S iPhone from Xcode (family Apple Developer
+account in Xcode → Signing & Capabilities → pick team; her phone on the
+cable, Developer Mode on, ⌘R). She verifies: welcome tour → create account
+→ coach chat → film a serve. She reviews the design page (link in session
+14b) and rules on icon B vs A/C. Then Phase C: TestFlight upload + internal
+group (external group fallback for her account if ASC team invite won't
+work for a minor). Mac↔WSL note: nothing here needs a Railway deploy.
 Also still open from session 13: have the daughter film one real serve in
 the Film Room on the live site and
 sanity-check feedback quality (the smoke test only verified format + honest
@@ -50,6 +51,24 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-22 (session 14b, Mac) — Phase B: icon, splash, app-like onboarding (90dd6c0)
+- Product owner (the daughter) asked for: our stab at icon + splash + a more
+  intuitive, "app"-like onboarding (disliked the Who-are-you chooser).
+- Native now launches straight into #player (chooser is web-only; Coach
+  tools still linked in-app). NEW Welcome.jsx: full-screen 3-slide swipe
+  tour (scroll-snap, haptic per slide, animated dots) → Get started /
+  sign-in; shows once per device. AuthScreen restyled full-screen w/ brand
+  mark + big inputs; Onboarding got step dots, haptics, phone-width slider
+  layout. All shared with the web #player route.
+- Icon (shipped): white line-volleyball on brand pink, generated from the
+  app's own Volleyball.jsx mark via headless Chrome; 2 alternates (pink-on-
+  cream; cropped "serve") kept in scratch + review page. Splash: mark +
+  wordmark on cream, all 3 slots. Verified: build + fresh install on the
+  iPhone 17 Pro sim — welcome tour + home-screen icon look right.
+- Review artifact for her (icons A/B/C, splash, screens):
+  https://claude.ai/code/artifact/432f3b46-3fdc-45a9-a3cd-a9c0bcd45124
+- DECISION pending her review: icon B vs A/C; tour copy tweaks welcome.
+- Next: install on HER phone (not Dad's) via Xcode; then TestFlight.
 ### 2026-07-22 (session 14, Mac) — Capacitor wrap: Phase A verified on simulator
 - First session on the MacBook (per HANDOFF-IOS.md). The previous Mac
   session CRASHED mid-wrap before committing or verifying anything; this
