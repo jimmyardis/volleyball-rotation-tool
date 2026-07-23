@@ -5,6 +5,16 @@ import { useEffect, useState } from "react";
 import { ROLES } from "../api.js";
 import { roleMeta } from "../roles.js";
 import { playerApi } from "./api.js";
+import { tap, success } from "../haptics.js";
+
+function StepDots({ step }) {
+  return (
+    <div className="pz-step-dots" aria-label={`Step ${step} of 2`}>
+      <span className={step === 1 ? "active" : "done"} />
+      <span className={step === 2 ? "active" : ""} />
+    </div>
+  );
+}
 
 export function AssessmentSliders({ skills, levelNames, ratings, onChange }) {
   return (
@@ -45,6 +55,7 @@ export default function Onboarding({ me, onDone }) {
       await playerApi.updateProfile({ position, level_band: levelBand });
       await playerApi.saveAssessment(ratings);
       try { await playerApi.generatePlan(); } catch { /* plan can be generated later */ }
+      success();
       onDone();
     } catch (e) {
       setError(e.message);
@@ -53,7 +64,8 @@ export default function Onboarding({ me, onDone }) {
   }
 
   return (
-    <div className="screen">
+    <div className="screen pz-onb">
+      <StepDots step={step} />
       {step === 1 && (
         <div className="card">
           <h2>What do you play?</h2>
@@ -65,7 +77,7 @@ export default function Onboarding({ me, onDone }) {
               return (
                 <button key={r.code} className={`pz-pos ${active ? "active" : ""}`}
                         style={{ "--pos-color": m.color, "--pos-ink": m.ink }}
-                        onClick={() => setPosition(r.code)}>
+                        onClick={() => { tap(); setPosition(r.code); }}>
                   <span className="pz-pos-code">{r.code}</span>
                   <span className="pz-pos-label">{r.label}</span>
                 </button>

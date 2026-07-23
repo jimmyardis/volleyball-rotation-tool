@@ -9,6 +9,9 @@ import "./styles.css";
 // the CSS treat .is-native like installed mode (safe areas, no URL bar).
 if (window.Capacitor?.isNativePlatform?.()) {
   document.documentElement.classList.add("is-native");
+  // The iOS app IS the Player Zone: launch straight into it, never the
+  // coach chooser (still reachable via the in-app "Coach tools" link).
+  if (!location.hash) location.hash = "#player";
 }
 
 // Two surfaces, one app: the coach tool (default) and the Player Zone

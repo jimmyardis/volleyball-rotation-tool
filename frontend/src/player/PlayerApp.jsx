@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { playerApi, getToken, setToken } from "./api.js";
 import AuthScreen from "./AuthScreen.jsx";
+import Welcome from "./Welcome.jsx";
 import Onboarding from "./Onboarding.jsx";
 import HomeScreen from "./HomeScreen.jsx";
 import CoachScreen from "./CoachScreen.jsx";
@@ -17,9 +18,15 @@ import ProfileScreen from "./ProfileScreen.jsx";
 
 const TABS = ["Home", "Coach", "Plan", "Train", "Film", "Progress", "Profile"];
 
+// The swipeable welcome tour shows once per device; after that, signed-out
+// users go straight to sign-in (with a link back to the tour).
+const WELCOME_SEEN = "pz_welcome_seen";
+
 export default function PlayerApp() {
   const [me, setMe] = useState(null);        // null = loading/anon
   const [authed, setAuthed] = useState(!!getToken());
+  const [authView, setAuthView] = useState(() =>
+    getToken() || localStorage.getItem(WELCOME_SEEN) ? "login" : "welcome");
   const [tab, setTab] = useState("Home");
   const [error, setError] = useState(null);
   // ONE coach conversation, shared by the floating bubble and the Coach tab
@@ -49,18 +56,26 @@ export default function PlayerApp() {
 
   return (
     <div className="app player-zone">
-      <header>
-        <h1>Player Zone</h1>
-        <div className="team-bar">
-          {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
-          {me && <button className="ghost" onClick={signOut}>Sign out</button>}
-          <a className="pz-switch" href="#" onClick={(e) => { e.preventDefault(); location.hash = ""; }}>Coach tools</a>
-        </div>
-      </header>
+      {authed && (
+        <header>
+          <h1>Player Zone</h1>
+          <div className="team-bar">
+            {me && <span className="pz-whoami">{me.user.display_name}{me.profile?.position ? ` · ${me.profile.position}` : ""}</span>}
+            {me && <button className="ghost" onClick={signOut}>Sign out</button>}
+            <a className="pz-switch" href="#" onClick={(e) => { e.preventDefault(); location.hash = ""; }}>Coach tools</a>
+          </div>
+        </header>
+      )}
 
       {error && <p className="error global">{error}</p>}
 
-      {!authed && <AuthScreen onAuthed={loadMe} />}
+      {!authed && authView === "welcome" && (
+        <Welcome onStart={(mode) => { localStorage.setItem(WELCOME_SEEN, "1"); setAuthView(mode); }} />
+      )}
+      {!authed && authView !== "welcome" && (
+        <AuthScreen key={authView} initialMode={authView} onAuthed={loadMe}
+                    onBack={() => setAuthView("welcome")} />
+      )}
 
       {authed && me && (!me.profile?.position || !me.has_assessment) && (
         <Onboarding me={me} onDone={loadMe} />

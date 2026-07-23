@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { playerApi, setToken } from "./api.js";
+import Volleyball from "../components/Volleyball.jsx";
+import { success } from "../haptics.js";
 
-export default function AuthScreen({ onAuthed }) {
-  const [mode, setMode] = useState("login");
+export default function AuthScreen({ onAuthed, initialMode = "login", onBack }) {
+  const [mode, setMode] = useState(initialMode);
   const [form, setForm] = useState({ username: "", password: "", display_name: "" });
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -17,6 +19,7 @@ export default function AuthScreen({ onAuthed }) {
         ? await playerApi.login({ username: form.username, password: form.password })
         : await playerApi.register(form);
       setToken(res.token);
+      success();
       onAuthed();
     } catch (err) {
       setError(err.message);
@@ -27,8 +30,12 @@ export default function AuthScreen({ onAuthed }) {
 
   return (
     <div className="screen pz-auth">
-      <div className="card pz-auth-card">
-        <h2>{mode === "login" ? "Welcome back" : "Create your player account"}</h2>
+      <div className="pz-auth-card">
+        <div className="pz-auth-brand">
+          <Volleyball size={54} />
+          <span className="pz-auth-wordmark">Player Zone</span>
+        </div>
+        <h2>{mode === "login" ? "Welcome back" : "Create your account"}</h2>
         <p className="hint">
           Your own coach, plan, and progress — no coach account needed.
         </p>
@@ -39,7 +46,7 @@ export default function AuthScreen({ onAuthed }) {
           )}
           <input type="password" placeholder="Password (6+ characters)" autoComplete={mode === "login" ? "current-password" : "new-password"}
                  value={form.password} onChange={set("password")} />
-          <button type="submit" disabled={busy}>
+          <button type="submit" className="pz-cta" disabled={busy}>
             {busy ? "One sec…" : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
@@ -47,6 +54,9 @@ export default function AuthScreen({ onAuthed }) {
         <button className="link inline-link" onClick={() => { setMode(mode === "login" ? "register" : "login"); setError(null); }}>
           {mode === "login" ? "New here? Create an account" : "Already have an account? Sign in"}
         </button>
+        {onBack && (
+          <button className="link inline-link pz-auth-back" onClick={onBack}>‹ Back to the tour</button>
+        )}
       </div>
     </div>
   );

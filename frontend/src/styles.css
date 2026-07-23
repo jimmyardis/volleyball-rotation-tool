@@ -616,3 +616,105 @@ input[type="range"] { accent-color: var(--accent); background: transparent; bord
 .pz-film-conf { font-size: 0.8rem; margin-top: 0.5rem; }
 .pz-film-past-head { display: flex; width: 100%; gap: 0.5rem; align-items: baseline; background: none; color: var(--text); border: none; padding: 0; font-size: 0.9rem; text-align: left; }
 .pz-film-past-issue { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ================= Player Zone mobile app (Phase B) =================
+   The welcome tour, sign-in, and setup steps as full-screen, touch-first
+   surfaces. Shared with the web #player route so both stay consistent. */
+
+.pz-welcome {
+  position: fixed; inset: 0; z-index: 60; background: var(--bg);
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+}
+.pz-carousel {
+  flex: 1; display: flex; overflow-x: auto; overflow-y: hidden;
+  scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.pz-carousel::-webkit-scrollbar { display: none; }
+.pz-slide {
+  flex: 0 0 100%; min-width: 100%; scroll-snap-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 1.5rem 2.25rem; gap: 0.25rem;
+}
+.pz-slide h2 { font-size: 1.65rem; letter-spacing: -0.02em; margin: 1.5rem 0 0.35rem; }
+.pz-slide p { color: var(--dim); font-size: 1.02rem; line-height: 1.5; margin: 0; max-width: 30rem; }
+
+.pz-hero-mark { color: var(--accent); }
+
+.pz-mock-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px;
+  box-shadow: var(--shadow); padding: 1.1rem 1.2rem; display: flex;
+  flex-direction: column; gap: 0.8rem; width: min(21rem, 80vw);
+}
+.pz-mock-row { display: flex; align-items: center; gap: 0.7rem; font-size: 0.95rem; text-align: left; }
+.pz-mock-row.done { color: var(--dim); }
+.pz-mock-tick {
+  flex: none; width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--line); display: inline-flex; align-items: center;
+  justify-content: center; font-size: 0.8rem; font-weight: 800;
+}
+.pz-mock-row.done .pz-mock-tick { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+.pz-mock-film {
+  display: flex; flex-direction: column; gap: 0.7rem; align-items: center;
+}
+.pz-mock-lens {
+  width: min(13rem, 55vw); aspect-ratio: 3 / 4; border-radius: 18px;
+  background: var(--panel); border: 1px solid var(--line); box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center; color: var(--accent);
+}
+.pz-mock-frames { display: flex; gap: 0.45rem; }
+.pz-mock-frames span {
+  width: 2.6rem; height: 1.9rem; border-radius: 6px;
+  background: var(--accent-soft); border: 1.5px solid var(--accent);
+}
+
+.pz-dots { display: flex; justify-content: center; gap: 0.45rem; margin: 0.9rem 0; }
+.pz-dot {
+  width: 8px; height: 8px; border-radius: 4px; background: var(--line);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+.pz-dot.active { width: 22px; background: var(--accent); }
+
+.pz-welcome-actions {
+  display: flex; flex-direction: column; align-items: stretch; gap: 0.4rem;
+  padding: 0 1.5rem; max-width: 26rem; width: 100%; margin: 0 auto;
+}
+.pz-cta {
+  font-size: 1.05rem; padding: 0.95rem 1rem; border-radius: 14px; font-weight: 700;
+}
+.pz-welcome-actions .link { padding: 0.7rem; font-size: 0.95rem; text-align: center; align-self: center; }
+
+/* sign-in as a centered full-height surface with the brand on top */
+.pz-auth { margin-top: 0; min-height: 70vh; align-items: center; }
+.pz-auth-card { max-width: 420px; width: 100%; background: none; border: none; box-shadow: none; text-align: center; }
+.pz-auth-card h2 { margin-bottom: 0.25rem; }
+.pz-auth-brand {
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  color: var(--accent); margin-bottom: 1.5rem;
+}
+.pz-auth-wordmark { font-weight: 800; letter-spacing: -0.02em; color: var(--text); font-size: 1.15rem; }
+.pz-auth-form { display: flex; flex-direction: column; gap: 0.6rem; margin: 1rem 0 0.5rem; }
+.pz-auth-form input { padding: 0.85rem 1rem; border-radius: 12px; font-size: 1rem; }
+.pz-auth-back { margin-top: 1.25rem; color: var(--dim); }
+
+/* setup steps (position + self-assessment) */
+.pz-step-dots { display: flex; justify-content: center; gap: 0.45rem; margin: 0.75rem 0 1rem; }
+.pz-step-dots span { width: 8px; height: 8px; border-radius: 4px; background: var(--line); transition: width 0.25s ease, background 0.25s ease; }
+.pz-step-dots span.active { width: 22px; background: var(--accent); }
+.pz-step-dots span.done { background: var(--accent); opacity: 0.45; }
+.pz-onb .card { border-radius: 16px; }
+.pz-onb input[type="range"] { accent-color: var(--accent); }
+
+/* self-assessment rows: stack on phones so sliders get full width */
+@media (max-width: 640px) {
+  .pz-assess-row {
+    grid-template-columns: 1fr auto; grid-template-areas: "name level" "slider slider";
+    row-gap: 0.3rem; padding: 0.35rem 0;
+  }
+  .pz-assess-name { grid-area: name; font-weight: 600; }
+  .pz-assess-level { grid-area: level; text-align: right; }
+  .pz-assess-row input[type="range"] { grid-area: slider; width: 100%; }
+}
