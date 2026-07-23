@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-21 (session 13b) |
+| Last Active | 2026-07-22 (session 14, Mac) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -10,7 +10,13 @@
 | Type | Full-stack learning project (3 phases) |
 
 ## Current State (jump to latest Session Log entry for detail)
-Session 13 (2026-07-20): FILM ROOM shipped — video self-assessment for all
+Session 14 (2026-07-22, Mac): iOS PHASE A DONE — Capacitor 8 wrap ("Player
+Zone", com.jimmyardis.PlayerZone) builds and runs on the iPhone 17 Pro
+simulator: landing screen renders, safe areas respected, native API base +
+haptics + Info.plist permission strings in place. Committed + pushed from
+the Mac (312529c). Not yet verified: sign-in/chat/Film-Room on a real
+device (needs credentials + her phone). Session 13 (2026-07-20): FILM ROOM
+shipped — video self-assessment for all
 six ball skills (browser samples ~10 frames + runs MediaPipe pose locally,
 raw video never uploaded; backend computes deterministic serve metrics and
 gets rubric-grounded structured feedback from Claude vision; new Film tab +
@@ -22,7 +28,14 @@ into both AI prompts. 72 backend tests green. Repo's .git was found MISSING
 repo) — restored from a GitHub clone, everything pushed properly.
 
 ## Next Action
-Have the daughter film one real serve in the Film Room on the live site and
+iOS: run the app on the daughter's real iPhone from Xcode (needs the family
+Apple Developer account signed into Xcode → Signing & Capabilities → pick
+the team; then plug in her phone and Run). Phase A sign-off = she signs in,
+chats with the coach, films a serve in-app. Then Phase B (app icon +
+splash are her calls — present options). Mac↔WSL note: nothing here needs a
+Railway deploy; webdist untouched.
+Also still open from session 13: have the daughter film one real serve in
+the Film Room on the live site and
 sanity-check feedback quality (the smoke test only verified format + honest
 cant_tell behavior on junk frames — no real clip has been reviewed yet).
 Still open: USER MUST REGISTER THE FIRST COACH ACCOUNT on the live site —
@@ -37,6 +50,26 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-22 (session 14, Mac) — Capacitor wrap: Phase A verified on simulator
+- First session on the MacBook (per HANDOFF-IOS.md). The previous Mac
+  session CRASHED mid-wrap before committing or verifying anything; this
+  session recovered it. Root cause of the machine-wide failures: an
+  orphaned 14-day-old claude process holding 985 zombie children had
+  exhausted the per-user process table (every fork() failed — git push,
+  clang, everything). Killed it; system healthy.
+- Recovered work, all intact and now committed (312529c): Capacitor 8
+  project in frontend/ios (SPM, no Pods), appId com.jimmyardis.PlayerZone,
+  app name "Player Zone"; apiBase.js (native shell → Railway directly, web
+  unchanged); haptics.js + PlanScreen ticks; html.is-native safe-area CSS
+  (WKWebView reports display-mode "browser", not standalone); Info.plist
+  camera/mic/photo strings with the on-device-video privacy story; splash
+  + keyboard config in capacitor.config.json.
+- Verified: xcodebuild succeeds; app installs, launches, and renders
+  correctly on the iPhone 17 Pro simulator (landing chooser, safe areas,
+  brand styles). NOT yet verified: sign-in / coach chat / Film Room —
+  needs credentials and a real phone (UI automation on the sim needs
+  accessibility permissions this environment doesn't have).
+- Machine split respected: no backend, no webdist, no Railway.
 ### 2026-07-21 (session 13b) — iOS prep: handoff spec, account deletion (deployed)
 - Decision: iPhone app = CAPACITOR WRAP of the existing frontend (not an RN
   rewrite), built on the wife's MacBook under the user's Apple Developer
