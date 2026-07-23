@@ -15,8 +15,10 @@ export default function CoachAuth({ onAuthed, onBack, initialMode = "login" }) {
 
   async function submit(e) {
     e.preventDefault();
-    setBusy(true);
     setError(null);
+    if (!username.trim()) return setError("Pick a username first.");
+    if (password.length < 6) return setError("Password needs at least 6 characters.");
+    setBusy(true);
     try {
       const body = { username, password, display_name: displayName };
       const res = creating ? await api.coachRegister(body) : await api.coachLogin(body);
@@ -49,7 +51,10 @@ export default function CoachAuth({ onAuthed, onBack, initialMode = "login" }) {
                  autoComplete={creating ? "new-password" : "current-password"}
                  onChange={(e) => setPassword(e.target.value)} />
           {error && <p className="error">{error}</p>}
-          <button className="primary" disabled={busy || !username || password.length < 6}>
+          {password.length > 0 && password.length < 6 && (
+            <p className="hint">Password needs at least 6 characters.</p>
+          )}
+          <button className="primary" disabled={busy}>
             {creating ? "Create account" : "Sign in"}
           </button>
         </form>
