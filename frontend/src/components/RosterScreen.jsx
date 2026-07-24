@@ -90,6 +90,7 @@ export default function RosterScreen({ teamId, players, reload }) {
   const [importRows, setImportRows] = useState(null); // parsed CSV preview, null = closed
   const [importBusy, setImportBusy] = useState(false);
   const [spherePick, setSpherePick] = useState(null); // player tapped on the sphere
+  const [showAll, setShowAll] = useState(false);      // card grid, collapsed by default
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -385,6 +386,13 @@ export default function RosterScreen({ teamId, players, reload }) {
 
       {players.length === 0 && !formOpen && <p className="empty">No players yet — tap “+ New player” to add your first.</p>}
 
+      {players.length > 0 && (
+        <button className="ghost roster-toggle" onClick={() => setShowAll(!showAll)}>
+          {showAll ? "Hide player cards" : `Show all player cards (${players.length})`}
+        </button>
+      )}
+
+      {(showAll || editingId != null) && (
       <div className="player-cards">
         {players.map((p) => {
           const meta = roleMeta(p.primary_role);
@@ -418,6 +426,7 @@ export default function RosterScreen({ teamId, players, reload }) {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

@@ -66,29 +66,36 @@ export default function SimulationScreen({ lineups, team, onTeamChanged }) {
     <div className="screen">
       <h2>Simulate</h2>
 
-      <div className="card sim-controls">
-        <label>
-          Lineup:{" "}
-          <select value={lineupId ?? ""} onChange={(e) => { setLineupId(Number(e.target.value)); setBatch(null); }}>
-            {lineups.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.system})</option>)}
-          </select>
-        </label>
-        <div className="slider-field">
-          <span>Opponent strength: <strong>{opponent}</strong></span>
-          <input type="range" min="20" max="95" value={opponent}
-                 onChange={(e) => { setOpponent(Number(e.target.value)); setBatch(null); }} />
-        </div>
-        {team && (
-          <label title="Scales unforced errors for both sides — rec ball is decided by mistakes, college ball is earned.">
-            Level:{" "}
-            <select value={level} onChange={(e) => changeLevel(e.target.value)}>
-              {LEVELS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+      <div className="card sim-setup">
+        <span className="pz-card-title">Match setup</span>
+        <div className="sim-setup-grid">
+          <label className="sim-field">
+            <span className="sim-field-label">Your lineup</span>
+            <select value={lineupId ?? ""} onChange={(e) => { setLineupId(Number(e.target.value)); setBatch(null); }}>
+              {lineups.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.system})</option>)}
             </select>
           </label>
-        )}
-        <div className="phase-tabs">
-          <button className={mode === "watch" ? "active" : ""} onClick={() => setMode("watch")}>Watch a game</button>
-          <button className={mode === "analyze" ? "active" : ""} onClick={() => setMode("analyze")}>Analyze rotations</button>
+          <label className="sim-field">
+            <span className="sim-field-label">Opponent strength — <strong>{opponent}</strong></span>
+            <input type="range" min="20" max="95" value={opponent}
+                   onChange={(e) => { setOpponent(Number(e.target.value)); setBatch(null); }} />
+          </label>
+          {team && (
+            <label className="sim-field" title="Scales unforced errors for both sides — rec ball is decided by mistakes, college ball is earned.">
+              <span className="sim-field-label">Level of play</span>
+              <select value={level} onChange={(e) => changeLevel(e.target.value)}>
+                {LEVELS.map((l) => <option key={l.code} value={l.code}>{l.label}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
+        <div className="sim-modes">
+          <button className={mode === "watch" ? "active" : "ghost"} onClick={() => setMode("watch")}>
+            ▶ Watch a game
+          </button>
+          <button className={mode === "analyze" ? "active" : "ghost"} onClick={() => setMode("analyze")}>
+            📊 Analyze rotations
+          </button>
         </div>
       </div>
 

@@ -7,6 +7,7 @@ const SYSTEMS = ["5-1", "6-2", "4-2"];
 
 export default function LineupBuilder({ teamId, players, lineups, reload, onView }) {
   const [newLineup, setNewLineup] = useState({ name: "", system: "5-1", notes: "" });
+  const [creating, setCreating] = useState(false);   // "+ Lineup" opens the form
   const [selectedId, setSelectedId] = useState(null);
   const [assign, setAssign] = useState({}); // zone -> player_id
   const [error, setError] = useState(null);
@@ -34,6 +35,7 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
         notes: newLineup.notes || null,
       });
       setNewLineup({ name: "", system: "5-1", notes: "" });
+      setCreating(false);
       await reload();
       setSelectedId(lineup.id);
       setAssign({});
@@ -69,25 +71,18 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
 
   return (
     <div className="screen">
-      <h2>Lineups</h2>
-
-      <div className="two-col">
+      <div className="screen-head">
         <div>
-          <h3>Your lineups</h3>
-          <ul className="lineup-list">
-            {lineups.length === 0 && <li className="empty">No lineups yet.</li>}
-            {lineups.map((l) => (
-              <li key={l.id} className={l.id === selectedId ? "active" : ""}>
-                <button className="link" onClick={() => setSelectedId(l.id)}>
-                  {l.name} <span className="tag">{l.system}</span>
-                </button>
-                <button className="ghost danger" onClick={() => remove(l.id)}>Delete</button>
-              </li>
-            ))}
-          </ul>
+          <h2>Lineups</h2>
+          <p className="hint">Name it, pick a system, drag your six onto the court.</p>
+        </div>
+        {!creating && <button onClick={() => setCreating(true)}>+ Lineup</button>}
+      </div>
 
-          <form className="card" onSubmit={createLineup}>
-            <h4>New lineup</h4>
+      {creating && (
+        <form className="card" onSubmit={createLineup}>
+          <h4 className="form-title">New lineup</h4>
+          <div className="form-row">
             <input
               placeholder="Name (e.g. 5-1 vs tall teams)"
               value={newLineup.name}
@@ -100,11 +95,25 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
               {SYSTEMS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <button type="submit">Create</button>
-          </form>
-        </div>
+            <button type="button" className="ghost" onClick={() => setCreating(false)}>Cancel</button>
+          </div>
+        </form>
+      )}
 
-        <div>
-          {!selected && <p className="hint">Select or create a lineup to set its starting six.</p>}
+      <ul className="lineup-list">
+        {lineups.length === 0 && !creating && <li className="empty">No lineups yet — tap “+ Lineup”.</li>}
+        {lineups.map((l) => (
+          <li key={l.id} className={l.id === selectedId ? "active" : ""}>
+            <button className="link" onClick={() => setSelectedId(l.id === selectedId ? null : l.id)}>
+              {l.name} <span className="tag">{l.system}</span>
+            </button>
+            <button className="ghost danger" onClick={() => remove(l.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+
+      <div>
+          {!selected && lineups.length > 0 && <p className="hint">Tap a lineup to set its starting six.</p>}
           {selected && (
             <>
               <h3>
@@ -138,7 +147,6 @@ export default function LineupBuilder({ teamId, players, lineups, reload, onView
             </>
           )}
           {error && <p className="error">{error}</p>}
-        </div>
       </div>
     </div>
   );

@@ -869,7 +869,7 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 }
 
 /* ---- player tab bar as a net across the screen (her spec) ---- */
-.player-zone nav.tabs {
+.app nav.tabs {
   background:
     repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 22px),
     repeating-linear-gradient(0deg, var(--line) 0 1px, transparent 1px 14px);
@@ -878,11 +878,11 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
   border-radius: 0 0 8px 8px;
   padding: 0.15rem 0.4rem;
 }
-.player-zone nav.tabs button {
+.app nav.tabs button {
   background: var(--panel); border-radius: 8px; margin: 0.3rem 0.1rem;
   border-bottom: 2px solid transparent;
 }
-.player-zone nav.tabs button.active {
+.app nav.tabs button.active {
   border-bottom-color: var(--pop); box-shadow: var(--shadow);
 }
 
@@ -926,4 +926,26 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 }
 @media (max-width: 700px) {
   .sphere-card { position: static; width: auto; margin-top: 0.5rem; }
+}
+
+/* roster: sphere is the roster — cards live behind this toggle */
+.roster-toggle { display: block; margin: 0.5rem auto; }
+
+/* simulate: match setup, de-clunked */
+.sim-setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.9rem; margin: 0.4rem 0 0.9rem; }
+.sim-field { display: flex; flex-direction: column; gap: 0.3rem; }
+.sim-field-label { font-size: 0.82rem; color: var(--dim); font-weight: 600; }
+.sim-modes { display: flex; gap: 0.5rem; border-top: 1px solid var(--line); padding-top: 0.8rem; }
+.sim-modes button { flex: 1; padding: 0.7rem; font-size: 0.95rem; }
+.sim-modes button.active { background: var(--accent); color: var(--accent-ink); border: none; }
+
+/* team notebook: spiral binder down the left edge */
+.notebook-page { position: relative; padding-left: 3rem; }
+.notebook-page::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2.1rem;
+  border-right: 2px solid var(--line);
+  background:
+    radial-gradient(circle at 55% 50%, transparent 4px, var(--dim) 4.5px 6px, transparent 6.5px)
+    50% 0 / 100% 30px repeat-y;
+  opacity: 0.55; border-radius: var(--radius) 0 0 var(--radius);
 }

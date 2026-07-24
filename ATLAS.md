@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 17, WSL) |
+| Last Active | 2026-07-23 (session 17b, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,18 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 17b, WSL) — coach-side layout pass (deployed)
+- Her list, all shipped: ROSTER — sphere IS the roster; card grid behind a
+  "Show all player cards (N)" toggle (auto-shows while editing). LINEUPS —
+  "+ Lineup" button opens the create form; lineups listed full-width below
+  (tap to open the starting-six editor; two-col layout retired). SIMULATE —
+  de-clunked into a "Match setup" card: labeled field grid (lineup /
+  opponent slider / level) + two big Watch/Analyze mode buttons. NOTES —
+  spiral-binder accent down the notebook's left edge (CSS repeating
+  radial-gradient rings, .notebook-page). NET TABS extended to the coach
+  side (selectors generalized .player-zone->.app).
+- Verify note: Simulate needs a lineup to show setup (scratch team got one
+  seeded via API).
 ### 2026-07-23 (session 17, WSL) — coach gotcha: the roster sphere (deployed)
 - HER SPEC for the coach side's hook: a dynamic sphere you can move around,
   a dot per player, tap a dot -> their card (skills + position). Built as

@@ -109,7 +109,7 @@ export default function NotesScreen({ teamId, players, lineups }) {
         Everything you've jotted — team entries plus the notes pinned to players and lineups.
         Pin from a player's card (Roster) or a lineup (Rotations).
       </p>
-      <div className="card">
+      <div className="card notebook-page">
         <AddNote teamId={teamId} attach={{}} placeholder="New team note — practice focus, matchup plans, reminders…"
                  onAdded={(n) => setNotes((ns) => [n, ...ns])} />
         {notes.length === 0 ? (
