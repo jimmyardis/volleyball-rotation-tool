@@ -35,7 +35,8 @@ import FilmScreen from "./FilmScreen.jsx";
 import ProgressScreen from "./ProgressScreen.jsx";
 import ProfileScreen from "./ProfileScreen.jsx";
 
-const TABS = ["Home", "Coach", "Plan", "Train", "Film", "Progress", "Profile"];
+// Coach leads: the combined chat + film device is the app's hook (her call)
+const TABS = ["Coach", "Home", "Plan", "Train", "Film", "Progress", "Profile"];
 
 // The swipeable welcome tour shows once per device; after that, signed-out
 // users go straight to sign-in (with a link back to the tour).
@@ -68,7 +69,7 @@ export default function PlayerApp() {
   // the mode (login/register) chosen on the tour, carried through the
   // coach-or-player question that follows it
   const [pendingMode, setPendingMode] = useState("register");
-  const [tab, setTab] = useState("Home");
+  const [tab, setTab] = useState("Coach");
   const [error, setError] = useState(null);
   // ONE coach conversation, shared by the floating bubble and the Coach tab
   const [coachThread, setCoachThread] = useState([]);
@@ -98,7 +99,7 @@ export default function PlayerApp() {
     setToken(null);
     setMe(null);
     setAuthed(false);
-    setTab("Home");
+    setTab("Coach");
   }
 
   return (

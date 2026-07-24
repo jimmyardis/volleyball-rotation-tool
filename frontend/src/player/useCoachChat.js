@@ -18,7 +18,9 @@ export function useCoachChat(messages, setMessages) {
     setMessages(next);
     setBusy(true);
     try {
-      const res = await playerApi.coachChat(next);
+      // film messages carry a rich `film` payload for rendering — the API
+      // only wants role + content (the text summary keeps context)
+      const res = await playerApi.coachChat(next.map(({ role, content }) => ({ role, content })));
       setMessages([...next, { role: "assistant", content: res.reply }]);
       return true;
     } catch (e) {

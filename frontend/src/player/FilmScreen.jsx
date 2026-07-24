@@ -118,7 +118,7 @@ export default function FilmScreen({ me }) {
   );
 }
 
-function FeedbackCard({ a, big = false }) {
+export function FeedbackCard({ a, big = false }) {
   const fb = a.feedback || {};
   const m = a.metrics;
   return (

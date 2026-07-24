@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 15c, WSL) |
+| Last Active | 2026-07-23 (session 16, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,25 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 16, WSL) — the gotcha moment: chat+film ONE device (deployed)
+- Her spec (daughter driving; she flagged that most messages are her):
+  player-side revamp starts with the hook — the AI coach + film upload
+  combined like any modern AI chat. Built: CoachScreen is now a full
+  chat device (bubbles, pinned input bar) with a CAMERA BUTTON in the
+  input row; tapping it opens skill chips + how-to-film + choose/record,
+  and the review lands IN the conversation (user "sent a clip" turn +
+  assistant turn rendering FeedbackCard, now exported from FilmScreen).
+  Thread text summary of each film review keeps chat-API context
+  continuous (useCoachChat strips non-{role,content} keys before POST).
+- Coach is the FIRST tab and default view after sign-in (tabs reordered).
+- First-time spotlight (her mid-turn add): pulsing ring on the camera
+  button + bobbing callout bubble "Send a video of any rep — I'll analyze
+  it"; retires permanently on first camera tap (localStorage
+  pz_cam_tip_seen). NOTE: infinite bob animation makes playwright deem the
+  element unstable — click(force=True) in tests.
+- Verified live: empty-state hook copy, camera panel (6 skills + tips),
+  real chat round-trip (reply referenced her actual checklist), tip
+  persistence across reload. Film tab kept as the history/detail view.
 ### 2026-07-23 (session 15c, WSL) — her flow spec: ONE front door (deployed)
 - ROUND 6: her own icon art is in — she dropped a side-view orange/black
   butterfly + a proper volleyball line-icon in Downloads (white-bg PNGs).
