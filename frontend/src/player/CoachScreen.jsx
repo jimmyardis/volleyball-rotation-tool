@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { playerApi } from "./api.js";
 import { useCoachChat } from "./useCoachChat.js";
 import { extractFrames, extractPose } from "./filmroom.js";
-import { FeedbackCard } from "./FilmScreen.jsx";
+import { FeedbackCard } from "./FeedbackCard.jsx";
 
 function CameraIcon({ size = 20 }) {
   return (

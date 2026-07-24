@@ -90,7 +90,6 @@ export default function Onboarding({ me, onDone, theme, setTheme }) {
     try {
       await playerApi.updateProfile({ position, level_band: levelBand, theme });
       await playerApi.saveAssessment(ratings);
-      try { await playerApi.generatePlan(); } catch { /* plan can be generated later */ }
       success();
       onDone();
     } catch (e) {
@@ -161,7 +160,7 @@ export default function Onboarding({ me, onDone, theme, setTheme }) {
           <div className="form-row">
             <button className="ghost" onClick={() => setStep(2)}>Back</button>
             <button onClick={finish} disabled={busy}>
-              {busy ? "Building your plan…" : "Finish — build my plan"}
+              {busy ? "Setting you up…" : "Finish — let's train"}
             </button>
           </div>
           {error && <p className="error">{error}</p>}

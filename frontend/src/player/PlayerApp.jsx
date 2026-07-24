@@ -10,6 +10,7 @@ import WhoAreYou from "../components/WhoAreYou.jsx";
 import { Monarch, MonarchPerch } from "../components/Monarchs.jsx";
 import { Cloud, CloudDrift } from "../components/Clouds.jsx";
 import Volleyball from "../components/Volleyball.jsx";
+import BallSpinner from "../components/BallSpinner.jsx";
 
 const LOOKS = ["classic", "intense", "sky"];
 export function LookButtonLabel({ theme }) {
@@ -26,17 +27,14 @@ export function ThemeMark({ theme, size = 20 }) {
   return <Volleyball size={size} style={style} />;
 }
 import Onboarding from "./Onboarding.jsx";
-import HomeScreen from "./HomeScreen.jsx";
 import CoachScreen from "./CoachScreen.jsx";
 import PlayerCoachBubble from "./PlayerCoachBubble.jsx";
-import PlanScreen from "./PlanScreen.jsx";
 import TrainScreen from "./TrainScreen.jsx";
-import FilmScreen from "./FilmScreen.jsx";
 import ProgressScreen from "./ProgressScreen.jsx";
 import ProfileScreen from "./ProfileScreen.jsx";
 
 // Coach leads: the combined chat + film device is the app's hook (her call)
-const TABS = ["Coach", "Home", "Plan", "Train", "Film", "Progress", "Profile"];
+const TABS = ["Coach", "Train", "Progress", "Profile"];
 
 // The swipeable welcome tour shows once per device; after that, signed-out
 // users go straight to sign-in (with a link back to the tour).
@@ -161,11 +159,8 @@ export default function PlayerApp() {
               <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}</button>
             ))}
           </nav>
-          {tab === "Home" && <HomeScreen me={me} goTo={setTab} />}
           {tab === "Coach" && <CoachScreen me={me} messages={coachThread} setMessages={setCoachThread} />}
-          {tab === "Plan" && <PlanScreen me={me} goTo={setTab} />}
           {tab === "Train" && <TrainScreen me={me} />}
-          {tab === "Film" && <FilmScreen me={me} />}
           {tab === "Progress" && <ProgressScreen me={me} reloadMe={loadMe} />}
           {tab === "Profile" && <ProfileScreen me={me} reloadMe={loadMe} onSignOut={signOut} theme={theme} setTheme={setTheme} />}
 
@@ -180,7 +175,7 @@ export default function PlayerApp() {
         </>
       )}
 
-      {authed && !me && !error && <p className="hint big-hint">Loading…</p>}
+      {authed && !me && !error && <BallSpinner label="Warming up…" />}
     </div>
   );
 }

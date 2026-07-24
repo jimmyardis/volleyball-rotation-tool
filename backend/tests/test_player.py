@@ -154,7 +154,9 @@ def test_coach_context_assembly(client, auth, monkeypatch):
 
     assert "Position: OH" in ctx
     assert "Attacking / Spiking" in ctx and "2/5" in ctx
-    assert "Active goal" in ctx
+    # plans/goals no longer surface in the app or the chat context (UI revamp
+    # 2026-07-23: activity-log-first; plan endpoints remain but are unsurfaced)
+    assert "Active goal" not in ctx
     assert "kept hitting the net" in ctx
 
     keys = player._mentioned_skills("why do my serves keep going into the net when I spike?")

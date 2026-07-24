@@ -867,3 +867,30 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 @media (prefers-reduced-motion: reduce) {
   .pz-cam-btn.spotlight, .pz-cam-callout { animation: none; }
 }
+
+/* ---- player tab bar as a net across the screen (her spec) ---- */
+.player-zone nav.tabs {
+  background:
+    repeating-linear-gradient(90deg, var(--line) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(0deg, var(--line) 0 1px, transparent 1px 14px);
+  border-top: 3px solid var(--accent-2);   /* the net tape */
+  border-bottom: 1px solid var(--line);
+  border-radius: 0 0 8px 8px;
+  padding: 0.15rem 0.4rem;
+}
+.player-zone nav.tabs button {
+  background: var(--panel); border-radius: 8px; margin: 0.3rem 0.1rem;
+  border-bottom: 2px solid transparent;
+}
+.player-zone nav.tabs button.active {
+  border-bottom-color: var(--pop); box-shadow: var(--shadow);
+}
+
+/* ---- her volleyball, spinning = loading ---- */
+.ball-spinner {
+  display: flex; flex-direction: column; align-items: center; gap: 0.6rem;
+  padding: 2.5rem 0; text-align: center;
+}
+.ball-spinner-ball { display: inline-flex; animation: ball-spin 1.1s linear infinite; }
+@keyframes ball-spin { to { rotate: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .ball-spinner-ball { animation: none; } }

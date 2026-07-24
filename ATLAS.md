@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 16, WSL) |
+| Last Active | 2026-07-23 (session 16b, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,23 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 16b, WSL) — player revamp: 4 tabs, activity-first Train (deployed)
+- Her layout pass: PLAN TAB (and Home + Film tabs) RETIRED — player nav is
+  now Coach / Train / Progress / Profile. Plan endpoints + progression.py
+  remain server-side but are unsurfaced; onboarding no longer generates a
+  plan ("Finish — let's train"); PLAYER_COACH_SYSTEM feature list + chat
+  context rewritten with NO plan/goal/checklist references (context test
+  now asserts their absence); Progress stat "blocks mastered" ->
+  "sessions logged". HomeScreen/PlanScreen/FilmScreen deleted;
+  FeedbackCard extracted to player/FeedbackCard.jsx (chat renders it).
+- TRAIN = "+ Log an activity" button opening a form (her spec): skill
+  DROPDOWN, minutes, drill chips filtered to the chosen skill, quality
+  slider + notes. Recent activities + drill library below.
+- Player tab bar drawn as a NET across the screen (mesh background via
+  repeating-linear-gradients + accent-2 top tape; tabs sit as panels on
+  the net). Loading is now her volleyball SPINNING (BallSpinner; coach
+  Loader delegates to it too).
+- Verified: 4 tabs render, log flow saves + lists, 74 backend tests.
 ### 2026-07-23 (session 16, WSL) — the gotcha moment: chat+film ONE device (deployed)
 - Her spec (daughter driving; she flagged that most messages are her):
   player-side revamp starts with the hook — the AI coach + film upload

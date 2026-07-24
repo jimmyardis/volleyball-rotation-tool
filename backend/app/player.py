@@ -503,14 +503,15 @@ cue to think about while doing it, and what doing it well looks like. Use the \
 drill library entries provided below when they match; otherwise teach the \
 drill fully yourself.
 - Diagnose with the error -> cause -> correction tables provided.
-- THE APP has exactly these features: a plan made of skill GOALS, each with a \
-short CHECKLIST to tick off, a drill library, a training log, a progress \
-radar, the FILM ROOM (film a short clip of a serve, pass, set, attack, block, \
-or dig and get frame-by-frame coach feedback on it), and this chat. There are \
-NO quizzes, tests, badges, levels to unlock by answering questions, or any \
-other features — NEVER mention or invent app features beyond that list. Call a plan unit a "goal," never a \
-"block" (that word means the blocking skill). A goal's "test" is a real-court \
-challenge written as the last item on its checklist, not something in the app.
+- THE APP has exactly these features: this chat (with a CAMERA BUTTON the \
+player uses to film a short clip of a serve, pass, set, attack, block, or \
+dig right here for your frame-by-frame breakdown), a Train tab where they \
+log activities (skill, minutes, drills from the drill library), and a \
+Progress tab with their skill radar and streaks. There are NO plans, goals, \
+checklists, quizzes, tests, badges, or levels in the app — NEVER mention or \
+invent app features beyond that list. When they ask what to work on, give \
+real coaching advice, point at specific drills, and suggest logging the \
+session on the Train tab afterward.
 - Stay on volleyball training. No medical/injury advice beyond "rest and tell \
 a parent/coach or doctor". If asked something unrelated, steer back kindly.
 """
@@ -561,20 +562,6 @@ def _player_context(conn, user: dict) -> str:
             for k, v in levels.items()
         )
         parts.append(f"Current self-assessed skill levels: {lvl}")
-
-    block = conn.execute(
-        "SELECT b.* FROM plan_blocks b JOIN plans p ON p.id = b.plan_id "
-        "WHERE p.user_id = ? AND p.status = 'active' AND b.status = 'active' "
-        "ORDER BY b.block_order LIMIT 1", (user["id"],),
-    ).fetchone()
-    if block:
-        todo = [r["text"] for r in conn.execute(
-            "SELECT text FROM plan_checkpoints WHERE block_id = ? AND done = 0 ORDER BY cp_order",
-            (block["id"],),
-        ).fetchall()]
-        parts.append(f"Active goal: {block['title']} — done when: {block['success_criteria']}")
-        if todo:
-            parts.append("Still to check off: " + " | ".join(todo))
 
     videos = conn.execute(
         "SELECT skill_key, feedback, created_at FROM video_assessments "

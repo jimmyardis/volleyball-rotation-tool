@@ -71,7 +71,7 @@ export default function ProgressScreen({ me, reloadMe }) {
             <div className="pz-stat"><span className="pz-stat-num">{prog?.week_streak ?? 0}</span><span className="pz-stat-label">week streak</span></div>
             <div className="pz-stat"><span className="pz-stat-num">{prog?.sessions_28d ?? 0}</span><span className="pz-stat-label">last 4 weeks</span></div>
             <div className="pz-stat"><span className="pz-stat-num">{prog?.sessions_total ?? 0}</span><span className="pz-stat-label">all-time sessions</span></div>
-            <div className="pz-stat"><span className="pz-stat-num">{prog?.blocks_done ?? 0}</span><span className="pz-stat-label">blocks mastered</span></div>
+            <div className="pz-stat"><span className="pz-stat-num">{prog?.sessions_total ?? 0}</span><span className="pz-stat-label">sessions logged</span></div>
           </div>
         </div>
       </div>
