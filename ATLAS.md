@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 16c, WSL) |
+| Last Active | 2026-07-23 (session 17, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,22 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 17, WSL) — coach gotcha: the roster sphere (deployed)
+- HER SPEC for the coach side's hook: a dynamic sphere you can move around,
+  a dot per player, tap a dot -> their card (skills + position). Built as
+  components/RosterSphere.jsx: PURE SVG 3D (no deps) — Fibonacci-lattice
+  point distribution, yaw/pitch drag rotation w/ pointer capture, idle
+  auto-spin (resumes 2.5s after interaction), perspective projection,
+  lat/long wireframe rings, depth-sorted dots (back ones dimmed), jersey
+  numbers in role-colored dots, first names under front-facing dots.
+- Hero card at the top of Roster (hidden while add/edit form is open);
+  tap -> floating player card (band + radar + overall + Edit/Close),
+  static-stacked on phones.
+- TRAP: setPointerCapture retargets click events to the svg — per-dot
+  onClick never fires. Taps are resolved manually on pointerup (<6px
+  movement + document.elementFromPoint -> .closest('.sphere-dot') ->
+  data-pid). Playwright note: use mouse.click at dot coords, not
+  locator.click (dots move with the idle spin).
 ### 2026-07-23 (session 16c, WSL) — coach intro interview + net monarch (deployed)
 - HER SPEC: after the skill self-assessment, Coach pops up in the chat:
   "Hi (name), I'm Pepper, your AI coach — mind if we get started with a

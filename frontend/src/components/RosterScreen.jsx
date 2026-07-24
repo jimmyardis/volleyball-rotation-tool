@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, ROLES, ATTRS } from "../api.js";
 import { roleMeta, overallRating } from "../roles.js";
 import RadarChart from "./RadarChart.jsx";
+import RosterSphere from "./RosterSphere.jsx";
 import { QuickNotes } from "./Notes.jsx";
 
 // ---- roster file import (SportsEngine CSV export, or any spreadsheet) ----
@@ -88,6 +89,7 @@ export default function RosterScreen({ teamId, players, reload }) {
   const [notesFor, setNotesFor] = useState(null); // player id with the notes pin open
   const [importRows, setImportRows] = useState(null); // parsed CSV preview, null = closed
   const [importBusy, setImportBusy] = useState(false);
+  const [spherePick, setSpherePick] = useState(null); // player tapped on the sphere
   const fileRef = useRef(null);
 
   useEffect(() => {
@@ -96,6 +98,7 @@ export default function RosterScreen({ teamId, players, reload }) {
     setFormOpen(false);
     setNotesFor(null);
     setImportRows(null);
+    setSpherePick(null);
   }, [teamId]);
 
   async function onImportFile(e) {
@@ -245,6 +248,36 @@ export default function RosterScreen({ teamId, players, reload }) {
         )}
         <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: "none" }} onChange={onImportFile} />
       </div>
+
+      {players.length > 0 && !formOpen && !editingId && (
+        <div className="sphere-wrap card">
+          <RosterSphere players={players} onPick={(p) => setSpherePick(p)} />
+          <p className="hint sphere-hint">Spin the team — tap a player.</p>
+          {spherePick && (() => {
+            const p = players.find((x) => x.id === spherePick.id) ?? spherePick;
+            const meta = roleMeta(p.primary_role);
+            const overall = overallRating(p);
+            return (
+              <div className="sphere-card player-card">
+                <div className="pc-band" style={{ background: meta.color, color: meta.ink }}>
+                  <span className="pc-jersey">{p.jersey_number ?? "–"}</span>
+                  <span className="pc-nameblock">
+                    <span className="pc-name">{p.name}</span>
+                    <span className="pc-role">{meta.label}{p.secondary_role ? ` · ${p.secondary_role}` : ""}</span>
+                  </span>
+                  {overall != null && <span className="pc-overall">{overall}</span>}
+                </div>
+                {!!p.is_libero && <span className="pc-libero">LIBERO</span>}
+                <RadarChart attrs={p} color={meta.color} />
+                <div className="pc-actions">
+                  <button className="ghost" onClick={() => { setSpherePick(null); startEdit(p); }}>Edit</button>
+                  <button className="ghost" onClick={() => setSpherePick(null)}>Close</button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
 
       {importRows && (
         <div className="card">

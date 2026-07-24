@@ -905,3 +905,25 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 
 /* coach intro bubble */
 .pz-intro p { margin: 0 0 0.5rem; }
+
+/* ---- roster sphere: the coach side's gotcha moment ---- */
+.sphere-wrap { position: relative; padding: 0.5rem; }
+.roster-sphere {
+  display: block; width: min(440px, 92vw); margin: 0 auto;
+  cursor: grab; touch-action: none; user-select: none;
+}
+.roster-sphere:active { cursor: grabbing; }
+.sphere-ring { fill: none; stroke: var(--line); stroke-width: 1; }
+.sphere-dot { cursor: pointer; }
+.sphere-dot circle { stroke: var(--panel); stroke-width: 1.5; }
+.sphere-dot.back { opacity: 0.28; }
+.sphere-dot.front { opacity: 1; }
+.sphere-name { fill: var(--dim); font-weight: 600; }
+.sphere-hint { text-align: center; margin: 0.25rem 0 0.4rem; }
+.sphere-card {
+  position: absolute; top: 0.75rem; right: 0.75rem; width: 230px;
+  box-shadow: 0 8px 28px rgba(20, 20, 26, 0.18); z-index: 8;
+}
+@media (max-width: 700px) {
+  .sphere-card { position: static; width: auto; margin-top: 0.5rem; }
+}
