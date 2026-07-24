@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 17b, WSL) |
+| Last Active | 2026-07-23 (session 18, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,16 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 18, WSL) — de-rounded restyle (deployed)
+- User call: "less rounded — the font and the whole app." Inter → Barlow
+  (squarer athletic grotesque; true italics loaded for the Pepper wordmark,
+  which Barlow's slanted 800 matches better than Inter did). Radius scale
+  compressed: 10-18px cards → 4-6px, 999px pills → 3px chips, 8px → 3px,
+  progress dots squared to bars. Functional circles kept round (player
+  tokens, step/jersey dots, camera button, theme swatches, the ball).
+- All in frontend/src/styles.css + the Google Fonts link; webdist rebuilt,
+  committed (cc45a25), `railway up` deployed.
+
 ### 2026-07-23 (session 17b, WSL) — coach-side layout pass (deployed)
 - Her list, all shipped: ROSTER — sphere IS the roster; card grid behind a
   "Show all player cards (N)" toggle (auto-shows while editing). LINEUPS —
