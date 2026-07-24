@@ -174,7 +174,8 @@ CREATE TABLE IF NOT EXISTS player_profiles (
     position           TEXT CHECK (position IN ('S','OH','MB','OPP','L','DS')),
     secondary_position TEXT,
     level_band         TEXT DEFAULT 'high_school',  -- rec|club|middle_school|high_school
-    theme              TEXT NOT NULL DEFAULT 'classic',  -- app look: classic|intense (per account)
+    theme              TEXT NOT NULL DEFAULT 'classic',  -- app look: classic|intense|sky (per account)
+    coach_memory       TEXT,                             -- what the player told Coach about themselves
     roster_player_id   INTEGER REFERENCES players(id),  -- optional coach-app link
     created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

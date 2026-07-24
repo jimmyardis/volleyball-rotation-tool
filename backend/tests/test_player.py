@@ -211,3 +211,16 @@ def test_theme_is_per_account(client, auth):
     tok2 = client.post("/player/login", json={"username": "celia", "password": "spike123"}).json()["token"]
     me2 = client.get("/player/me", headers={"Authorization": f"Bearer {tok2}"}).json()
     assert me2["profile"]["theme"] == "classic"
+
+
+def test_coach_memory_personalizes_context(client, auth):
+    r = client.put("/player/coach-memory", headers=auth,
+                   json={"content": "Strengths: serving. Struggles: nerves in big games. Goal: make varsity."})
+    assert r.status_code == 200
+    from app import db, player
+    conn = db.connect(db.resolve_db_path())
+    user = dict(conn.execute("SELECT * FROM users").fetchone())
+    ctx = player._player_context(conn, user)
+    conn.close()
+    assert "make varsity" in ctx and "told Coach about themselves" in ctx
+    assert client.get("/player/me", headers=auth).json()["profile"]["coach_memory"].startswith("Strengths")

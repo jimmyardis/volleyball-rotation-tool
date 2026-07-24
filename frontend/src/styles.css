@@ -894,3 +894,14 @@ html:has(.app[data-theme="sky"]) body { background: #e8f3fc; }
 .ball-spinner-ball { display: inline-flex; animation: ball-spin 1.1s linear infinite; }
 @keyframes ball-spin { to { rotate: 360deg; } }
 @media (prefers-reduced-motion: reduce) { .ball-spinner-ball { animation: none; } }
+
+/* the corner monarch perches ON the net (player tab bar), right side */
+.pz-net-wrap { position: relative; }
+.pz-net-wrap .monarch-perch {
+  position: absolute; top: -30px; right: 4px; padding: 0; margin: 0;
+  display: block; pointer-events: none; z-index: 6;
+}
+.pz-net-wrap .monarch-perch img { rotate: -8deg; }
+
+/* coach intro bubble */
+.pz-intro p { margin: 0 0 0.5rem; }

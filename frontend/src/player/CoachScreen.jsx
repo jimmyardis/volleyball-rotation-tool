@@ -30,12 +30,57 @@ function filmSummaryText(a) {
   return t;
 }
 
-export default function CoachScreen({ me, messages, setMessages }) {
+// The getting-to-know-you interview: asked once, saved to Coach's memory,
+// grounds every future conversation and film review.
+const INTRO_QUESTIONS = [
+  "First up — what are your biggest strengths on the court?",
+  "Got it. What do you struggle with, or what's felt frustrating lately?",
+  "Last one: what's the ONE thing you most want to achieve this season?",
+];
+const INTRO_LABELS = ["Strengths", "Struggles", "Season goal"];
+
+export default function CoachScreen({ me, messages, setMessages, reloadMe }) {
   const [available, setAvailable] = useState(null);
   const [input, setInput] = useState("");
   const { busy, error, send } = useCoachChat(messages, setMessages);
   const bodyRef = useRef(null);
   const fileRef = useRef(null);
+
+  // intro interview state: null = not running; {step, answers} while running
+  const [interview, setInterview] = useState(null);
+  const [introDismissed, setIntroDismissed] = useState(false);
+  const needsIntro = !me.profile?.coach_memory && !introDismissed && !interview && messages.length === 0;
+  const firstName = me.user.display_name.split(" ")[0];
+
+  function startInterview() {
+    setInterview({ step: 0, answers: [] });
+    setMessages((m) => [...m, { role: "assistant", content: `Awesome. ${INTRO_QUESTIONS[0]}` }]);
+  }
+
+  function declineInterview() {
+    setIntroDismissed(true);
+    setMessages((m) => [...m, {
+      role: "assistant",
+      content: "No problem! Ask me anything, or tap the camera and send a clip. If you ever want to tell me about your game, just say so.",
+    }]);
+  }
+
+  async function interviewAnswer(text) {
+    const answers = [...interview.answers, text];
+    if (interview.step < INTRO_QUESTIONS.length - 1) {
+      setMessages((m) => [...m, { role: "user", content: text },
+        { role: "assistant", content: INTRO_QUESTIONS[interview.step + 1] }]);
+      setInterview({ step: interview.step + 1, answers });
+    } else {
+      const content = INTRO_LABELS.map((l, i) => `${l}: ${answers[i]}`).join("\n");
+      setMessages((m) => [...m, { role: "user", content: text }, {
+        role: "assistant",
+        content: `Perfect — I've got all that, ${firstName}, and I'll keep it in mind every time we talk. Ask me anything, or tap the camera and send me a rep to break down. 🏐`,
+      }]);
+      setInterview(null);
+      try { await playerApi.saveCoachMemory(content); reloadMe?.(); } catch { /* retry next session */ }
+    }
+  }
 
   // first-time spotlight on the camera button (her spec: highlight it and
   // explain with a chat bubble until they've tried it once)
@@ -57,8 +102,10 @@ export default function CoachScreen({ me, messages, setMessages }) {
   }, [messages, busy, filmStatus]);
 
   async function submit(text) {
-    const content = text ?? input;
+    const content = (text ?? input).trim();
+    if (!content) return;
     setInput("");
+    if (interview) return interviewAnswer(content);   // free-form answers, no API call
     const ok = await send(content);
     if (!ok) setInput(content);
   }
@@ -104,9 +151,19 @@ export default function CoachScreen({ me, messages, setMessages }) {
     <div className="screen pz-coach">
       <div className="card pz-chat pz-chat-hero">
         <div className="chat-body pz-chat-body" ref={bodyRef}>
-          {messages.length === 0 && (
+          {needsIntro && (
+            <div className="bubble assistant pz-intro">
+              <p>Hi {firstName} 👋 I'm <strong>Pepper</strong>, your AI coach. Mind if we
+                get started with a few questions so I can get to know your game?</p>
+              <div className="form-row">
+                <button type="button" onClick={startInterview}>Let's do it</button>
+                <button type="button" className="ghost" onClick={declineInterview}>Maybe later</button>
+              </div>
+            </div>
+          )}
+          {!needsIntro && messages.length === 0 && (
             <div className="pz-chat-empty">
-              <p><strong>Hey {me.user.display_name.split(" ")[0]} — I'm your coach.</strong></p>
+              <p><strong>Hey {firstName} — I'm your coach.</strong></p>
               <p className="hint">Ask me anything about your training, or tap the camera and send
                 one rep of a serve, pass, set, attack, block, or dig — I'll break it down frame by frame.</p>
             </div>

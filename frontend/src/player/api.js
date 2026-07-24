@@ -50,6 +50,7 @@ export const playerApi = {
   coachChat: (messages) => request("/player/coach-chat", { method: "POST", body: JSON.stringify({ messages }) }),
   deleteAccount: (password) => request("/player/account", { method: "DELETE", body: JSON.stringify({ password }) }),
   saveTheme: (theme) => request("/player/profile/theme", { method: "PUT", body: JSON.stringify({ theme }) }),
+  saveCoachMemory: (content) => request("/player/coach-memory", { method: "PUT", body: JSON.stringify({ content }) }),
   videoConfig: () => request("/player/video-assessments/config"),
   submitVideo: (body) => request("/player/video-assessments", { method: "POST", body: JSON.stringify(body) }),
   videoHistory: (limit = 10) => request(`/player/video-assessments?limit=${limit}`),

@@ -102,7 +102,6 @@ export default function PlayerApp() {
 
   return (
     <div className="app player-zone" data-theme={theme}>
-      {theme === "intense" && authed && <MonarchPerch />}
       {theme === "sky" && authed && <CloudDrift />}
       {authed && (
         <header>
@@ -154,12 +153,16 @@ export default function PlayerApp() {
 
       {authed && me && me.profile?.position && me.has_assessment && (
         <>
-          <nav className="tabs">
-            {TABS.map((t) => (
-              <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}</button>
-            ))}
-          </nav>
-          {tab === "Coach" && <CoachScreen me={me} messages={coachThread} setMessages={setCoachThread} />}
+          <div className="pz-net-wrap">
+            <nav className="tabs">
+              {TABS.map((t) => (
+                <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}</button>
+              ))}
+            </nav>
+            {/* the corner monarch sits ON the net, bigger (her call) */}
+            {theme === "intense" && <MonarchPerch size={60} />}
+          </div>
+          {tab === "Coach" && <CoachScreen me={me} messages={coachThread} setMessages={setCoachThread} reloadMe={loadMe} />}
           {tab === "Train" && <TrainScreen me={me} />}
           {tab === "Progress" && <ProgressScreen me={me} reloadMe={loadMe} />}
           {tab === "Profile" && <ProfileScreen me={me} reloadMe={loadMe} onSignOut={signOut} theme={theme} setTheme={setTheme} />}

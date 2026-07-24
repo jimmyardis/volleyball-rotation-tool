@@ -20,10 +20,10 @@ export function Monarch({ size = 24, className = "", style }) {
 // ONE monarch perched on its own strip at the top of the page (Intense,
 // both surfaces). In normal flow: scrolls with the page, never covers
 // buttons.
-export function MonarchPerch() {
+export function MonarchPerch({ size = 46 }) {
   return (
     <div className="monarch-perch" aria-hidden="true">
-      <Monarch size={46} />
+      <Monarch size={size} />
     </div>
   );
 }

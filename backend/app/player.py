@@ -217,6 +217,20 @@ def update_profile(body: ProfileUpdate, user=Depends(current_user), conn=Depends
     return _profile(conn, user["id"])
 
 
+class CoachMemory(BaseModel):
+    content: str = Field(min_length=1, max_length=2000)
+
+
+@router.put("/coach-memory")
+def save_coach_memory(body: CoachMemory, user=Depends(current_user), conn=Depends(get_conn)):
+    """What the player told Coach about themselves (the getting-to-know-you
+    interview after sign-up). Grounds every future chat + film review."""
+    conn.execute("UPDATE player_profiles SET coach_memory = ? WHERE user_id = ?",
+                 (body.content.strip(), user["id"]))
+    conn.commit()
+    return {"ok": True}
+
+
 class ThemeUpdate(BaseModel):
     theme: str
 
@@ -562,6 +576,10 @@ def _player_context(conn, user: dict) -> str:
             for k, v in levels.items()
         )
         parts.append(f"Current self-assessed skill levels: {lvl}")
+
+    if profile.get("coach_memory"):
+        parts.append("What the player told Coach about themselves when they "
+                     "joined (personalize with this): " + profile["coach_memory"])
 
     videos = conn.execute(
         "SELECT skill_key, feedback, created_at FROM video_assessments "

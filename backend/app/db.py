@@ -90,6 +90,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
         pp_cols = {r[1] for r in conn.execute("PRAGMA table_info(player_profiles)")}
         if "theme" not in pp_cols:
             conn.execute("ALTER TABLE player_profiles ADD COLUMN theme TEXT NOT NULL DEFAULT 'classic'")
+        if "coach_memory" not in pp_cols:
+            conn.execute("ALTER TABLE player_profiles ADD COLUMN coach_memory TEXT")
     if "users" in tables:
         u_cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
         if "theme" not in u_cols:

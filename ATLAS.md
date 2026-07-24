@@ -2,7 +2,7 @@
 
 ## Meta
 | Field | Value |
-| Last Active | 2026-07-23 (session 16b, WSL) |
+| Last Active | 2026-07-23 (session 16c, WSL) |
 | Status | shipping |
 | Live URL | https://volleyball-api-production.up.railway.app |
 | GitHub | https://github.com/jimmyardis/volleyball-rotation-tool (public) |
@@ -51,6 +51,22 @@ None.
 - Phase 2/3 timing — no date set.
 
 ## Session Log
+### 2026-07-23 (session 16c, WSL) — coach intro interview + net monarch (deployed)
+- HER SPEC: after the skill self-assessment, Coach pops up in the chat:
+  "Hi (name), I'm Pepper, your AI coach — mind if we get started with a
+  few questions?" Yes/No. Yes -> 3 free-form questions (strengths /
+  struggles / season goal) answered in the normal chat input, scripted
+  client-side (zero API calls), then saved via new PUT /player/coach-memory
+  into player_profiles.coach_memory (migration + schema). _player_context
+  now injects it ("what the player told Coach about themselves") so every
+  chat + film review is personalized. Trigger = empty coach_memory + empty
+  thread, so EXISTING accounts get the intro once too. "Maybe later"
+  dismisses politely. 75 backend tests.
+- Intense: the corner monarch now SITS ON THE NET — bigger (60px), absolute
+  atop the tab bar's right side inside new .pz-net-wrap (nav's overflow
+  clipping avoided by wrapping, not nesting). Wordmark monarch unchanged.
+- Gotcha during verify: local uvicorn predated the new endpoint (no
+  --reload) — silent 404 swallowed by the retry-later catch; restart fixed.
 ### 2026-07-23 (session 16b, WSL) — player revamp: 4 tabs, activity-first Train (deployed)
 - Her layout pass: PLAN TAB (and Home + Film tabs) RETIRED — player nav is
   now Coach / Train / Progress / Profile. Plan endpoints + progression.py
